@@ -1,0 +1,110 @@
+import gym
+import numpy as np
+import torch
+from oracles.classifier import RFC
+from stable_baselines3.common.env_checker import check_env
+from data.process_data import seq_to_encoding
+from algo.diversity import diversity
+
+
+class AMPEnv(gym.Env):
+    def __init__(self, reward_oracle, max_AMP_length = 46):
+        # Actions in AMP design are the 20 amino acids
+        # For non-finite horizon case: An extra action is added to
+        # represent the "end of sequence" token
+        self.action_space = gym.spaces.Discrete(20)
+
+        # The state at time t is given by the last t tokens in the AMP sequence
+        # TODO: Change observation size to window W
+        self.obs_shape = [max_AMP_length] # positional encoding of ([Position in seq., Amino Acid])
+        self.observation_space = gym.spaces.Box(low=0, high=1, shape=self.obs_shape, dtype=float)
+
+        self.start_state = torch.tensor(np.zeros((max_AMP_length)))
+        self.curr_state = self.start_state  # TODO: Need to update this outside of class
+
+        self.time_step = 0 # TODO: Need to update this outside of class
+        self.history = []
+
+        self.max_AMP_length = max_AMP_length
+        self.reward_oracle = reward_oracle
+        self.proxy_oracles = []
+        self.modelbased = False
+
+        self.l = 0.1  # TODO: tune + add this to config
+
+    def update_proxy_oracles(self, oracle):
+        self.proxy_oracles = oracle
+
+    def update_opt_method(self, modelbased):
+        self.modelbased = modelbased
+
+    def step(self, action):
+        # Return: (state, reward, done, info)
+        # NOTE: Reward is the prediction probability of whether
+        # a sequence is antimicrobial towards a certain pathogen
+        done = [0.0]
+        reward = torch.tensor(0.0)
+        pred_prob = torch.tensor([0.0, 0.0])
+        self.curr_state[self.time_step] = action
+
+        if self.time_step == 45:
+            done = [1.0]
+            enc = np.zeros((46, 21))
+            for i, j in enumerate(self.curr_state):
+                enc[int(i)][int(j)] = 1
+            # compute density of similar sequences in the history
+            if len(self.history) > 1:
+                # Use div=False to test without diversity promotion
+                dens = diversity(enc, self.history, div=True).hamming_distance()
+            else:
+                dens = 0.0
+            self.history.append(enc)
+
+            # Store predictive probability for regression
+            if self.modelbased:
+                # NOTE: This is regression case -> the oracle predicts the probability of given
+                # sequence to be AMP-like i.e. prob. of being antimicrobial towards a certain pathogen
+                # print("Model based: ", predict_seq)
+
+                pred = []
+                for m in self.proxy_oracles:
+                    s = seq_to_encoding(self.curr_state)
+                    d = m.predict((s.detach().cpu().numpy()).reshape(1, 46*21))
+                    pred.append(d)
+                predictionAMP = np.average(pred)
+                # print("Avg. prediction: ", predictionAMP)
+                # Return avg. prediction based on proxy models
+                pred_prob = torch.tensor([[1 - predictionAMP, predictionAMP]])
+                reward = torch.tensor(predictionAMP)
+                reward -= self.l * dens
+                with open('log.txt', 'a+') as f:
+                    f.write('Model Based' + '\t' + str(reward) + '\n')
+            else:
+                # (returns prob. per classification class --> [Prob. Neg., Prob. Pos.])
+                pred_prob = torch.tensor(self.reward_oracle.predict_proba(seq_to_encoding(self.curr_state)))
+                reward = pred_prob[0][1]
+                with open('log.txt', 'a+') as f:
+                    f.write('Model Free' + '\t' + str(reward) + '\n')
+
+
+        self.time_step += 1
+        # Info must be a dictionary
+        info = [{"action": action, "state": self.curr_state, "pred_prob": pred_prob}]
+
+        return(self.curr_state, reward, pred_prob, done, info)
+
+    def reset(self):
+        self.curr_state = torch.tensor(np.zeros((self.max_AMP_length)))
+        self.time_step = 0
+        return self.curr_state
+
+"""
+def main():
+    env = AMPEnv()
+    print(check_env(env))
+if __name__ == "__main__":
+    main()
+"""
+
+
+

@@ -1,11 +1,11 @@
 
 
 class AMPProxyOracle(BaseOracle):
-
-	def __init__(self, query_storage):
+	def __init__(self, query_storage, p = 0.8):
 		super(BaseOracle)
 		self.query_storage = query_storage
 
+		self.p = p
 
 
 	def query(self, model, mols):
@@ -13,7 +13,7 @@ class AMPProxyOracle(BaseOracle):
 
 	def fit(self, model):
 		"""
-			Fits the model on a randomlmy sampled subset of the storage.
+			Fits the model on a randomly sampled (p) subset of the storage.
 
 		"""
 		raise NotImplementedError()

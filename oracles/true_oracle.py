@@ -16,16 +16,13 @@ class TrueOracle(BaseOracle):
 			 - Reward (Real Number): (batch_size, 1)
 		"""
 
-		
+
 		raise NotImplementedError()
 
 
 	def fit(self, model):
 		"""
 			Fits the model on the entirety of the storage
-
-			Args:
-			 - model: 
 
 		"""
 

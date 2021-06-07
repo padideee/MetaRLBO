@@ -21,4 +21,12 @@ class QueryStorage(BaseStorage):
 
 
 	def insert(self, x, y):
+		"""
+			Inserts data into the storage in a queue like fashion [cur_idx, cur_idx + batch_size]
+			
+			args:
+			 - x: (batch_size, state_dim)
+			 - y: (batch_size, 1)
+
+		"""
 		raise NotImplementedError()

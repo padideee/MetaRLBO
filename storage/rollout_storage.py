@@ -1,8 +1,6 @@
 """
 	Storage for training the policy
 
-
-
 	Implement a Queue (as a tensor):
 	0...storage_size, 0, ...
 """
@@ -15,5 +13,5 @@ class RolloutStorage(BaseStorage):
 
 
 
-	def insert(self, x, y):
+	def insert(self, ...):
 		raise NotImplementedError()

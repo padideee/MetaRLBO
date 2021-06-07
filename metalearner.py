@@ -64,7 +64,7 @@ class MetaLearner:
 
         """
 
-        self.true_oracle.fit(self.true_oracle_model, self.D_AMP)
+        self.true_oracle_model = self.true_oracle.fit(self.true_oracle_model, self.D_AMP)
         updated_params = [None for _ in range(self.config["num_proxies"])]
 
         for i in range(self.config["num_meta_updates"]):
@@ -94,7 +94,7 @@ class MetaLearner:
 
             # Fit proxy oracles
             for j in range(self.config["num_proxies"]):
-                self.proxy_oracles[j].fit(self.proxy_oracle_models[j])
+                self.proxy_oracle_models[j] = self.proxy_oracles[j].fit(self.proxy_oracle_models[j])
 
 
 

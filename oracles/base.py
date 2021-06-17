@@ -1,6 +1,3 @@
-from sklearn.ensemble import RandomForestClassifier
-
-
 class BaseOracle:
 	def __init__(self):
 

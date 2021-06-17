@@ -39,14 +39,15 @@ class MetaLearner:
         self.true_oracle_model = utl.get_true_oracle_model(self.config)
         self.env = AMPEnv(self.true_oracle)
 
+
+        self.D_train = QueryStorage(storage_size=self.config["max_num_queries"], state_dim = self.env.observation_space.shape)
+
         self.proxy_oracles = [AMPProxyOracle(training_storage=self.D_train) for j in range(self.config["num_proxies"])]
         self.proxy_oracle_models = [utl.get_proxy_oracle_model(self.config) for j in range(self.config["num_proxies"])]
         self.proxy_envs = [AMPEnv(self.proxy_oracles[j]) for j in range(self.config["num_proxies"])]
 
 
-        # self.policy = NormalMLPPolicy(...) # 
         self.policy = None
-        self.D_train = QueryStorage(storage_size=self.config["max_num_queries"], state_dim = self.env.observation_space.shape)
 
 
 

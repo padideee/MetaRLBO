@@ -3,7 +3,7 @@ from oracles.base import BaseOracle
 from torch.utils.data import DataLoader
 
 class AMPTrueOracle(BaseOracle):
-	def __init__(self, training_storage, model_name):
+	def __init__(self, training_storage):
 		self.training_storage = training_storage
 
 

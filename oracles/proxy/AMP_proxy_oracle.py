@@ -1,19 +1,23 @@
-
+from torch.utils.data import DataLoader
+from oracles import BaseOracle
 
 class AMPProxyOracle(BaseOracle):
-	def __init__(self, query_storage, p = 0.8):
+	def __init__(self, training_storage, p = 0.8):
 		super(BaseOracle)
-		self.query_storage = query_storage
+		self.training_storage = training_storage
 
 		self.p = p
 
 
 	def query(self, model, mols):
-		raise NotImplementedError()
+		return self.model.predict_proba(mols)
 
 	def fit(self, model):
 		"""
 			Fits the model on a randomly sampled (p) subset of the storage.
-
 		"""
-		raise NotImplementedError()
+
+		seq = self.training_storage.mols
+		value = self.training_storage.scores
+
+		return self.model.fit(seq, value)

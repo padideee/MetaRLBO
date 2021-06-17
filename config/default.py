@@ -1,6 +1,6 @@
 
 
-DEFAULT_CONFIGS = {
+DEFAULT_CONFIG = {
 	"task": "AMP",
 	"max_num_queries": 100000,
 	"num_meta_updates": 5000,

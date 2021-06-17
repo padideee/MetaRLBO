@@ -1,4 +1,5 @@
 import torch
+from storage.base import BaseStorage
 
 class QueryStorage(BaseStorage):
 	def __init__(self, storage_size, state_dim):

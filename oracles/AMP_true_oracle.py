@@ -1,5 +1,5 @@
 
-from oracles import BaseOracle
+from oracles.base import BaseOracle
 from torch.utils.data import DataLoader
 
 class AMPTrueOracle(BaseOracle):

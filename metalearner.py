@@ -3,10 +3,10 @@ import numpy as np
 from tqdm import tqdm
 import utils.helpers as utl
 
-from models.online_storage import RolloutStorage
-from models.query_storage import QueryStorage
-from models.policy import Policy
-from models.random_policy import RandomPolicy
+from storage.rollout_storage import RolloutStorage
+from storage.query_storage import QueryStorage
+from policies.policy import Policy
+from policies.random_policy import RandomPolicy
 
 
 from oracles.AMP_true_oracle import AMPTrueOracle

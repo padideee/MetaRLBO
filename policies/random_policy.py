@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 # from torch.distributions.categorical import Categorical
 
-from collections import OrderedDict
+from policies.policy import Policy
 
 class RandomPolicy(Policy):
     """Random Policy

@@ -2,9 +2,9 @@ from oracles.models import RFC, NN
 
 
 def get_true_oracle_model(config):
-	"""
-		Returns an instance of TrueOracle following config
-	"""
+    """
+        Returns an instance of TrueOracle following config
+    """
 
     if config["true_oracle"]["model_name"] == 'RFC':
         model = RFC()
@@ -12,15 +12,15 @@ def get_true_oracle_model(config):
         model = NN()
 
 
-	return model
+    return model
 
-	
+    
 def get_proxy_oracle_model(config):
-	"""
-		Returns an instance of (AMP)ProxyOracle following config.
+    """
+        Returns an instance of (AMP)ProxyOracle following config.
 
-		Note that we should be allowed to have different kinds of the proxy oracle depending on ours configs.
-	"""
+        Note that we should be allowed to have different kinds of the proxy oracle depending on ours configs.
+    """
 
     if config["proxy_oracle"]["model_name"] == 'RFC':
         model = RFC()

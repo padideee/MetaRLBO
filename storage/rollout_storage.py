@@ -1,4 +1,5 @@
 import torch
+from storage.base import BaseStorage
 
 
 class RolloutStorage(BaseStorage):

@@ -1,5 +1,5 @@
 from torch.utils.data import DataLoader
-from oracles import BaseOracle
+from oracles.base import BaseOracle
 
 class AMPProxyOracle(BaseOracle):
 	def __init__(self, training_storage, p = 0.8):

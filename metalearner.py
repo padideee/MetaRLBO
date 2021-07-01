@@ -13,7 +13,7 @@ from oracles.AMP_true_oracle import AMPTrueOracle
 from oracles.proxy.AMP_proxy_oracle import AMPProxyOracle
 
 from environments.AMP_env import AMPEnv
-
+from data.process_data import get_AMP_data
 # from acquisition_functions import UCB
 
 
@@ -34,9 +34,35 @@ class MetaLearner:
         
 
         # D_AMP = QueryStorage(...) # TODO: Replace with https://github.com/padideee/MBRL-for-AMP/blob/main/main.py
-        D_AMP = None # TODO
+
+
+        # The seq and the label from library
+        # seq shape: (batch, 46*21)
+        # label shape: (batch) -> in binary format:{'positive': AMP, 'negative': not AMP}
+        D_AMP = get_AMP_data('data/data.hkl') 
+
         self.true_oracle = AMPTrueOracle(training_storage=D_AMP)
         self.true_oracle_model = utl.get_true_oracle_model(self.config)
+
+        # -- BEGIN ---
+        # Leo: Temporary putting this here (probably want to organise this better)
+
+
+        if self.config["true_oracle"]["model_name"] == "RFC":
+            self.flatten_true_oracle_input = True
+        else:
+            self.flatten_true_oracle_input = False
+
+
+
+        if self.config["proxy_oracle"]["model_name"] == 'RFC':
+            self.flatten_proxy_oracle_input = True
+        else:
+            self.flatten_proxy_oracle_input = False
+
+
+        # -- END ---
+        
         self.env = AMPEnv(self.true_oracle)
 
 
@@ -54,21 +80,14 @@ class MetaLearner:
 
 
     def meta_update(self):
+        # TODO
         pass
 
 
 
     def run(self):
 
-        """
-            TODO:
-
-             - Loss Calculation
-             - Meta-update
-
-        """
-
-        self.true_oracle_model = self.true_oracle.fit(self.true_oracle_model)
+        self.true_oracle_model = self.true_oracle.fit(self.true_oracle_model, flatten_input = self.flatten_true_oracle_input)
         updated_params = [None for _ in range(self.config["num_proxies"])]
 
         for i in range(self.config["num_meta_updates"]):
@@ -79,7 +98,7 @@ class MetaLearner:
                                                num_steps = self.env.max_AMP_length
                                                )
 
-            logs = {}
+            logs = {} # TODO
 
 
             # Sample molecules to train proxy oracles
@@ -88,25 +107,40 @@ class MetaLearner:
                 random_policy = RandomPolicy(input_size = self.env.observation_space.shape, output_size = 1, num_actions=self.env.action_space.n)
                 sampled_mols = self.sample_policy(random_policy, self.env, self.config["num_initial_samples"]) # Sample from true env. using random policy (num_starting_mols, dim of mol)
 
-                sampled_mols_scores = true_oracle.query(self.true_oracle_model, sampled_mols)
 
-                # Add to storage
 
-                self.D_train.insert(sampled_mols, sampled_mols_scores)
+                sampled_mols = utl.to_one_hot(self.config, sampled_mols)
+                sampled_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, sampled_mols, flatten_input = self.flatten_true_oracle_input))
+
+
+
+                if self.config["task"] == "AMP":
+                    sampled_mols_labels = utl.scores_to_labels(self.config["true_oracle"]["model_name"], self.true_oracle_model, sampled_mols_scores)
+                    # Add to storage
+
+                    self.D_train.insert(sampled_mols, sampled_mols_labels) 
+                else:
+                    self.D_train.insert(sampled_mols, sampled_mols_scores) 
 
             else:
 
                 for j in range(self.config["num_proxies"]):
                     sampled_mols = self.sample_policy(self.policy, self.env, self.config["num_samples_per_iter"], params=updated_params) # Sample from policies -- preferably make this parallelised in the future
-                    sampled_mols_scores = true_oracle.query(self.proxy_oracle_models[j], sampled_mols)
+                    sampled_mols = utl.to_one_hot(self.config, sampled_mols)
+                    sampled_mols_scores = torch.tensor(self.true_oracle.query(self.proxy_oracle_models[j], sampled_mols, flatten_input = self.flatten_true_oracle_input))
 
 
-                    self.D_train.insert(sampled_mols, sampled_mols_scores)
+                    if self.config["task"] == "AMP":
+                        sampled_mols_labels = utl.scores_to_labels(self.config["proxy_oracle"]["model_name"], self.proxy_oracle_models[j], sampled_mols_scores)
+
+                        self.D_train.insert(sampled_mols, sampled_mols_labels)
+                    else:
+                        self.D_train.insert(sampled_mols, sampled_mols_labels)
 
 
             # Fit proxy oracles
             for j in range(self.config["num_proxies"]):
-                self.proxy_oracle_models[j] = self.proxy_oracles[j].fit(self.proxy_oracle_models[j])
+                self.proxy_oracle_models[j] = self.proxy_oracles[j].fit(self.proxy_oracle_models[j], flatten_input = self.flatten_proxy_oracle_input)
 
 
 
@@ -122,9 +156,9 @@ class MetaLearner:
                                            num_steps = self.env.max_AMP_length
                                            )
 
-                self.sample_policy(self.policy, self.proxy_envs[j], self.config["num_samples_per_task_update"], storage=self.D_j) # Sample from policy[j]
+                self.sample_policy(self.policy, self.proxy_envs[j], self.config["num_samples_per_task_update"], policy_storage=self.D_j) # Sample from policy[j]
 
-                # sampled_mols_scores = self.proxy_oracles[j].query(self.proxy_oracle_models[j], sampled_mols)
+                # sampled_mols_scores = self.proxy_oracles[j].query(self.proxy_oracle_models[j], sampled_mols, flatten_input = self.flatten_proxy_oracle_input)
 
 
                 # self.D_j.insert(sampled_mols, sampled_mols_scores) # TODO: We need to replace this with reward...
@@ -135,9 +169,9 @@ class MetaLearner:
 
             for j in range(self.config["num_proxies"]):
 
-                sampled_mols = self.sample_policy(self.policy, self.proxy_envs[j], self.config["num_meta_proxy_samples"], storage=self.D_meta_query, params=updated_params) # Sample from policies using (update_params)
+                sampled_mols = self.sample_policy(self.policy, self.proxy_envs[j], self.config["num_meta_proxy_samples"], policy_storage=self.D_meta_query, params=updated_params) # Sample from policies using (update_params)
 
-                sampled_mols_scores = self.proxy_oracles[j].query(self.proxy_oracle_models[j], sampled_mols)
+                sampled_mols_scores = self.proxy_oracles[j].query(self.proxy_oracle_models[j], sampled_mols, flatten_input = self.flatten_proxy_oracle_input)
 
                 self.D_meta_query.insert(sampled_mols, sampled_mols_scores)
 
@@ -149,7 +183,7 @@ class MetaLearner:
             self.log(logs)
                 
 
-    def sample_policy(policy, env, num_samples, policy_storage = None, params=None):
+    def sample_policy(self, policy, env, num_samples, policy_storage = None, params=None):
         """
             Args:
              - Policy - 
@@ -162,8 +196,9 @@ class MetaLearner:
              - Molecules: Tensor of size (num_samples, dim of mol)
 
         """
+        # import pdb; pdb.set_trace()
         state_dim = env.observation_space.shape # Currently hardcoded
-        return_mols = torch.zeros(num_samples, state_dim)
+        return_mols = torch.zeros(num_samples, *state_dim)
 
         for j in range(num_samples):
 
@@ -193,7 +228,9 @@ class MetaLearner:
 
                 state = next_state
 
-            policy_storage.after_rollout()
+            if policy_storage is not None:
+                policy_storage.after_rollout()
+
 
         return return_mols
 

@@ -8,29 +8,35 @@ class AMPTrueOracle(BaseOracle):
 
 
 
-	def query(self, model, x):
+	def query(self, model, x, flatten_input=True):
 		"""
 			Args:
 			 - model: 
 			 - x: (batch_size, dim of query)
+			 - flatten_input: True if the model takes in the whole seq. at once (False o.w.)
 			
 			Return:
 			 - Reward (Real Number): (batch_size, 1)
 		"""
+		if flatten_input: 
+			x = x.flatten(start_dim=-2, end_dim = -1) # Hardcoded for AMP
 
-		return self.model.predict_proba(x)
+		return model.predict_proba(x)
 
 
-	def fit(self, model):
+	def fit(self, model, flatten_input=True):
 		"""
 			Fits the model on the entirety of the storage
 
 		"""
 
-		seq = self.training_storage.mols
+		if flatten_input:
+			seq = self.training_storage.mols.flatten(start_dim=-2, end_dim=-1) # Hardcoded for AMP
+		else:
+			seq = self.training_storage.mols
 		value = self.training_storage.scores
 
-		return self.model.fit(seq, value)
+		return model.fit(seq, value)
 
 
 

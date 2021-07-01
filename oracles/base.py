@@ -1,7 +1,6 @@
 class BaseOracle:
 	def __init__(self):
 
-
 		pass
 
 	def query(self,  x):

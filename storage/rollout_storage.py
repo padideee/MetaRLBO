@@ -15,12 +15,11 @@ class RolloutStorage(BaseStorage):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.hidden_dim = hidden_dim
-        self.num_proxies = num_proxies
         self.num_steps = num_steps
 
 
-        self.states = torch.zeros(num_steps+1, num_samples, state_dim)
-        self.next_states = torch.zeros(num_steps+1, num_samples, state_dim)
+        self.states = torch.zeros(num_steps+1, num_samples, *state_dim)
+        self.next_states = torch.zeros(num_steps+1, num_samples, *state_dim)
         self.actions = torch.zeros(num_steps+1, num_samples, action_dim)
         self.hidden_states = torch.zeros(num_steps+1, num_samples, hidden_dim)
         self.rewards = torch.zeros(num_steps+1, num_samples, 1)

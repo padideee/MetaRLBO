@@ -1,5 +1,5 @@
 from oracles.models import RFC, NN
-
+import torch.nn.functional as F
 
 def get_true_oracle_model(config):
     """
@@ -10,6 +10,8 @@ def get_true_oracle_model(config):
         model = RFC()
     elif config["true_oracle"]["model_name"] == 'NN':
         model = NN()
+    else:
+        raise NotImplementedError
 
 
     return model
@@ -26,11 +28,31 @@ def get_proxy_oracle_model(config):
         model = RFC()
     elif config["proxy_oracle"]["model_name"] == 'NN':
         model = NN()
+    else:
+        raise NotImplementedError
 
 
     return model
 
 
+
+def to_one_hot(config, mols):
+
+    if config["task"] == "AMP":
+
+        mols = F.one_hot(mols.long(), num_classes=21) # Leo: ISSUE -- the default is 0 if there's no choice of action...?
+    else:
+        raise NotImplementedError
+    return mols
+
+def scores_to_labels(model_name, model, scores):
+
+    if model_name == "RFC":
+        labels = scores.argmax(dim=1).unsqueeze(-1)
+    else:
+        raise NotImplementedError
+
+    return labels
 
 
 

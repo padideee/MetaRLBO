@@ -1,3 +1,8 @@
+'''
+    Taken from https://github.com/padideee/MBRL-for-AMP/blob/43a1b3b247faeb28b64eaa06a4d0abdc301fba21/data/process_data.py
+
+'''
+
 import numpy as np
 import torch
 import hickle as hkl
@@ -48,3 +53,24 @@ def get_data(data):
 
     # data_x shape: (batch, 46, 21)
     return data_x + p_enc, labels
+
+
+
+
+# Leo: Function to get the data into the storage class
+from storage.query_storage import QueryStorage
+def get_AMP_data(data_path):
+
+    data, labels = get_data(data_path)
+
+
+    labels = torch.tensor([x == 'positive' for x in labels]).long().unsqueeze(-1)
+
+
+    storage = QueryStorage(data.shape[0], data.shape[1:])
+    storage.mols = data
+    storage.scores = labels
+
+    return storage
+
+

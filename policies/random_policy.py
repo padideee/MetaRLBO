@@ -19,11 +19,11 @@ class RandomPolicy(Policy):
         self.lo = 0
         self.hi = num_actions
 
-    def forward(self, input):
+    def forward(self, input, batch_size = 1):
         """
           Returns a random action from lo... hi-1
         """
 
         # return Independent(Normal(loc=mu, scale=scale), 1)
-        return torch.randint(self.lo, self.hi)
+        return torch.randint(self.lo, self.hi, size = (batch_size, ))
 

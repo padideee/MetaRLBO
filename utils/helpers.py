@@ -1,5 +1,6 @@
 from oracles.models import RFC, NN
 import torch.nn.functional as F
+import copy
 
 def get_true_oracle_model(config):
     """

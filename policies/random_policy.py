@@ -25,5 +25,5 @@ class RandomPolicy(Policy):
         """
 
         # return Independent(Normal(loc=mu, scale=scale), 1)
-        return torch.randint(self.lo, self.hi, size = (batch_size, ))
+        return torch.randint(self.lo, self.hi, size = (batch_size, )), torch.log(torch.ones(size = (batch_size, )) / (self.hi - self.lo + 1))
 

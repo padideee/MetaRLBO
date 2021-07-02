@@ -3,7 +3,7 @@ import numpy as np
 import torch
 from stable_baselines3.common.env_checker import check_env
 from data.process_data import seq_to_encoding
-# from algo.diversity import diversity # Leo: Tentatively turned off
+from algo.diversity import diversity 
 
 
 class AMPEnv(gym.Env):
@@ -81,7 +81,12 @@ class AMPEnv(gym.Env):
             else:
                 # (returns prob. per classification class --> [Prob. Neg., Prob. Pos.])
                 pred_prob = torch.tensor(self.reward_oracle.predict_proba(seq_to_encoding(self.curr_state)))
-                reward = pred_prob[0][1]
+                # import pdb; pdb.set_trace()
+                try:
+                    reward = pred_prob[0][1]
+                except:
+                    print("Hack: Classifier only predicts a single value") # TODO fix this...
+                    reward = torch.tensor(self.reward_oracle.classes_[0])
                 with open('log.txt', 'a+') as f:
                     f.write('Model Free' + '\t' + str(reward) + '\n')
 

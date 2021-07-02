@@ -8,18 +8,20 @@ class AMPProxyOracle(BaseOracle):
 		self.p = p
 
 
-	def query(self, model, mols, flatten_input=True):
+	def query(self, model, x, flatten_input=True):
 		if flatten_input:
-			x = x.flatten(start_dim=1, end_dim = -1)
-		return model.predict_proba(mols)
+			x = x.flatten(start_dim=-2, end_dim = -1)
+		return model.predict_proba(x)
 
 	def fit(self, model, flatten_input=True):
 		"""
 			Fits the model on a randomly sampled (p) subset of the storage.
+
+			TODO
 		"""
 
 		if flatten_input:
-			seq = self.training_storage.mols.flatten(start_dim=1, end_dim=-1)
+			seq = self.training_storage.mols.flatten(start_dim=-2, end_dim=-1)
 		else:
 			seq = self.training_storage.mols
 		value = self.training_storage.scores

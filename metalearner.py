@@ -2,6 +2,7 @@ import torch
 import numpy as np
 from tqdm import tqdm
 import utils.helpers as utl
+import utils.reinforcement_learning as rl_utl
 
 from storage.rollout_storage import RolloutStorage
 from storage.query_storage import QueryStorage
@@ -63,14 +64,14 @@ class MetaLearner:
 
         # -- END ---
         
-        self.env = AMPEnv(self.true_oracle)
+        self.env = AMPEnv(self.true_oracle_model)
 
 
         self.D_train = QueryStorage(storage_size=self.config["max_num_queries"], state_dim = self.env.observation_space.shape)
 
         self.proxy_oracles = [AMPProxyOracle(training_storage=self.D_train) for j in range(self.config["num_proxies"])]
         self.proxy_oracle_models = [utl.get_proxy_oracle_model(self.config) for j in range(self.config["num_proxies"])]
-        self.proxy_envs = [AMPEnv(self.proxy_oracles[j]) for j in range(self.config["num_proxies"])]
+        self.proxy_envs = [AMPEnv(self.proxy_oracle_models[j]) for j in range(self.config["num_proxies"])]
 
 
         self.policy = None
@@ -108,10 +109,10 @@ class MetaLearner:
                 sampled_mols = self.sample_policy(random_policy, self.env, self.config["num_initial_samples"]) # Sample from true env. using random policy (num_starting_mols, dim of mol)
 
 
-
                 sampled_mols = utl.to_one_hot(self.config, sampled_mols)
+                
                 sampled_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, sampled_mols, flatten_input = self.flatten_true_oracle_input))
-
+                #[Prob. False, Prob. True]
 
 
                 if self.config["task"] == "AMP":
@@ -125,7 +126,7 @@ class MetaLearner:
             else:
 
                 for j in range(self.config["num_proxies"]):
-                    sampled_mols = self.sample_policy(self.policy, self.env, self.config["num_samples_per_iter"], params=updated_params) # Sample from policies -- preferably make this parallelised in the future
+                    sampled_mols = self.sample_policy(self.policy, self.env, self.config["num_samples_per_iter"], params=updated_params[j]) # Sample from policies -- preferably make this parallelised in the future
                     sampled_mols = utl.to_one_hot(self.config, sampled_mols)
                     sampled_mols_scores = torch.tensor(self.true_oracle.query(self.proxy_oracle_models[j], sampled_mols, flatten_input = self.flatten_true_oracle_input))
 
@@ -135,7 +136,7 @@ class MetaLearner:
 
                         self.D_train.insert(sampled_mols, sampled_mols_labels)
                     else:
-                        self.D_train.insert(sampled_mols, sampled_mols_labels)
+                        self.D_train.insert(sampled_mols, sampled_mols_scores)
 
 
             # Fit proxy oracles
@@ -156,25 +157,40 @@ class MetaLearner:
                                            num_steps = self.env.max_AMP_length
                                            )
 
+                # # Testing (1):
+                # random_policy = RandomPolicy(input_size = self.env.observation_space.shape, output_size = 1, num_actions=self.env.action_space.n)
+                # self.sample_policy(random_policy, self.proxy_envs[j], self.config["num_samples_per_task_update"], policy_storage=self.D_j) # Sample from policy[j]
+                
+
+
+                # Real:
                 self.sample_policy(self.policy, self.proxy_envs[j], self.config["num_samples_per_task_update"], policy_storage=self.D_j) # Sample from policy[j]
 
-                # sampled_mols_scores = self.proxy_oracles[j].query(self.proxy_oracle_models[j], sampled_mols, flatten_input = self.flatten_proxy_oracle_input)
 
 
-                # self.D_j.insert(sampled_mols, sampled_mols_scores) # TODO: We need to replace this with reward...
+                # TODO - number of inner loop updates
+                loss = rl_utl.reinforce_loss(self.D_j) # Calculate loss using self.D_j - TODO: RL vs. Sup. Setting Formulation
+                
 
-                loss = ... # Calculate loss using self.D_j
+                
+
+                # # Testing (2):
+                # updated_params[j] = None
+
+
+                # Real:
                 updated_params[j] = self.policy.update_params(loss) # Tristan's update_params for MAML-RL "https://github.com/tristandeleu/pytorch-maml-rl/blob/master/maml_rl/policies/policy.py"
 
 
             for j in range(self.config["num_proxies"]):
+                # # Testing (3):
+                # random_policy = RandomPolicy(input_size = self.env.observation_space.shape, output_size = 1, num_actions=self.env.action_space.n)
+                # self.sample_policy(random_policy, self.proxy_envs[j], self.config["num_samples_per_task_update"], policy_storage=self.D_j) # Sample from policy[j]
+                # sampled_mols = self.sample_policy(random_policy, self.proxy_envs[j], self.config["num_meta_proxy_samples"], policy_storage=self.D_meta_query, params=updated_params[j]) # Sample from policies using (update_params)
 
-                sampled_mols = self.sample_policy(self.policy, self.proxy_envs[j], self.config["num_meta_proxy_samples"], policy_storage=self.D_meta_query, params=updated_params) # Sample from policies using (update_params)
 
-                sampled_mols_scores = self.proxy_oracles[j].query(self.proxy_oracle_models[j], sampled_mols, flatten_input = self.flatten_proxy_oracle_input)
-
-                self.D_meta_query.insert(sampled_mols, sampled_mols_scores)
-
+                # Real:
+                sampled_mols = self.sample_policy(self.policy, self.proxy_envs[j], self.config["num_meta_proxy_samples"], policy_storage=self.D_meta_query, params=updated_params[j]) # Sample from policies using (update_params)
 
 
             # Perform meta-update
@@ -208,13 +224,14 @@ class MetaLearner:
             while not done:
 
                 if params is not None:
-                    action = policy(state, params)
+                    action, log_prob = policy(state, params)
                 else:
-                    action = policy(state)
+                    action, log_prob = policy(state)
 
                 next_state, reward, pred_prob, done, info = env.step(action)
 
-                if done:
+                done = torch.tensor(done)
+                if done.item():
                     return_mols[j] = next_state
 
 
@@ -223,21 +240,26 @@ class MetaLearner:
                                    next_state=next_state,
                                    action=action, 
                                    reward=reward,
-                                   pred_prob=pred_prob,
+                                   log_prob=log_prob,
                                    done=done)
 
                 state = next_state
 
             if policy_storage is not None:
+                policy_storage.compute_returns()
                 policy_storage.after_rollout()
 
 
         return return_mols
 
 
+
+
+
+
     def log(self, logs):
         """
-            
+            TODO
 
         """
 

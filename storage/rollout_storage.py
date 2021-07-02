@@ -23,7 +23,11 @@ class RolloutStorage(BaseStorage):
         self.actions = torch.zeros(num_steps+1, num_samples, action_dim)
         self.hidden_states = torch.zeros(num_steps+1, num_samples, hidden_dim)
         self.rewards = torch.zeros(num_steps+1, num_samples, 1)
+        self.log_probs = torch.zeros(num_steps+1, num_samples, 1)
         self.dones = torch.zeros(num_steps+1, num_samples, 1)
+
+
+        self.returns = torch.zeros(num_steps+1, num_samples, 1)
 
 
 
@@ -39,6 +43,7 @@ class RolloutStorage(BaseStorage):
                next_state, 
                action, 
                reward, 
+               log_prob, 
                done):
 
         assert self.curr_timestep < self.num_steps + 1
@@ -47,11 +52,17 @@ class RolloutStorage(BaseStorage):
         self.next_states[self.curr_timestep][self.curr_sample].copy_(next_state)
         self.actions[self.curr_timestep][self.curr_sample].copy_(action)
         self.rewards[self.curr_timestep][self.curr_sample].copy_(reward)
+        # self.log_probs[self.curr_timestep][self.curr_sample].copy_(log_prob)
         self.dones[self.curr_timestep][self.curr_sample].copy_(done)
 
         self.curr_timestep = self.curr_timestep + 1
 
+    def compute_returns(self, gamma = 0.99):
+        self.returns[self.num_steps] = self.rewards[self.num_steps]
+        for step in reversed(range(self.num_steps)):
+            self.returns[step] = self.returns[step+1] + gamma * self.rewards[step] 
+
     def after_rollout(self):
         self.curr_timestep = 0
-        self.curr_sample = (self.curr_sample + 1) % num_samples
+        self.curr_sample = (self.curr_sample + 1) % self.num_samples
 

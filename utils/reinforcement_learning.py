@@ -14,4 +14,4 @@
 def reinforce_loss(episodes, params=None):
     losses = episodes.log_probs * episodes.rewards
 
-    return losses.mean()
+    return losses.mean() # Leo: Is this necessarily correct if the episodes end short (i.e. before 46)?

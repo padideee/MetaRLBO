@@ -48,12 +48,12 @@ class RolloutStorage(BaseStorage):
 
         assert self.curr_timestep < self.num_steps + 1
 
-        self.states[self.curr_timestep][self.curr_sample].copy_(state)
-        self.next_states[self.curr_timestep][self.curr_sample].copy_(next_state)
-        self.actions[self.curr_timestep][self.curr_sample].copy_(action)
-        self.rewards[self.curr_timestep][self.curr_sample].copy_(reward)
-        # self.log_probs[self.curr_timestep][self.curr_sample].copy_(log_prob)
-        self.dones[self.curr_timestep][self.curr_sample].copy_(done)
+        self.states[self.curr_timestep][self.curr_sample].copy_(state.clone().detach())
+        self.next_states[self.curr_timestep][self.curr_sample].copy_(next_state.clone().detach())
+        self.actions[self.curr_timestep][self.curr_sample].copy_(action.clone().detach())
+        self.rewards[self.curr_timestep][self.curr_sample].copy_(reward.clone().detach())
+        self.log_probs[self.curr_timestep][self.curr_sample].copy_(log_prob.clone()) # Leo: Used to differentiate through
+        self.dones[self.curr_timestep][self.curr_sample].copy_(done.clone().detach())
 
         self.curr_timestep = self.curr_timestep + 1
 

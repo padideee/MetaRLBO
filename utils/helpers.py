@@ -1,6 +1,7 @@
 from oracles.models import RFC, NN
-import torch.nn.functional as F
+from torch.nn import functional as F
 import copy
+from torch import nn
 
 def get_true_oracle_model(config):
     """
@@ -41,7 +42,7 @@ def to_one_hot(config, mols):
 
     if config["task"] == "AMP":
 
-        mols = F.one_hot(mols.long(), num_classes=21) # Leo: ISSUE -- the default is 0 if there's no choice of action...?
+        mols = F.one_hot(mols.long(), num_classes=21).float() # Leo: ISSUE -- the default is 0 if there's no choice of action...?
     else:
         raise NotImplementedError
     return mols
@@ -117,3 +118,23 @@ def deep_update(original,
         else:
             original[k] = value
     return original
+
+
+
+class FeatureExtractor(nn.Module):
+    """ Used for extrating features for states/actions/rewards """
+
+    def __init__(self, input_size, output_size, activation_function):
+        super(FeatureExtractor, self).__init__()
+        self.output_size = output_size
+        self.activation_function = activation_function
+        if self.output_size != 0:
+            self.fc = nn.Linear(input_size, output_size)
+        else:
+            self.fc = None
+
+    def forward(self, inputs):
+        if self.output_size != 0:
+            return self.activation_function(self.fc(inputs))
+        else:
+            return torch.zeros(0, ).to(device)

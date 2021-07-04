@@ -3,6 +3,7 @@
 DEFAULT_CONFIG = {
 	"task": "AMP",
 	"max_num_queries": 100000,
+	"num_inner_updates": 2, 
 	"num_meta_updates": 5000,
 	"num_proxies": 8, 
 	"num_trajs_inner_loop": 100,

@@ -17,7 +17,6 @@ from oracles.proxy.AMP_proxy_oracle import AMPProxyOracle
 
 from environments.AMP_env import AMPEnv
 from data.process_data import get_AMP_data
-# from acquisition_functions import UCB
 import higher 
 
 
@@ -32,11 +31,6 @@ class MetaLearner:
 
     def __init__(self, config):
         self.config = config
-
-
-        
-
-        # D_AMP = QueryStorage(...) # TODO: Replace with https://github.com/padideee/MBRL-for-AMP/blob/main/main.py
 
 
         # The seq and the label from library
@@ -81,14 +75,6 @@ class MetaLearner:
                                             state_dim = 21,
                                             state_embed_dim = 64,
                                             )
-
-
-
-
-
-    def meta_update(self):
-        # TODO
-        pass
 
 
 
@@ -152,10 +138,6 @@ class MetaLearner:
                                                hidden_dim = self.config["policy"]["hidden_dim"],
                                                num_steps = self.env.max_AMP_length
                                                )
-
-                    # # Testing (1):
-                    # random_policy = RandomPolicy(input_size = self.env.observation_space.shape, output_size = 1, num_actions=self.env.action_space.n)
-                    # self.sample_policy(random_policy, self.proxy_envs[j], self.config["num_samples_per_task_update"], policy_storage=self.D_j) # Sample from policy[j]
                     
 
 
@@ -164,21 +146,11 @@ class MetaLearner:
 
 
 
-                    # TODO - number of inner loop updates
-                    inner_loss = rl_utl.reinforce_loss(self.D_j) # Calculate loss using self.D_j - TODO: RL vs. Sup. Setting Formulation
-                    
+                    for _ in range(self.config["num_inner_updates"]):
+                        inner_loss = rl_utl.reinforce_loss(self.D_j) # Calculate loss using self.D_j - TODO: RL vs. Sup. Setting Formulation
 
-                    
-
-                    # # # Testing (2):
-                    # # updated_params[j] = None
-
-
-                    # # Real:
-                    # updated_params[j] = self.policy.update_params(loss) # Tristan's update_params for MAML-RL "https://github.com/tristandeleu/pytorch-maml-rl/blob/master/maml_rl/policies/policy.py"
-
-                    # Inner update
-                    diffopt.step(inner_loss)# Need to make this differentiable... not immediately differentiable from the storage!
+                        # Inner update
+                        diffopt.step(inner_loss)# Need to make this differentiable... not immediately differentiable from the storage!
 
 
 
@@ -202,9 +174,6 @@ class MetaLearner:
                         self.D_train.insert(sampled_mols, sampled_mols_scores)
 
 
-            # # Perform meta-update
-            # self.meta_update()
-
             outer_loss = rl_utl.reinforce_loss(self.D_meta_query) # Need to make this differentiable... not differentiable from the storage!
             outer_loss.backward() # Not really...
             meta_opt.step()            
@@ -215,17 +184,15 @@ class MetaLearner:
     def sample_policy(self, policy, env, num_samples, policy_storage = None):
         """
             Args:
-             - Policy - 
-             - env - 
-             - num_samples - 
+             - policy 
+             - env 
+             - num_samples - number of molecules to return
              - policy_storage: Optional -- Used to store the rollout for training the pollicy
-             - params: Optional -- Use these parameters instead of the default parameters for the policy (MAML)
 
             Return:
              - Molecules: Tensor of size (num_samples, dim of mol)
 
         """
-        # import pdb; pdb.set_trace()
         state_dim = env.observation_space.shape # Currently hardcoded
         return_mols = torch.zeros(num_samples, *state_dim)
 

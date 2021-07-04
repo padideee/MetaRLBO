@@ -1,6 +1,7 @@
-
 from oracles.base import BaseOracle
 from torch.utils.data import DataLoader
+import numpy as np
+
 
 class AMPTrueOracle(BaseOracle):
 	def __init__(self, training_storage):
@@ -21,7 +22,21 @@ class AMPTrueOracle(BaseOracle):
 		if flatten_input: 
 			x = x.flatten(start_dim=-2, end_dim = -1) # Hardcoded for AMP
 
-		return model.predict_proba(x)
+		pred_prob = model.predict_proba(x)
+
+
+		assert model.classes_.shape[-1] <= 2
+
+		if pred_prob.shape[-1] == 1:
+			pred_prob = np.zeros((*pred_prob.shape[:-1], 2))
+
+			if model.classes_[0] == 0:
+				pred_prob[:, 0] = 1
+			elif model.classes_[0] == 1:
+				pred_prob[:, 1] = 1
+
+
+		return pred_prob
 
 
 	def fit(self, model, flatten_input=True):

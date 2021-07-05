@@ -6,3 +6,7 @@ scikit-learn
 hickle
 positional-encodings
 xgboost
+tensorboard
+higher
+tqdm
+

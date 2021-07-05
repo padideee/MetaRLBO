@@ -1,4 +1,4 @@
-from oracles.models import RFC, NN, RFR, KNR
+from oracles.models import *
 from torch.nn import functional as F
 import copy
 from torch import nn
@@ -32,6 +32,8 @@ def get_proxy_oracle_model(config):
         model = RFR()
     elif config["proxy_oracle"]["model_name"] == 'KNR':
         model = KNR()
+    elif config["proxy_oracle"]["model_name"] == 'RR':
+        model = RR()
     else:
         raise NotImplementedError
 

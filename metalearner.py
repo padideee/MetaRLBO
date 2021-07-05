@@ -57,7 +57,7 @@ class MetaLearner:
 
 
 
-        if self.config["proxy_oracle"]["model_name"] == 'RFR' or 'KNR':
+        if self.config["proxy_oracle"]["model_name"] == 'RFR' or 'KNR' or 'RR':
             self.flatten_proxy_oracle_input = True
         else:
             self.flatten_proxy_oracle_input = False
@@ -114,6 +114,7 @@ class MetaLearner:
 
                 self.D_train.insert(sampled_mols, sampled_mols_scores[:, 1]) 
 
+                print(sampled_mols_scores[:, 1])
 
             # Fit proxy oracles
             for j in range(self.config["num_proxies"]):
@@ -140,13 +141,13 @@ class MetaLearner:
                     
 
 
-                    # Real:
                     self.sample_policy(self.policy, self.proxy_envs[j], self.config["num_samples_per_task_update"], policy_storage=self.D_j) # Sample from policy[j]
 
 
 
                     for k in range(self.config["num_inner_updates"]):
-                        inner_loss = rl_utl.reinforce_loss(self.D_j)
+                        
+                        inner_loss = rl_utl.reinforce_loss(self.D_j) # Leo: This is bugged -- the log_probs need to be recalculated
                         
                         logs["inner_loop/proxy-{j}/loss/{k}"] = inner_loss.item()
                         # Inner update
@@ -169,7 +170,6 @@ class MetaLearner:
 
 
                     self.D_train.insert(sampled_mols, sampled_mols_scores[:, 1])
-
 
             outer_loss = rl_utl.reinforce_loss(self.D_meta_query) # Need to make this differentiable... not differentiable from the storage!
             print("Outer Loss:", outer_loss)
@@ -220,7 +220,6 @@ class MetaLearner:
                 next_state, reward, pred_prob, done, info = env.step(action)
 
                 done = torch.tensor(done)
-
 
                 if done.item():
                     return_mols[j] = next_state

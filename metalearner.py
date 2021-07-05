@@ -18,6 +18,7 @@ from oracles.proxy.AMP_proxy_oracle import AMPProxyOracle
 from environments.AMP_env import AMPEnv
 from data.process_data import get_AMP_data
 import higher 
+from utils.tb_logger import TBLogger
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -31,6 +32,10 @@ class MetaLearner:
 
     def __init__(self, config):
         self.config = config
+
+
+        # initialise tensorboard logger
+        self.logger = TBLogger(self.config, self.config["exp_label"])
 
 
         # The seq and the label from library
@@ -62,7 +67,6 @@ class MetaLearner:
         
         self.env = AMPEnv(self.true_oracle_model)
 
-
         self.D_train = QueryStorage(storage_size=self.config["max_num_queries"], state_dim = self.env.observation_space.shape)
 
         self.proxy_oracles = [AMPProxyOracle(training_storage=self.D_train, p=self.config["proxy_oracle"]["p"]) for j in range(self.config["num_proxies"])]
@@ -70,12 +74,14 @@ class MetaLearner:
         self.proxy_envs = [AMPEnv(self.proxy_oracle_models[j]) for j in range(self.config["num_proxies"])]
 
 
-        self.policy = CategoricalGRUPolicy(num_actions = 21,
-                                            hidden_size = 128,
-                                            state_dim = 21,
-                                            state_embed_dim = 64,
+        self.policy = CategoricalGRUPolicy(num_actions = self.env.action_space.n + 1,
+                                            hidden_size = self.config["policy"]["hidden_dim"],
+                                            state_dim = self.env.action_space.n + 1,
+                                            state_embed_dim = self.config["policy"]["state_embedding_size"],
                                             )
 
+
+        self.iter_idx = 0
 
 
     def run(self):
@@ -83,7 +89,7 @@ class MetaLearner:
         self.true_oracle_model = self.true_oracle.fit(self.true_oracle_model, flatten_input = self.flatten_true_oracle_input)
         updated_params = [None for _ in range(self.config["num_proxies"])]
 
-        for i in range(self.config["num_meta_updates"]):
+        for self.iter_idx in range(self.config["num_meta_updates"]):
             self.D_meta_query = RolloutStorage(num_samples = self.config["num_meta_proxy_samples"],
                                                state_dim = self.env.observation_space.shape,
                                                action_dim = 1, # Discrete value
@@ -91,11 +97,11 @@ class MetaLearner:
                                                num_steps = self.env.max_AMP_length
                                                )
 
-            logs = {} # TODO
+            logs = {} 
 
 
             # Sample molecules to train proxy oracles
-            if i == 0:
+            if self.iter_idx == 0:
 
                 random_policy = RandomPolicy(input_size = self.env.observation_space.shape, output_size = 1, num_actions=self.env.action_space.n)
                 sampled_mols = self.sample_policy(random_policy, self.env, self.config["num_initial_samples"]) # Sample from true env. using random policy (num_starting_mols, dim of mol)
@@ -146,9 +152,10 @@ class MetaLearner:
 
 
 
-                    for _ in range(self.config["num_inner_updates"]):
-                        inner_loss = rl_utl.reinforce_loss(self.D_j) # Calculate loss using self.D_j - TODO: RL vs. Sup. Setting Formulation
+                    for k in range(self.config["num_inner_updates"]):
+                        inner_loss = rl_utl.reinforce_loss(self.D_j)
 
+                        logs["inner_loop/proxy-{j}/loss/{k}"] = inner_loss.item()
                         # Inner update
                         diffopt.step(inner_loss)# Need to make this differentiable... not immediately differentiable from the storage!
 
@@ -165,6 +172,7 @@ class MetaLearner:
                     sampled_mols = utl.to_one_hot(self.config, sampled_mols)
                     sampled_mols_scores = torch.tensor(self.true_oracle.query(self.proxy_oracle_models[j], sampled_mols, flatten_input = self.flatten_true_oracle_input))
 
+                    logs["inner_loop/proxy-{j}/sampled_mols_scores_avg"] = sampled_mols_scores.mean().item()
 
                     if self.config["task"] == "AMP":
                         sampled_mols_labels = utl.scores_to_labels(self.config["proxy_oracle"]["model_name"], self.proxy_oracle_models[j], sampled_mols_scores)
@@ -175,10 +183,14 @@ class MetaLearner:
 
 
             outer_loss = rl_utl.reinforce_loss(self.D_meta_query) # Need to make this differentiable... not differentiable from the storage!
+            logs["outer_loss"] = outer_loss.item()
             outer_loss.backward() # Not really...
-            meta_opt.step()            
+            meta_opt.step()
 
-            self.log(logs)
+
+            # Logging
+            if self.iter_idx % self.config["log_interval"] == 0:
+                self.log(logs)
                 
 
     def sample_policy(self, policy, env, num_samples, policy_storage = None):
@@ -208,10 +220,11 @@ class MetaLearner:
                 onehot_state = utl.to_one_hot(self.config, state)
 
                 if curr_timestep == 0:
-                    s = torch.zeros((21, ))
-                    action, log_prob, hidden_state = policy(s.unsqueeze(0).unsqueeze(0), hidden_state) # Leo: Should just pass the first timestep..
+                    s = torch.zeros((1, 1, 21))
                 else:
-                    action, log_prob, hidden_state = policy(onehot_state[curr_timestep - 1].unsqueeze(0).unsqueeze(0), hidden_state)
+                    s = onehot_state[curr_timestep - 1].unsqueeze(0).unsqueeze(0)
+                
+                action, log_prob, hidden_state = policy(s, hidden_state)
 
 
                 next_state, reward, pred_prob, done, info = env.step(action)
@@ -246,9 +259,9 @@ class MetaLearner:
 
     def log(self, logs):
         """
-            TODO
-
+            Tentatively Tensorboard, but perhaps we want WANDB
         """
 
 
-        return
+        for k, v in logs.items():
+            self.logger.add(k, v, self.iter_idx)

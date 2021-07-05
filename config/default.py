@@ -1,6 +1,7 @@
 
 
 DEFAULT_CONFIG = {
+	"exp_label": "DEFAULT",
 	"task": "AMP",
 	"max_num_queries": 100000,
 	"num_inner_updates": 2, 
@@ -21,5 +22,9 @@ DEFAULT_CONFIG = {
 	},
 	"policy": {
 		"hidden_dim": 100,
-	}
+		"state_embedding_size": 64,
+	},
+	"log_interval": 10,
+	"results_log_dir": ".",
+	"seed": 73,
 }

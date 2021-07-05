@@ -130,3 +130,9 @@ dmypy.json
 
 
 .idea
+
+
+
+# Project Specific
+logs
+log.txt

@@ -14,21 +14,7 @@ class AMPProxyOracle(BaseOracle):
 		if flatten_input:
 			x = x.flatten(start_dim=-2, end_dim = -1)
 
-		pred_prob = model.predict_proba(x)
-
-
-		assert model.classes_.shape[-1] <= 2
-
-		if pred_prob.shape[-1] == 1:
-			pred_prob = np.zeros((*pred_prob.shape[:-1], 2))
-
-			if model.classes_[0] == 0:
-				pred_prob[:, 0] = 1
-			elif model.classes_[0] == 1:
-				pred_prob[:, 1] = 1
-
-
-		return pred_prob
+		return model.predict(x)
 
 	def fit(self, model, flatten_input=True):
 		"""

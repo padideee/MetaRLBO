@@ -1,4 +1,4 @@
-from oracles.models import RFC, NN
+from oracles.models import RFC, NN, RFR, KNR
 from torch.nn import functional as F
 import copy
 from torch import nn
@@ -22,14 +22,16 @@ def get_true_oracle_model(config):
 def get_proxy_oracle_model(config):
     """
         Returns an instance of (AMP)ProxyOracle following config.
-
-        Note that we should be allowed to have different kinds of the proxy oracle depending on ours configs.
     """
 
     if config["proxy_oracle"]["model_name"] == 'RFC':
         model = RFC()
     elif config["proxy_oracle"]["model_name"] == 'NN':
         model = NN()
+    elif config["proxy_oracle"]["model_name"] == 'RFR':
+        model = RFR()
+    elif config["proxy_oracle"]["model_name"] == 'KNR':
+        model = KNR()
     else:
         raise NotImplementedError
 

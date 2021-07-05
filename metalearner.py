@@ -57,7 +57,7 @@ class MetaLearner:
 
 
 
-        if self.config["proxy_oracle"]["model_name"] == 'RFC':
+        if self.config["proxy_oracle"]["model_name"] == 'RFR' or 'KNR':
             self.flatten_proxy_oracle_input = True
         else:
             self.flatten_proxy_oracle_input = False
@@ -89,7 +89,7 @@ class MetaLearner:
         self.true_oracle_model = self.true_oracle.fit(self.true_oracle_model, flatten_input = self.flatten_true_oracle_input)
         updated_params = [None for _ in range(self.config["num_proxies"])]
 
-        for self.iter_idx in range(self.config["num_meta_updates"]):
+        for self.iter_idx in tqdm(range(self.config["num_meta_updates"])):
             self.D_meta_query = RolloutStorage(num_samples = self.config["num_meta_proxy_samples"],
                                                state_dim = self.env.observation_space.shape,
                                                action_dim = 1, # Discrete value
@@ -112,14 +112,7 @@ class MetaLearner:
                 sampled_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, sampled_mols, flatten_input = self.flatten_true_oracle_input))
                 #[Prob. False, Prob. True]
 
-
-                if self.config["task"] == "AMP":
-                    sampled_mols_labels = utl.scores_to_labels(self.config["true_oracle"]["model_name"], self.true_oracle_model, sampled_mols_scores)
-                    # Add to storage
-
-                    self.D_train.insert(sampled_mols, sampled_mols_labels) 
-                else:
-                    self.D_train.insert(sampled_mols, sampled_mols_scores) 
+                self.D_train.insert(sampled_mols, sampled_mols_scores[:, 1]) 
 
 
             # Fit proxy oracles
@@ -154,7 +147,7 @@ class MetaLearner:
 
                     for k in range(self.config["num_inner_updates"]):
                         inner_loss = rl_utl.reinforce_loss(self.D_j)
-
+                        
                         logs["inner_loop/proxy-{j}/loss/{k}"] = inner_loss.item()
                         # Inner update
                         diffopt.step(inner_loss)# Need to make this differentiable... not immediately differentiable from the storage!
@@ -170,19 +163,16 @@ class MetaLearner:
                     # Sample mols for training the proxy oracle later
                     sampled_mols = self.sample_policy(inner_policy, self.env, self.config["num_samples_per_iter"]) # Sample from policies -- preferably make this parallelised in the future
                     sampled_mols = utl.to_one_hot(self.config, sampled_mols)
-                    sampled_mols_scores = torch.tensor(self.true_oracle.query(self.proxy_oracle_models[j], sampled_mols, flatten_input = self.flatten_true_oracle_input))
+                    sampled_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, sampled_mols, flatten_input = self.flatten_true_oracle_input))
 
                     logs["inner_loop/proxy-{j}/sampled_mols_scores_avg"] = sampled_mols_scores.mean().item()
 
-                    if self.config["task"] == "AMP":
-                        sampled_mols_labels = utl.scores_to_labels(self.config["proxy_oracle"]["model_name"], self.proxy_oracle_models[j], sampled_mols_scores)
 
-                        self.D_train.insert(sampled_mols, sampled_mols_labels)
-                    else:
-                        self.D_train.insert(sampled_mols, sampled_mols_scores)
+                    self.D_train.insert(sampled_mols, sampled_mols_scores[:, 1])
 
 
             outer_loss = rl_utl.reinforce_loss(self.D_meta_query) # Need to make this differentiable... not differentiable from the storage!
+            print("Outer Loss:", outer_loss)
             logs["outer_loss"] = outer_loss.item()
             outer_loss.backward() # Not really...
             meta_opt.step()

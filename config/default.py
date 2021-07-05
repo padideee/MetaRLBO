@@ -13,7 +13,7 @@ DEFAULT_CONFIG = {
 	"num_samples_per_iter": 5, 
 	"num_samples_per_task_update": 16, 
 	"proxy_oracle": {
-		"model_name": "RFC",
+		"model_name": "KNR",
 		"p": 0.8, # Proportion of data to sample to train proxy oracles
 	},
 
@@ -24,7 +24,7 @@ DEFAULT_CONFIG = {
 		"hidden_dim": 100,
 		"state_embedding_size": 64,
 	},
-	"log_interval": 10,
-	"results_log_dir": ".",
+	"log_interval": 25,
+	"results_log_dir": "./logs",
 	"seed": 73,
 }

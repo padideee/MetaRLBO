@@ -1,10 +1,9 @@
 import gym
 import numpy as np
 import torch
-from oracles.classifier import RFC
 from stable_baselines3.common.env_checker import check_env
 from data.process_data import seq_to_encoding
-from algo.diversity import diversity
+from algo.diversity import diversity 
 
 
 class AMPEnv(gym.Env):
@@ -82,7 +81,30 @@ class AMPEnv(gym.Env):
             else:
                 # (returns prob. per classification class --> [Prob. Neg., Prob. Pos.])
                 pred_prob = torch.tensor(self.reward_oracle.predict_proba(seq_to_encoding(self.curr_state)))
-                reward = pred_prob[0][1]
+
+                # ---- Modification ---------
+                """
+                    Modification to env.:
+
+                    There's a special case where if the reward oracle was only trained on neg./pos. data, then it will output a
+                    pred_prob w/ a final dimension of 1, which leads to an error.
+                """
+                assert self.reward_oracle.classes_.shape[-1] <= 2
+
+                if pred_prob.shape[-1] == 1:
+                    
+                    prob = torch.zeros((*pred_prob.shape[:-1], 2))
+
+                    if self.reward_oracle.classes_[0] == 0:
+                        prob[:, 0] = 1
+                    elif self.reward_oracle.classes_[0] == 1:
+                        prob[:, 1] = 1
+
+                    pred_prob = prob
+
+                # ---- End Modification -----
+
+                reward = pred_prob[0][1]    
                 with open('log.txt', 'a+') as f:
                     f.write('Model Free' + '\t' + str(reward) + '\n')
 

@@ -1,14 +1,5 @@
-from sklearn.ensemble import RandomForestClassifier
-
-
 class BaseOracle:
-	def __init__(self, model_name='RFC'):
-
-		if model_name == 'RFC':
-			self.model = RFC()
-		elif model_name == 'NN':
-			self.model = NN()
-
+	def __init__(self):
 
 		pass
 
@@ -21,9 +12,8 @@ class BaseOracle:
 			Return:
 			 - Reward (Real Number): (batch_size, 1)
 		"""
-		# raise NotImplementedError()
+		raise NotImplementedError()
 
-		return self.model.predict_proba(x)
 
 
 
@@ -39,14 +29,4 @@ class BaseOracle:
 
 		"""
 
-		# raise NotImplementedError()
-		return self.model.fit(seq, value)
-
-
-def RFC():
-	model = RandomForestClassifier(random_state=0, bootstrap= True, max_depth=50, n_estimators=200)
-	return model
-
-
-def NN():
-	raise NotImplementedError()
+		raise NotImplementedError()

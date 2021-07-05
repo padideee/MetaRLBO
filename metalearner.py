@@ -1,25 +1,27 @@
-from oracles.gridworld import GridworldImaginedOracle
-from oracles.molecule import MoleculeImaginedOracle
-
-import utils.helpers as utl
-from models.online_storage import RolloutStorage
-from models.query_storage import QueryStorage
-
-from models.policy import Policy
-from algo.ppo import PPO
 import torch
-from environments.envs import make_vec_envs
 import numpy as np
+from torch import optim
 from tqdm import tqdm
+import utils.helpers as utl
+import utils.reinforcement_learning as rl_utl
 
-from acquisition_functions import UCB
-from torch.utils.data import DataLoader
-import time
-from collections import deque
+from storage.rollout_storage import RolloutStorage
+from storage.query_storage import QueryStorage
+from policies.policy import Policy
+from policies.gru_policy import CategoricalGRUPolicy
+from policies.random_policy import RandomPolicy
 
-from stable_baselines3.common.running_mean_std import RunningMeanStd
+
+from oracles.AMP_true_oracle import AMPTrueOracle
+from oracles.proxy.AMP_proxy_oracle import AMPProxyOracle
+
+from environments.AMP_env import AMPEnv
+from data.process_data import get_AMP_data
+import higher 
+
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 
 
 class MetaLearner:
@@ -31,114 +33,222 @@ class MetaLearner:
         self.config = config
 
 
-        D_AMP = QueryStorage(self.config["max_num_queries"]) # TODO: Replace with https://github.com/padideee/MBRL-for-AMP/blob/main/main.py
+        # The seq and the label from library
+        # seq shape: (batch, 46*21)
+        # label shape: (batch) -> in binary format:{'positive': AMP, 'negative': not AMP}
+        D_AMP = get_AMP_data('data/data.hkl') 
 
-        self.policy = NormalMLPPolicy(...) # 
-        self.D_train = QueryStorage(self.config["max_num_queries"])
-        # self.D_query = QueryStorage(self.config["query_storage_size"])
-        # self.D_meta_query = RolloutStorage(self.config["num_meta_proxy_samples"] * self.config["num_proxies"])
-
-
-        self.true_oracle = TrueOracle(D_AMP)
+        self.true_oracle = AMPTrueOracle(training_storage=D_AMP)
         self.true_oracle_model = utl.get_true_oracle_model(self.config)
 
-        self.proxy_oracles = [AMPProxyOracle(self.D_train) for j in range(self.config["num_proxies"])]
+        # -- BEGIN ---
+        # Leo: Temporary putting this here (probably want to organise this better)
+
+
+        if self.config["true_oracle"]["model_name"] == "RFC":
+            self.flatten_true_oracle_input = True
+        else:
+            self.flatten_true_oracle_input = False
+
+
+
+        if self.config["proxy_oracle"]["model_name"] == 'RFC':
+            self.flatten_proxy_oracle_input = True
+        else:
+            self.flatten_proxy_oracle_input = False
+
+
+        # -- END ---
+        
+        self.env = AMPEnv(self.true_oracle_model)
+
+
+        self.D_train = QueryStorage(storage_size=self.config["max_num_queries"], state_dim = self.env.observation_space.shape)
+
+        self.proxy_oracles = [AMPProxyOracle(training_storage=self.D_train, p=self.config["proxy_oracle"]["p"]) for j in range(self.config["num_proxies"])]
         self.proxy_oracle_models = [utl.get_proxy_oracle_model(self.config) for j in range(self.config["num_proxies"])]
+        self.proxy_envs = [AMPEnv(self.proxy_oracle_models[j]) for j in range(self.config["num_proxies"])]
 
 
-
-    def meta_update(self):
-        pass
+        self.policy = CategoricalGRUPolicy(num_actions = 21,
+                                            hidden_size = 128,
+                                            state_dim = 21,
+                                            state_embed_dim = 64,
+                                            )
 
 
 
     def run(self):
 
-        """
-            TODO:
-             - Datasets Initialization
-             - Sampling of molecules
-
-             - Loss Calculation
-             - Meta-update
-
-        """
-
-        self.true_oracle_model = self.true_oracle.fit(self.true_oracle_model, self.D_AMP)
+        self.true_oracle_model = self.true_oracle.fit(self.true_oracle_model, flatten_input = self.flatten_true_oracle_input)
         updated_params = [None for _ in range(self.config["num_proxies"])]
 
         for i in range(self.config["num_meta_updates"]):
-            # self.D_query = ...
-            self.D_meta_query = RolloutStorage(self.config["num_meta_proxy_samples"] * self.config["num_proxies"])
+            self.D_meta_query = RolloutStorage(num_samples = self.config["num_meta_proxy_samples"],
+                                               state_dim = self.env.observation_space.shape,
+                                               action_dim = 1, # Discrete value
+                                               hidden_dim = self.config["policy"]["hidden_dim"],
+                                               num_steps = self.env.max_AMP_length
+                                               )
+
+            logs = {} # TODO
 
 
             # Sample molecules to train proxy oracles
             if i == 0:
-                sampled_mols = ... # Sample from true env. using random policy (num_starting_mols, dim of mol)
 
-                sampled_mols_scores = true_oracle.query(self.true_oracle_model, sampled_mols)
-
-                # Add to storage
-
-                self.D_train.insert(sampled_mols, sampled_mols_scores)
-
-            else:
-
-                for j in range(self.config["num_proxies"]):
-                    sampled_mols = ... # Sample from policies -- preferably make this parallelised in the future
-                    sampled_mols_scores = self.proxy_oracles[j].query(self.proxy_oracle_models[j], sampled_mols)
+                random_policy = RandomPolicy(input_size = self.env.observation_space.shape, output_size = 1, num_actions=self.env.action_space.n)
+                sampled_mols = self.sample_policy(random_policy, self.env, self.config["num_initial_samples"]) # Sample from true env. using random policy (num_starting_mols, dim of mol)
 
 
-                    self.D_train.insert(sampled_mols, sampled_mols_scores)
+                sampled_mols = utl.to_one_hot(self.config, sampled_mols) # Leo: There could be an issue with the end of state token...
+                
+                sampled_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, sampled_mols, flatten_input = self.flatten_true_oracle_input))
+                #[Prob. False, Prob. True]
+
+
+                if self.config["task"] == "AMP":
+                    sampled_mols_labels = utl.scores_to_labels(self.config["true_oracle"]["model_name"], self.true_oracle_model, sampled_mols_scores)
+                    # Add to storage
+
+                    self.D_train.insert(sampled_mols, sampled_mols_labels) 
+                else:
+                    self.D_train.insert(sampled_mols, sampled_mols_scores) 
 
 
             # Fit proxy oracles
             for j in range(self.config["num_proxies"]):
-                self.proxy_oracle_models[j] = self.proxy_oracles[j].fit(self.proxy_oracle_models[j])
+                self.proxy_oracle_models[j] = self.proxy_oracles[j].fit(self.proxy_oracle_models[j], flatten_input = self.flatten_proxy_oracle_input)
 
 
-
+            inner_opt = optim.SGD(self.policy.parameters(), lr=1e-1)
+            meta_opt = optim.SGD(self.policy.parameters(), lr=1e-3)
+            meta_opt.zero_grad()
 
             # Proxy(Task)-specific updates
             for j in range(self.config["num_proxies"]):
 
 
-                self.D_j = RolloutStorage(self.config["num_proxy_samples"])
+                with higher.innerloop_ctx(
+                        self.policy, inner_opt, copy_initial_weights=False
+                ) as (inner_policy, diffopt):
+                    self.D_j = RolloutStorage(num_samples = self.config["num_samples_per_task_update"],
+                                               state_dim = self.env.observation_space.shape,
+                                               action_dim = 1, # Discrete value
+                                               hidden_dim = self.config["policy"]["hidden_dim"],
+                                               num_steps = self.env.max_AMP_length
+                                               )
+                    
 
 
-                sampled_mols = ... # Sample from policy[j]
-
-                sampled_mols_scores = self.proxy_oracles[j].query(self.proxy_oracle_models[j], sampled_mols)
-
-
-                self.D_j.insert(sampled_mols, sampled_mols_scores)
-
-                loss = ... # Calculate loss
-                updated_params[j] = self.policy.update_params(loss) # Tristan's update_params for MAML-RL "https://github.com/tristandeleu/pytorch-maml-rl/blob/master/maml_rl/policies/policy.py"
-
-
-            for j in range(self.config["num_proxies"]):
-
-                sampled_mols = ... # Sample from policies using (update_params)
-
-                sampled_mols_scores = self.proxy_oracles[j].query(self.proxy_oracle_models[j], sampled_mols)
-
-                self.D_meta_query.insert(sampled_mols, sampled_mols_scores)
+                    # Real:
+                    self.sample_policy(self.policy, self.proxy_envs[j], self.config["num_samples_per_task_update"], policy_storage=self.D_j) # Sample from policy[j]
 
 
 
-            # Perform meta-update
-            self.meta_update()
+                    for _ in range(self.config["num_inner_updates"]):
+                        inner_loss = rl_utl.reinforce_loss(self.D_j) # Calculate loss using self.D_j - TODO: RL vs. Sup. Setting Formulation
+
+                        # Inner update
+                        diffopt.step(inner_loss)# Need to make this differentiable... not immediately differentiable from the storage!
+
+
+
+                    # Sample mols for meta update
+                    sampled_mols = self.sample_policy(inner_policy, self.proxy_envs[j], self.config["num_meta_proxy_samples"], policy_storage=self.D_meta_query) # Sample from policies using (update_params)
+
+
+
+
+                    # Sample mols for training the proxy oracle later
+                    sampled_mols = self.sample_policy(inner_policy, self.env, self.config["num_samples_per_iter"]) # Sample from policies -- preferably make this parallelised in the future
+                    sampled_mols = utl.to_one_hot(self.config, sampled_mols)
+                    sampled_mols_scores = torch.tensor(self.true_oracle.query(self.proxy_oracle_models[j], sampled_mols, flatten_input = self.flatten_true_oracle_input))
+
+
+                    if self.config["task"] == "AMP":
+                        sampled_mols_labels = utl.scores_to_labels(self.config["proxy_oracle"]["model_name"], self.proxy_oracle_models[j], sampled_mols_scores)
+
+                        self.D_train.insert(sampled_mols, sampled_mols_labels)
+                    else:
+                        self.D_train.insert(sampled_mols, sampled_mols_scores)
+
+
+            outer_loss = rl_utl.reinforce_loss(self.D_meta_query) # Need to make this differentiable... not differentiable from the storage!
+            outer_loss.backward() # Not really...
+            meta_opt.step()            
+
+            self.log(logs)
                 
 
+    def sample_policy(self, policy, env, num_samples, policy_storage = None):
+        """
+            Args:
+             - policy 
+             - env 
+             - num_samples - number of molecules to return
+             - policy_storage: Optional -- Used to store the rollout for training the pollicy
 
+            Return:
+             - Molecules: Tensor of size (num_samples, dim of mol)
+
+        """
+        state_dim = env.observation_space.shape # Currently hardcoded
+        return_mols = torch.zeros(num_samples, *state_dim)
+
+        for j in range(num_samples):
+
+
+            done = False
+            state = env.reset() # Returns (46, )
+            hidden_state = None
+            curr_timestep = 0
+            while not done:
+                
+                onehot_state = utl.to_one_hot(self.config, state)
+
+                if curr_timestep == 0:
+                    s = torch.zeros((21, ))
+                    action, log_prob, hidden_state = policy(s.unsqueeze(0).unsqueeze(0), hidden_state) # Leo: Should just pass the first timestep..
+                else:
+                    action, log_prob, hidden_state = policy(onehot_state[curr_timestep - 1].unsqueeze(0).unsqueeze(0), hidden_state)
+
+
+                next_state, reward, pred_prob, done, info = env.step(action)
+
+                done = torch.tensor(done)
+
+
+                if done.item():
+                    return_mols[j] = next_state
+
+
+                if policy_storage is not None:
+                    policy_storage.insert(state=state, 
+                                   next_state=next_state,
+                                   action=torch.tensor(action), 
+                                   reward=reward,
+                                   log_prob=log_prob,
+                                   done=done)
+
+                state = next_state
+                curr_timestep += 1
+
+            if policy_storage is not None:
+                policy_storage.compute_returns()
+                policy_storage.after_rollout()
+
+
+        return return_mols
 
 
 
 
     def log(self, logs):
+        """
+            TODO
+
+        """
 
 
-
-        # Update the self.logger
-        pass
+        return

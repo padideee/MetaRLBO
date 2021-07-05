@@ -1,19 +1,53 @@
-
+from torch.utils.data import DataLoader
+from oracles.base import BaseOracle
+import torch
+import numpy as np
 
 class AMPProxyOracle(BaseOracle):
-	def __init__(self, query_storage, p = 0.8):
-		super(BaseOracle)
-		self.query_storage = query_storage
+	def __init__(self, training_storage, p = 0.8):
+		self.training_storage = training_storage
 
 		self.p = p
 
 
-	def query(self, model, mols):
-		raise NotImplementedError()
+	def query(self, model, x, flatten_input=True):
+		if flatten_input:
+			x = x.flatten(start_dim=-2, end_dim = -1)
 
-	def fit(self, model):
+		pred_prob = model.predict_proba(x)
+
+
+		assert model.classes_.shape[-1] <= 2
+
+		if pred_prob.shape[-1] == 1:
+			pred_prob = np.zeros((*pred_prob.shape[:-1], 2))
+
+			if model.classes_[0] == 0:
+				pred_prob[:, 0] = 1
+			elif model.classes_[0] == 1:
+				pred_prob[:, 1] = 1
+
+
+		return pred_prob
+
+	def fit(self, model, flatten_input=True):
 		"""
 			Fits the model on a randomly sampled (p) subset of the storage.
-
 		"""
-		raise NotImplementedError()
+
+		if flatten_input:
+			seq = self.training_storage.mols.flatten(start_dim=-2, end_dim=-1)
+		else:
+			seq = self.training_storage.mols
+		value = self.training_storage.scores
+
+
+		# Randomly sample subset of storage
+		size = self.training_storage.storage_size
+		indices = torch.tensor(np.random.choice(size, int(self.p*size), replace=False))
+
+		sampled_seq = torch.index_select(seq, dim=0, index=indices)
+		sampled_value = torch.index_select(value, dim=0, index=indices)
+
+
+		return model.fit(sampled_seq, sampled_value)

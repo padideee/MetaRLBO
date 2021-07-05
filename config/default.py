@@ -13,6 +13,7 @@ DEFAULT_CONFIG = {
 	"num_samples_per_task_update": 16, 
 	"proxy_oracle": {
 		"model_name": "RFC",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
 	},
 
 	"true_oracle": {

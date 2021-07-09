@@ -7,3 +7,10 @@ cd Meta_AMP
 pip install -e . 
 ```
 to install Meta-AMP package.
+
+
+To view tensorboard logs:
+```
+cd logs
+tensorboard --logdir .
+```

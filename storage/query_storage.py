@@ -12,6 +12,7 @@ class QueryStorage(BaseStorage):
 		self.scores = torch.zeros(self.storage_size)
 		
 
+		self.storage_filled = 0
 
 		self.curr_idx = 0
 
@@ -48,3 +49,4 @@ class QueryStorage(BaseStorage):
 
 
 		self.curr_idx = (self.curr_idx + batch_size) % self.storage_size 
+		self.storage_filled = min(self.storage_filled + batch_size, self.storage_size)

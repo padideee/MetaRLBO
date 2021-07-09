@@ -29,7 +29,7 @@ class AMPProxyOracle(BaseOracle):
 
 
 		# Randomly sample subset of storage
-		size = self.training_storage.storage_size
+		size = self.training_storage.storage_filled
 		indices = torch.tensor(np.random.choice(size, int(self.p*size), replace=False))
 
 		sampled_seq = torch.index_select(seq, dim=0, index=indices)

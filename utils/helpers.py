@@ -34,6 +34,10 @@ def get_proxy_oracle_model(config):
         model = KNR()
     elif config["proxy_oracle"]["model_name"] == 'RR':
         model = RR()
+    elif config["proxy_oracle"]["model_name"] == 'XGBoost':
+        model = XGBoost()
+    elif config["proxy_oracle"]["model_name"] == 'XGB':
+        model = XGB()
     else:
         raise NotImplementedError
 

@@ -1,6 +1,7 @@
 import torch
 from storage.base import BaseStorage
-
+import utils.helpers as utl
+from torch.nn import functional as F
 
 class RolloutStorage(BaseStorage):
 
@@ -18,7 +19,7 @@ class RolloutStorage(BaseStorage):
         self.num_steps = num_steps
 
 
-        self.states = torch.zeros(num_steps+1, num_samples, *state_dim)
+        self.states = torch.zeros(num_steps+1, num_samples, *state_dim) # minor issue: state_dim = (num_steps, action_dim) -- storing unnecessary info.
         self.next_states = torch.zeros(num_steps+1, num_samples, *state_dim)
         self.actions = torch.zeros(num_steps+1, num_samples, action_dim)
         self.hidden_states = torch.zeros(num_steps+1, num_samples, hidden_dim)
@@ -57,7 +58,7 @@ class RolloutStorage(BaseStorage):
 
         self.curr_timestep = self.curr_timestep + 1
 
-    def compute_returns(self, gamma = 0.99):
+    def compute_returns(self, gamma = 1.00):
         self.returns[self.num_steps] = self.rewards[self.num_steps]
         for step in reversed(range(self.num_steps)):
             self.returns[step] = self.returns[step+1] + gamma * self.rewards[step] 
@@ -66,3 +67,12 @@ class RolloutStorage(BaseStorage):
         self.curr_timestep = 0
         self.curr_sample = (self.curr_sample + 1) % self.num_samples
 
+
+    def compute_log_probs(self, policy):
+        
+        for j in range(self.num_samples):
+            hidden_state = None
+            for i in range(self.num_steps+1):
+                st = F.one_hot(self.states[i][j].long(), num_classes=21).float()[i-1] 
+
+                self.log_probs[i][j], hidden_state = policy.evaluate_action(st.unsqueeze(0).unsqueeze(0), self.actions[i][j].int().item(), hidden_state)

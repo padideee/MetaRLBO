@@ -60,6 +60,12 @@ class CategoricalGRUPolicy(nn.Module):
 
         act_prob = self.softmax(self.fc_action(curr_input))
 
+        return act_prob, gru_h
+
+    def act(self, state, hidden_state=None):
+        act_prob, gru_h = self.forward(state, hidden_state)
+
+
         # Tentatively hardcoded w/ batch of 1
 
         np_act_prob = act_prob.detach()[0][0].numpy()
@@ -69,6 +75,12 @@ class CategoricalGRUPolicy(nn.Module):
         a = np.random.choice(self.num_actions, p=np_act_prob)
         return a, torch.log(act_prob[0][0][a]), gru_h
 
+
+    def evaluate_action(self, state, action, hidden_state=None):
+        
+        act_prob, gru_h = self.forward(state, hidden_state)
+
+        return torch.log(act_prob[0][0][action]), gru_h
 
 
 

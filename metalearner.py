@@ -114,8 +114,6 @@ class MetaLearner:
 
                 self.D_train.insert(sampled_mols, sampled_mols_scores[:, 1]) 
 
-                print(sampled_mols_scores[:, 1])
-
             # Fit proxy oracles
             for j in range(self.config["num_proxies"]):
                 self.proxy_oracle_models[j] = self.proxy_oracles[j].fit(self.proxy_oracle_models[j], flatten_input = self.flatten_proxy_oracle_input)
@@ -146,12 +144,14 @@ class MetaLearner:
 
 
                     for k in range(self.config["num_inner_updates"]):
-                        
+                        self.D_j.compute_log_probs(inner_policy)
                         inner_loss = rl_utl.reinforce_loss(self.D_j) # Leo: This is bugged -- the log_probs need to be recalculated
-                        
+
                         logs["inner_loop/proxy-{j}/loss/{k}"] = inner_loss.item()
+                        logs['policy-{j}/action_logprob'] = self.D_j.log_probs.mean().item()
+
                         # Inner update
-                        diffopt.step(inner_loss)# Need to make this differentiable... not immediately differentiable from the storage!
+                        diffopt.step(inner_loss) 
 
 
 
@@ -171,10 +171,10 @@ class MetaLearner:
 
                     self.D_train.insert(sampled_mols, sampled_mols_scores[:, 1])
 
-            outer_loss = rl_utl.reinforce_loss(self.D_meta_query) # Need to make this differentiable... not differentiable from the storage!
+            outer_loss = rl_utl.reinforce_loss(self.D_meta_query) 
             print("Outer Loss:", outer_loss)
             logs["outer_loss"] = outer_loss.item()
-            outer_loss.backward() # Not really...
+            outer_loss.backward() 
             meta_opt.step()
 
 
@@ -214,7 +214,7 @@ class MetaLearner:
                 else:
                     s = onehot_state[curr_timestep - 1].unsqueeze(0).unsqueeze(0)
                 
-                action, log_prob, hidden_state = policy(s, hidden_state)
+                action, log_prob, hidden_state = policy.act(s, hidden_state)
 
 
                 next_state, reward, pred_prob, done, info = env.step(action)
@@ -251,6 +251,20 @@ class MetaLearner:
             Tentatively Tensorboard, but perhaps we want WANDB
         """
 
+        # log the average weights and gradients of all models (where applicable)
+        for [model, name] in [
+            [self.policy, 'policy']
+        ]:
+            if model is not None:
+                param_list = list(model.parameters())
+                param_mean = np.mean([param_list[i].data.cpu().numpy().mean() for i in range(len(param_list))])
+                self.logger.add('weights/{}'.format(name), param_mean, self.iter_idx)
+                if name == 'policy':
+                    self.logger.add('weights/policy_std', param_list[0].data.mean(), self.iter_idx)
+                if param_list[0].grad is not None:
+                    param_grad_mean = np.mean(
+                        [param_list[i].grad.cpu().numpy().mean() for i in range(len(param_list))])
+                    self.logger.add('gradients/{}'.format(name), param_grad_mean, self.iter_idx)
 
         for k, v in logs.items():
             self.logger.add(k, v, self.iter_idx)

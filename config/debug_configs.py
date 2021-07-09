@@ -1,6 +1,7 @@
 
 
 debug = {
+	"exp_label": "DEBUG",
 	"num_proxies": 2, 
 	"num_inner_updates": 1, 
 	"num_trajs_inner_loop": 10,

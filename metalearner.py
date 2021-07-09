@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from torch import optim
 from tqdm import tqdm
+import os
 import utils.helpers as utl
 import utils.reinforcement_learning as rl_utl
 
@@ -151,7 +152,7 @@ class MetaLearner:
                     for k in range(self.config["num_inner_updates"]):
                         
                         inner_loss = rl_utl.reinforce_loss(self.D_j) # Leo: This is bugged -- the log_probs need to be recalculated
-                        
+
                         logs["inner_loop/proxy-{j}/loss/{k}"] = inner_loss.item()
                         # Inner update
                         diffopt.step(inner_loss)# Need to make this differentiable... not immediately differentiable from the storage!
@@ -168,6 +169,7 @@ class MetaLearner:
                     sampled_mols = self.sample_policy(inner_policy, self.env, self.config["num_samples_per_iter"]) # Sample from policies -- preferably make this parallelised in the future
                     sampled_mols = utl.to_one_hot(self.config, sampled_mols)
                     sampled_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, sampled_mols, flatten_input = self.flatten_true_oracle_input))
+
 
                     logs["inner_loop/proxy-{j}/sampled_mols_scores_avg"] = sampled_mols_scores.mean().item()
 
@@ -186,12 +188,12 @@ class MetaLearner:
                 self.log(logs)
 
                 df = pd.DataFrame(data=self.env.evaluate)
-                df.to_pickle('log/D3_{}.pkl'.format(self.iter_idx))
+                df.to_pickle('logs/D3.pkl')
 
                 test_oracle = get_test_proxy(self.iter_idx)
                 score = test_oracle.give_score()
                 # wandb.log({"Performance based on classifier trained on test set": score})
-                # TODO adding to Tensorboard log
+                # TODO adding to log
                 print('Iteration {}, test oracle accuracy: {}'.format(self.iter_idx, score))
                 
 

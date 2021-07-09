@@ -78,8 +78,8 @@ class AMPEnv(gym.Env):
                 reward = torch.tensor(predictionAMP)
                 reward -= self.l * dens
 
-                with open('log.txt', 'a+') as f:
-                    f.write('Model Based' + '\t' + str(reward) + '\n')
+                with open('logs/log.txt', 'a+') as f:
+                    f.write('Model Based' + '\t' + str(reward.detach().cpu().numpy()) + '\n')
                 self.evaluate['seq'].append(self.curr_state.detach().cpu().numpy())
                 self.evaluate['embed_seq'].append(s.detach().cpu().numpy())
                 self.evaluate['reward'].append(reward.detach().cpu().numpy())
@@ -87,11 +87,13 @@ class AMPEnv(gym.Env):
 
             else:
                 # (returns prob. per classification class --> [Prob. Neg., Prob. Pos.])
+                s = seq_to_encoding(self.curr_state)
                 try:
-                    pred_prob = torch.tensor(self.reward_oracle.predict_proba(seq_to_encoding(self.curr_state)))
+                    pred_prob = torch.tensor(self.reward_oracle.predict_proba(s))
                     reward = pred_prob[0][1] 
                 except:
-                    reward = torch.tensor(self.reward_oracle.predict(seq_to_encoding(self.curr_state)))
+                    reward = torch.tensor(self.reward_oracle.predict(s))
+                    pred_prob = torch.tensor([[1 - reward, reward]])
                 # # ---- Modification ---------
                 # """
                 #     Modification to env.:
@@ -113,10 +115,10 @@ class AMPEnv(gym.Env):
                 #     pred_prob = prob
 
                 # # ---- End Modification -----
-
+                # import pdb; pdb.set_trace()
                    
-                with open('log.txt', 'a+') as f:
-                    f.write('Model Free' + '\t' + str(reward) + '\n')
+                with open('logs/log.txt', 'a+') as f:
+                    f.write('Model Free' + '\t' + str(reward.detach().cpu().numpy()) + '\n')
                 self.evaluate['seq'].append(self.curr_state.detach().cpu().numpy())
                 self.evaluate['embed_seq'].append(s.detach().cpu().numpy())
                 self.evaluate['reward'].append(reward.detach().cpu().numpy())

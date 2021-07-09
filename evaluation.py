@@ -1,4 +1,8 @@
 from data.process_data import get_data
+import numpy as np
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+
 
 
 class get_test_proxy:
@@ -11,6 +15,7 @@ class get_test_proxy:
         self.i = i
 
         seq, label = get_data('data/data_test.hkl')  # our held-out AMP for training the classifier for evaluation
+
         seq = np.array(seq)
         label = np.array(label)
         n, x, y = seq.shape
@@ -19,7 +24,7 @@ class get_test_proxy:
         self.model_test = RandomForestClassifier(random_state=0, bootstrap=True, max_depth=50, n_estimators=200)
         self.model_test.fit(seq, label)
 
-        self.df = pd.read_pickle('log/D3_{}.pkl'.format(i))  # D3 contains the generated AMP
+        self.df = pd.read_pickle('logs/D3.pkl')  # D3 contains the generated AMP
 
 
     def give_class_label(self):
@@ -40,8 +45,8 @@ class get_test_proxy:
         return seqs
 
     def give_score(self):
-        labels = give_class_label()
-        seqs = give_seqs()
+        labels = self.give_class_label()
+        seqs = self.give_seqs()
 
         return self.model_test.score(seqs, labels)
 

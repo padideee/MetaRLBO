@@ -14,6 +14,7 @@ class get_test_proxy:
     def __init__(self, i):
         self.i = i
 
+        # path to pickle format instead: 'data/data_test.pickle'
         seq, label = get_data('data/data_test.hkl')  # our held-out AMP for training the classifier for evaluation
 
         seq = np.array(seq)

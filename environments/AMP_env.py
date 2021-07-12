@@ -85,6 +85,8 @@ class AMPEnv(gym.Env):
                 self.evaluate['reward'].append(reward.detach().cpu().numpy())
                 self.evaluate['pred_prob'].append(predictionAMP)
 
+                # wandb.log({"train_pred_prob": predictionAMP})
+
             else:
                 # (returns prob. per classification class --> [Prob. Neg., Prob. Pos.])
                 s = seq_to_encoding(self.curr_state)
@@ -115,7 +117,7 @@ class AMPEnv(gym.Env):
                 #     pred_prob = prob
 
                 # # ---- End Modification -----
-                # import pdb; pdb.set_trace()
+
                    
                 with open('logs/log.txt', 'a+') as f:
                     f.write('Model Free' + '\t' + str(reward.detach().cpu().numpy()) + '\n')
@@ -123,6 +125,8 @@ class AMPEnv(gym.Env):
                 self.evaluate['embed_seq'].append(s.detach().cpu().numpy())
                 self.evaluate['reward'].append(reward.detach().cpu().numpy())
                 self.evaluate['pred_prob'].append(pred_prob[0][1].detach().cpu().numpy())
+
+                # wandb.log({"train_pred_prob": pred_prob[0][1].detach().cpu().numpy()})
 
                 #TODO adding the pred_prob to Tensorboard log
 

@@ -46,6 +46,8 @@ class MetaLearner:
         # seq shape: (batch, 46*21)
         # label shape: (batch) -> in binary format:{'positive': AMP, 'negative': not AMP}
         D_AMP = get_AMP_data('data/data_train.hkl')
+        # path to pickle 'data/data_train.pickle'
+        # TODO : the data for train and test as sys argument
 
         self.true_oracle = AMPTrueOracle(training_storage=D_AMP)
         self.true_oracle_model = utl.get_true_oracle_model(self.config)

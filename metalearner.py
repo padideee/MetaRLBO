@@ -130,20 +130,20 @@ class MetaLearner:
                 with higher.innerloop_ctx(
                         self.policy, inner_opt, copy_initial_weights=False
                 ) as (inner_policy, diffopt):
-                    self.D_j = RolloutStorage(num_samples = self.config["num_samples_per_task_update"],
-                                               state_dim = self.env.observation_space.shape,
-                                               action_dim = 1, # Discrete value
-                                               hidden_dim = self.config["policy"]["hidden_dim"],
-                                               num_steps = self.env.max_AMP_length
-                                               )
-                    
-
-
-                    self.sample_policy(self.policy, self.proxy_envs[j], self.config["num_samples_per_task_update"], policy_storage=self.D_j) # Sample from policy[j]
-
 
 
                     for k in range(self.config["num_inner_updates"]):
+                        self.D_j = RolloutStorage(num_samples = self.config["num_samples_per_task_update"],
+                                                   state_dim = self.env.observation_space.shape,
+                                                   action_dim = 1, # Discrete value
+                                                   hidden_dim = self.config["policy"]["hidden_dim"],
+                                                   num_steps = self.env.max_AMP_length
+                                                   )
+                        
+
+
+                        self.sample_policy(self.policy, self.proxy_envs[j], self.config["num_samples_per_task_update"], policy_storage=self.D_j) # Sample from policy[j]
+
                         self.D_j.compute_log_probs(inner_policy)
                         inner_loss = rl_utl.reinforce_loss(self.D_j) # Leo: This is bugged -- the log_probs need to be recalculated
 

@@ -1,6 +1,6 @@
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, GradientBoostingRegressor
 from sklearn.neighbors import KNeighborsRegressor
-from sklearn.linear_model import Ridge
+from sklearn.linear_model import Ridge, BayesianRidge
 import xgboost as xgb
 
 # Classifiers
@@ -24,13 +24,17 @@ def RFR(max_depth = 50, max_features = "auto", n_estimators = 100):
     return model
 
 
-def KNR(n_neighbors = 10):
-	model = KNeighborsRegressor(n_neighbors=neighbors) # Temporarily hardcoded
+def KNR(n_neighbors = 7):
+	model = KNeighborsRegressor(n_neighbors=n_neighbors) # Temporarily hardcoded
 	return model
 
 def RR():
 	model = Ridge(alpha=1.0)
 	return model
+
+def BR():
+  model = BayesianRidge()
+  return model
 
 
 def XGBoost(learning_rate = 0.1, max_depth = 85, n_estimators = 500):

@@ -22,7 +22,7 @@ def main():
     
     if config_name == "DEFAULT":
         config = DEFAULT_CONFIG
-    elif config_name == "debug":
+    elif "debug" in config_name:
         debug_config = getattr(debug_configs, config_name)
         config = merge_dicts(DEFAULT_CONFIG, debug_config)
     else:

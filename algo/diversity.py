@@ -9,17 +9,16 @@ class diversity():
         self.history = torch.tensor(history)
 
     def hamming_distance(self, radius=2):
-
-        mult = self.history * self.seq
-
-        sum = torch.sum(mult, dim=(1,2))
-        count=0
-        for i in sum:
-            if i >= radius:
-                count+=1
-
         if self.div:
+            mult = self.history * self.seq
+
+            sum = torch.sum(mult, dim=(1,2))
+            count=0
+            for i in sum:
+                if i >= radius:
+                    count+=1
             return count / len(self.history)
+
         else:
             return 0.0
 

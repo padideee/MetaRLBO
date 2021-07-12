@@ -1,7 +1,9 @@
 import torch
 import numpy as np
+import pandas as pd
 from torch import optim
 from tqdm import tqdm
+import os
 import utils.helpers as utl
 import utils.reinforcement_learning as rl_utl
 
@@ -19,6 +21,8 @@ from environments.AMP_env import AMPEnv
 from data.process_data import get_AMP_data
 import higher 
 from utils.tb_logger import TBLogger
+
+from evaluation import get_test_proxy
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -41,7 +45,9 @@ class MetaLearner:
         # The seq and the label from library
         # seq shape: (batch, 46*21)
         # label shape: (batch) -> in binary format:{'positive': AMP, 'negative': not AMP}
-        D_AMP = get_AMP_data('data/data.hkl') 
+        D_AMP = get_AMP_data('data/data_train.hkl')
+        # path to pickle 'data/data_train.pickle'
+        # TODO : the data for train and test as sys argument
 
         self.true_oracle = AMPTrueOracle(training_storage=D_AMP)
         self.true_oracle_model = utl.get_true_oracle_model(self.config)
@@ -166,6 +172,7 @@ class MetaLearner:
                     sampled_mols = utl.to_one_hot(self.config, sampled_mols)
                     sampled_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, sampled_mols, flatten_input = self.flatten_true_oracle_input))
 
+
                     logs["inner_loop/proxy-{j}/sampled_mols_scores_avg"] = sampled_mols_scores.mean().item()
 
 
@@ -181,6 +188,15 @@ class MetaLearner:
             # Logging
             if self.iter_idx % self.config["log_interval"] == 0:
                 self.log(logs)
+
+                df = pd.DataFrame(data=self.env.evaluate)
+                df.to_pickle('logs/D3.pkl')
+
+                test_oracle = get_test_proxy(self.iter_idx)
+                score = test_oracle.give_score()
+                # wandb.log({"Performance based on classifier trained on test set": score})
+                # TODO adding to log
+                print('Iteration {}, test oracle accuracy: {}'.format(self.iter_idx, score))
                 
 
     def sample_policy(self, policy, env, num_samples, policy_storage = None):

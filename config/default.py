@@ -24,6 +24,9 @@ DEFAULT_CONFIG = {
 		"hidden_dim": 100,
 		"state_embedding_size": 64,
 	},
+	"logging": {
+		"top-k": 5, # k for top-k
+	},
 	"log_interval": 25,
 	"results_log_dir": "./logs",
 	"seed": 73,

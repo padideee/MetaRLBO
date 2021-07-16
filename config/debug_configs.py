@@ -14,6 +14,9 @@ debug = {
 		"model_name": "BR",
 		"p": 0.8, # Proportion of data to sample to train proxy oracles
 	},
+	"logging": {
+		"top-k": 4, # k for top-k
+	},
 	"log_interval": 1,
 }
 
@@ -30,6 +33,9 @@ debug_BR = {
 	"proxy_oracle": {
 		"model_name": "BR",
 		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+	"logging": {
+		"top-k": 4, # k for top-k
 	},
 	"log_interval": 1,
 }
@@ -49,6 +55,9 @@ debug_RR = {
 		"model_name": "BR",
 		"p": 0.8, # Proportion of data to sample to train proxy oracles
 	},
+	"logging": {
+		"top-k": 4, # k for top-k
+	},
 	"log_interval": 1,
 }
 
@@ -66,6 +75,9 @@ debug_KNR = {
 	"proxy_oracle": {
 		"model_name": "KNR",
 		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+	"logging": {
+		"top-k": 4, # k for top-k
 	},
 	"log_interval": 1,
 }

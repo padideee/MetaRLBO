@@ -164,12 +164,16 @@ class MetaLearner:
                     # Sample mols for training the proxy oracle later
                     sampled_mols = self.sample_policy(inner_policy, self.env, self.config["num_samples_per_iter"]) # Sample from policies -- preferably make this parallelised in the future
                     sampled_mols = utl.to_one_hot(self.config, sampled_mols)
-                    sampled_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, sampled_mols, flatten_input = self.flatten_true_oracle_input))
+                    sampled_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, sampled_mols, flatten_input = self.flatten_true_oracle_input))[:, 1]
 
-                    logs["inner_loop/proxy-{j}/sampled_mols_scores_avg"] = sampled_mols_scores.mean().item()
+                    logs["inner_loop/proxy-{j}/sampled_mols_scores/mean"] = sampled_mols_scores.mean().item()
+                    logs["inner_loop/proxy-{j}/sampled_mols_scores/max"] = sampled_mols_scores.max().item()
+                    logs["inner_loop/proxy-{j}/sampled_mols_scores/min"] = sampled_mols_scores.min().item()
 
+                    topk_values, _ = sampled_mols_scores.topk(self.config["logging"]["top-k"])
+                    logs["inner_loop/proxy-{j}/sampled_mols_scores/top-k/mean"] = topk_values.mean().item()
 
-                    self.D_train.insert(sampled_mols, sampled_mols_scores[:, 1])
+                    self.D_train.insert(sampled_mols, sampled_mols_scores)
 
             outer_loss = rl_utl.reinforce_loss(self.D_meta_query) 
             print("Outer Loss:", outer_loss)

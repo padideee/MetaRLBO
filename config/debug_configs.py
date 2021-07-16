@@ -1,6 +1,7 @@
 
 
 
+
 debug = {
 	"exp_label": "DEBUG",
 	"num_proxies": 2, 
@@ -21,6 +22,7 @@ debug = {
 }
 
 
+# Varying Proxy Oracle Models
 debug_BR = {
 	"exp_label": "DEBUG-BR",
 	"num_proxies": 2, 
@@ -82,3 +84,31 @@ debug_KNR = {
 	"log_interval": 1,
 }
 
+
+# Varying Policy Models
+
+debug = {
+	"exp_label": "DEBUG",
+	"num_proxies": 2, 
+	"num_inner_updates": 3, 
+	"num_trajs_inner_loop": 10,
+	"num_meta_proxy_samples": 4,
+	"num_initial_samples": 10,
+	"num_samples_per_iter": 4, 
+	"num_samples_per_task_update": 4, 
+	"proxy_oracle": {
+		"model_name": "BR",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+	"policy": {
+		"model_name": "GRU",
+		"model_config": {
+			"hidden_dim": 100,
+			"state_embedding_size": 64,
+		}
+	},
+	"logging": {
+		"top-k": 4, # k for top-k
+	},
+	"log_interval": 1,
+}

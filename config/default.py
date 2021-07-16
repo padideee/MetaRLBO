@@ -16,13 +16,12 @@ DEFAULT_CONFIG = {
 		"model_name": "KNR",
 		"p": 0.8, # Proportion of data to sample to train proxy oracles
 	},
+	"policy": {
+		"model_name": "MLP",
+	},
 
 	"true_oracle": {
 		"model_name": "RFC",
-	},
-	"policy": {
-		"hidden_dim": 100,
-		"state_embedding_size": 64,
 	},
 	"logging": {
 		"top-k": 5, # k for top-k

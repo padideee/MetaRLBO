@@ -80,11 +80,19 @@ class MetaLearner:
         self.proxy_envs = [AMPEnv(self.proxy_oracle_models[j]) for j in range(self.config["num_proxies"])]
 
 
-        self.policy = CategoricalGRUPolicy(num_actions = self.env.action_space.n + 1,
-                                            hidden_size = self.config["policy"]["hidden_dim"],
-                                            state_dim = self.env.action_space.n + 1,
-                                            state_embed_dim = self.config["policy"]["state_embedding_size"],
-                                            )
+        if self.config["policy"]["model_name"] == "GRU":
+            self.policy = CategoricalGRUPolicy(num_actions = self.env.action_space.n + 1,
+                                                hidden_size = self.config["policy"]["model_config"]["hidden_dim"],
+                                                state_dim = self.env.action_space.n + 1,
+                                                state_embed_dim = self.config["policy"]["model_config"]["state_embedding_size"],
+                                                )
+        elif self.config["policy"]["model_name"] == "MLP":
+            from policies.cnn_policy import Policy as MLPPolicy
+            self.policy = MLPPolicy(self.env.observation_space.shape * self.env.action_space.n,
+                                   self.env.action_space) # Policy defaults to CNNPolicy if no base (and in this task)
+            import pdb; pdb.set_trace()
+        else:
+            raise NotImplementedError
 
 
         self.iter_idx = 0

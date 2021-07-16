@@ -23,6 +23,7 @@ class AMPEnv(gym.Env):
 
         self.time_step = 0 # TODO: Need to update this outside of class
         self.history = []
+        self.evaluate = {'seq': [], 'embed_seq': [], 'reward': [], 'pred_prob': []}
 
         self.max_AMP_length = max_AMP_length
         self.reward_oracle = reward_oracle
@@ -76,15 +77,25 @@ class AMPEnv(gym.Env):
                 pred_prob = torch.tensor([[1 - predictionAMP, predictionAMP]])
                 reward = torch.tensor(predictionAMP)
                 reward -= self.l * dens
-                with open('log.txt', 'a+') as f:
-                    f.write('Model Based' + '\t' + str(reward) + '\n')
+
+                with open('logs/log.txt', 'a+') as f:
+                    f.write('Model Based' + '\t' + str(reward.detach().cpu().numpy()) + '\n')
+                self.evaluate['seq'].append(self.curr_state.detach().cpu().numpy())
+                self.evaluate['embed_seq'].append(s.detach().cpu().numpy())
+                self.evaluate['reward'].append(reward.detach().cpu().numpy())
+                self.evaluate['pred_prob'].append(predictionAMP)
+
+                # wandb.log({"train_pred_prob": predictionAMP})
+
             else:
                 # (returns prob. per classification class --> [Prob. Neg., Prob. Pos.])
+                s = seq_to_encoding(self.curr_state)
                 try:
-                    pred_prob = torch.tensor(self.reward_oracle.predict_proba(seq_to_encoding(self.curr_state)))
+                    pred_prob = torch.tensor(self.reward_oracle.predict_proba(s))
                     reward = pred_prob[0][1] 
                 except:
-                    reward = torch.tensor(self.reward_oracle.predict(seq_to_encoding(self.curr_state)))
+                    reward = torch.tensor(self.reward_oracle.predict(s))
+                    pred_prob = torch.tensor([[1 - reward, reward]])
                 # # ---- Modification ---------
                 # """
                 #     Modification to env.:
@@ -108,8 +119,16 @@ class AMPEnv(gym.Env):
                 # # ---- End Modification -----
 
                    
-                with open('log.txt', 'a+') as f:
-                    f.write('Model Free' + '\t' + str(reward) + '\n')
+                with open('logs/log.txt', 'a+') as f:
+                    f.write('Model Free' + '\t' + str(reward.detach().cpu().numpy()) + '\n')
+                self.evaluate['seq'].append(self.curr_state.detach().cpu().numpy())
+                self.evaluate['embed_seq'].append(s.detach().cpu().numpy())
+                self.evaluate['reward'].append(reward.detach().cpu().numpy())
+                self.evaluate['pred_prob'].append(pred_prob[0][1].detach().cpu().numpy())
+
+                # wandb.log({"train_pred_prob": pred_prob[0][1].detach().cpu().numpy()})
+
+                #TODO adding the pred_prob to Tensorboard log
 
 
         self.time_step += 1

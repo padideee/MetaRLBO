@@ -76,11 +76,15 @@ class CategoricalGRUPolicy(nn.Module):
         return a, torch.log(act_prob[0][0][a]), gru_h
 
 
-    def evaluate_action(self, state, action, hidden_state=None):
+    def evaluate_actions(self, state, hidden_state, masks, action):
         
         act_prob, gru_h = self.forward(state, hidden_state)
 
-        return torch.log(act_prob[0][0][action]), gru_h
 
+        # Placeholders
+        value = 0
+        dist_entropy = 0
+
+        return value, torch.log(act_prob[0][0][action]), dist_entropy, gru_h
 
 

@@ -6,7 +6,6 @@ debug = {
 	"exp_label": "DEBUG",
 	"num_proxies": 2, 
 	"num_inner_updates": 3, 
-	"num_trajs_inner_loop": 10,
 	"num_meta_proxy_samples": 4,
 	"num_initial_samples": 10,
 	"num_samples_per_iter": 4, 
@@ -27,7 +26,6 @@ debug_BR = {
 	"exp_label": "DEBUG-BR",
 	"num_proxies": 2, 
 	"num_inner_updates": 3, 
-	"num_trajs_inner_loop": 10,
 	"num_meta_proxy_samples": 4,
 	"num_initial_samples": 10,
 	"num_samples_per_iter": 4, 
@@ -48,7 +46,6 @@ debug_RR = {
 	"exp_label": "DEBUG-RR",
 	"num_proxies": 2, 
 	"num_inner_updates": 3, 
-	"num_trajs_inner_loop": 10,
 	"num_meta_proxy_samples": 4,
 	"num_initial_samples": 10,
 	"num_samples_per_iter": 4, 
@@ -69,7 +66,6 @@ debug_KNR = {
 	"exp_label": "DEBUG-KNR",
 	"num_proxies": 2, 
 	"num_inner_updates": 3, 
-	"num_trajs_inner_loop": 10,
 	"num_meta_proxy_samples": 4,
 	"num_initial_samples": 20,
 	"num_samples_per_iter": 4, 
@@ -87,11 +83,10 @@ debug_KNR = {
 
 # Varying Policy Models
 
-debug = {
+debug_GRU = {
 	"exp_label": "DEBUG",
 	"num_proxies": 2, 
 	"num_inner_updates": 3, 
-	"num_trajs_inner_loop": 10,
 	"num_meta_proxy_samples": 4,
 	"num_initial_samples": 10,
 	"num_samples_per_iter": 4, 

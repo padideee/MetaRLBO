@@ -1,4 +1,4 @@
-from data.process_data import get_data
+from data.process_data import get_AMP_data
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
@@ -11,11 +11,14 @@ class get_test_proxy:
     TODO: move this to oracle folder
     TODO: other method for evaluation
     """
-    def __init__(self, i):
-        self.i = i
+    def __init__(self):
 
         # path to pickle format instead: 'data/data_test.pickle'
-        seq, label = get_data('data/data_test.hkl')  # our held-out AMP for training the classifier for evaluation
+        data_storage = get_AMP_data('data/data_test.hkl')  # our held-out AMP for training the classifier for evaluation
+
+
+        seq, label = data_storage.mols, data_storage.scores
+
 
         seq = np.array(seq)
         label = np.array(label)

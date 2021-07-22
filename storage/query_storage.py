@@ -8,7 +8,7 @@ class QueryStorage(BaseStorage):
 		self.state_dim = state_dim
 
 
-		self.mols = torch.zeros(self.storage_size, *state_dim, 21)
+		self.mols = torch.zeros(self.storage_size, *state_dim)
 		self.scores = torch.zeros(self.storage_size)
 		
 

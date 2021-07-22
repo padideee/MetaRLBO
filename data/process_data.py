@@ -15,19 +15,25 @@ def seq_to_encoding(seq):
     This function takes in a sequence of amino acids, represented numerically,
     and first converts to a 46x21 encoding which is passed to the positional
     encoding function to get a 1D output
+
+    Args:
+      - seq: (batch_size, T, state dim)
+    Return:
+      - 
     """
-    enc = np.zeros((46, 21)) # TODO: Move all these to config
-    for i, j in enumerate(seq):
-        #print("Here: ", i, j)
-        enc[int(i)][int(j)] = 1
+    # enc = np.zeros((46, 21)) # TODO: Move all these to config
+    # for i, j in enumerate(seq):
+    #     #print("Here: ", i, j)
+    #     enc[int(i)][int(j)] = 1
 
-    enc = torch.from_numpy(enc.reshape(1,46,21))
-    pos_enc = PositionalEncoding1D(46)
-    p_enc = pos_enc(enc)
+    # enc = torch.from_numpy(enc.reshape(1,46,21))
+    # import pdb; pdb.set_trace()
+    pos_enc = PositionalEncoding1D(seq.shape[1] - 1)
+    p_enc = pos_enc(seq)
 
-    seqN = enc + p_enc
+    seqN = seq + p_enc
     # s = (seqN.detach().cpu().numpy()).reshape((1, 46*21))
-    return seqN.reshape((1, 46*21))
+    return seqN.flatten(start_dim=-2, end_dim=-1)
 
 
 def get_data(data):
@@ -61,11 +67,17 @@ def get_data(data):
 
 
 
-# Leo: Function to get the data into the storage class
 from storage.query_storage import QueryStorage
 def get_AMP_data(data_path):
 
-    data, labels = get_data(data_path)
+    orig_data, labels = get_data(data_path)
+
+    # Leo: TODO - pad to 51, 21
+
+    data = torch.zeros((orig_data.shape[0], 51, orig_data.shape[2]))
+
+    data[:, :orig_data.shape[1], :] += orig_data
+
 
 
     labels = torch.tensor([x == 'positive' for x in labels]).long().unsqueeze(-1)

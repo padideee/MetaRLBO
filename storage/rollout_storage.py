@@ -22,10 +22,12 @@ class RolloutStorage(BaseStorage):
         self.states = torch.zeros(num_steps+1, num_samples, *state_dim) # minor issue: state_dim = (num_steps, action_dim) -- storing unnecessary info.
         self.next_states = torch.zeros(num_steps+1, num_samples, *state_dim)
         self.actions = torch.zeros(num_steps+1, num_samples, action_dim)
-        self.hidden_states = torch.zeros(num_steps+1, num_samples, hidden_dim)
+        if hidden_dim is not None:
+            self.hidden_states = torch.zeros(num_steps+1, num_samples, hidden_dim)
         self.rewards = torch.zeros(num_steps+1, num_samples, 1)
         self.log_probs = torch.zeros(num_steps+1, num_samples, 1)
         self.dones = torch.zeros(num_steps+1, num_samples, 1)
+        self.masks = torch.zeros(num_steps+1, num_samples, 1) # 1 when action is performed, 0 when episode ends.
 
 
         self.returns = torch.zeros(num_steps+1, num_samples, 1)
@@ -66,13 +68,28 @@ class RolloutStorage(BaseStorage):
     def after_rollout(self):
         self.curr_timestep = 0
         self.curr_sample = (self.curr_sample + 1) % self.num_samples
+        for i in range(1, self.num_steps+1):
+            self.masks[i] = 1 - self.dones[i-1] - self.masks[i-1] 
 
 
     def compute_log_probs(self, policy):
         
+        # Leo: Can parallelise this...
         for j in range(self.num_samples):
             hidden_state = None
             for i in range(self.num_steps+1):
-                st = F.one_hot(self.states[i][j].long(), num_classes=21).float()[i-1] 
 
-                self.log_probs[i][j], hidden_state = policy.evaluate_action(st.unsqueeze(0).unsqueeze(0), self.actions[i][j].int().item(), hidden_state)
+            #     st = F.one_hot(self.states[i][j].long(), num_classes=21).float()[i-1]  # Leo: To check if this is correct...
+            #     value, self.log_probs[i][j], dist_entropy, hidden_state = policy.evaluate_actions(st.unsqueeze(0).unsqueeze(0), hidden_state, None, self.actions[i][j].int().item())
+
+
+
+                # value, action_log_probs, dist_entropy, rnn_hxs = policy.evaluate_actions(st.unsqueeze(0).unsqueeze(0), hidden_state, None, self.actions[i][j].int().item())
+
+
+                st = self.states[i][j].flatten()
+                value, action_log_probs, dist_entropy, hidden_state = policy.evaluate_actions(st.unsqueeze(0), hidden_state, self.masks[i][j].unsqueeze(0), self.actions[i][j].int().unsqueeze(0))
+
+                self.log_probs[i][j] = action_log_probs[0]
+
+

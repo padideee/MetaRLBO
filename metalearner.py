@@ -52,6 +52,8 @@ class MetaLearner:
         self.true_oracle = AMPTrueOracle(training_storage=D_AMP)
         self.true_oracle_model = utl.get_true_oracle_model(self.config)
 
+        self.test_oracle = get_test_proxy()
+
         # -- BEGIN ---
         # Leo: Temporary putting this here (probably want to organise this better)
 
@@ -87,10 +89,9 @@ class MetaLearner:
                                                 state_embed_dim = self.config["policy"]["model_config"]["state_embedding_size"],
                                                 )
         elif self.config["policy"]["model_name"] == "MLP":
-            from policies.cnn_policy import Policy as MLPPolicy
-            self.policy = MLPPolicy(self.env.observation_space.shape * self.env.action_space.n,
-                                   self.env.action_space) # Policy defaults to CNNPolicy if no base (and in this task)
-            import pdb; pdb.set_trace()
+            from policies.mlp_policy import Policy as MLPPolicy
+            self.policy = MLPPolicy((self.env.observation_space.shape[0] * self.env.observation_space.shape[1],),
+                                   self.env.action_space)
         else:
             raise NotImplementedError
 
@@ -107,7 +108,7 @@ class MetaLearner:
             self.D_meta_query = RolloutStorage(num_samples = self.config["num_meta_proxy_samples"],
                                                state_dim = self.env.observation_space.shape,
                                                action_dim = 1, # Discrete value
-                                               hidden_dim = self.config["policy"]["hidden_dim"],
+                                               hidden_dim = self.config["policy"]["hidden_dim"] if "hidden_dim" in self.config["policy"] else None,
                                                num_steps = self.env.max_AMP_length
                                                )
 
@@ -121,7 +122,7 @@ class MetaLearner:
                 sampled_mols = self.sample_policy(random_policy, self.env, self.config["num_initial_samples"]) # Sample from true env. using random policy (num_starting_mols, dim of mol)
 
 
-                sampled_mols = utl.to_one_hot(self.config, sampled_mols) # Leo: There could be an issue with the end of state token...
+                # sampled_mols = utl.to_one_hot(self.config, sampled_mols) # Leo: There could be an issue with the end of state token...
                 
                 sampled_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, sampled_mols, flatten_input = self.flatten_true_oracle_input))
                 #[Prob. False, Prob. True]
@@ -150,7 +151,7 @@ class MetaLearner:
                         self.D_j = RolloutStorage(num_samples = self.config["num_samples_per_task_update"],
                                                    state_dim = self.env.observation_space.shape,
                                                    action_dim = 1, # Discrete value
-                                                   hidden_dim = self.config["policy"]["hidden_dim"],
+                                                   hidden_dim = self.config["policy"]["hidden_dim"] if "hidden_dim" in self.config["policy"] else None,
                                                    num_steps = self.env.max_AMP_length
                                                    )
                         
@@ -175,9 +176,9 @@ class MetaLearner:
 
 
 
-                    # Sample mols for training the proxy oracle later
+                    # Sample mols for training the proxy oracles later
                     sampled_mols = self.sample_policy(inner_policy, self.env, self.config["num_samples_per_iter"]) # Sample from policies -- preferably make this parallelised in the future
-                    sampled_mols = utl.to_one_hot(self.config, sampled_mols)
+                    # sampled_mols = utl.to_one_hot(self.config, sampled_mols)
                     sampled_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, sampled_mols, flatten_input = self.flatten_true_oracle_input))[:, 1]
 
                     logs["inner_loop/proxy-{j}/sampled_mols_scores/mean"] = sampled_mols_scores.mean().item()
@@ -203,8 +204,8 @@ class MetaLearner:
                 df = pd.DataFrame(data=self.env.evaluate)
                 df.to_pickle('logs/D3.pkl')
 
-                test_oracle = get_test_proxy(self.iter_idx)
-                score = test_oracle.give_score()
+                
+                score = self.test_oracle.give_score()
                 # wandb.log({"Performance based on classifier trained on test set": score})
                 # TODO adding to log
                 print('Iteration {}, test oracle accuracy: {}'.format(self.iter_idx, score))
@@ -225,42 +226,48 @@ class MetaLearner:
         state_dim = env.observation_space.shape # Currently hardcoded
         return_mols = torch.zeros(num_samples, *state_dim)
 
-        for j in range(num_samples):
+        curr_sample = 0
+        while curr_sample < num_samples:
 
 
-            done = False
-            state = env.reset() # Returns (46, )
+            end_traj = False
+            state = env.reset().clone() # Returns (46, )
             hidden_state = None
             curr_timestep = 0
-            while not done:
+            while not end_traj:
                 
-                onehot_state = utl.to_one_hot(self.config, state)
-
-                if curr_timestep == 0:
-                    s = torch.zeros((1, 1, 21))
+                if self.config["policy"]["model_name"] == "GRU":
+                    if curr_timestep == 0:
+                        s = torch.zeros(state[0].shape)
+                    else:
+                        s = state[curr_timestep - 1]
+                    action, log_prob, hidden_state = policy.act(s, hidden_state) 
                 else:
-                    s = onehot_state[curr_timestep - 1].unsqueeze(0).unsqueeze(0)
-                
-                action, log_prob, hidden_state = policy.act(s, hidden_state)
-
+                    masks = None
+                    s = state.float().unsqueeze(0).flatten(-2, -1) # batch size is 1
+                    value, action, log_prob, hidden_state = policy.act(s, hidden_state, masks=masks)
+                    action = action[0] # batch size = 1
+                    log_prob = log_prob[0] # batch size = 1
 
                 next_state, reward, pred_prob, done, info = env.step(action)
 
-                done = torch.tensor(done)
-
-                if done.item():
-                    return_mols[j] = next_state
+                if action.item() == env.EOS_idx: # Query
+                    return_mols[curr_sample] = next_state
+                    curr_sample += 1
+                    end_traj = True # Leo: The question is whether we should only query if the policy picks the token to query with...
+                if done:
+                    end_traj = True
 
 
                 if policy_storage is not None:
-                    policy_storage.insert(state=state, 
-                                   next_state=next_state,
-                                   action=torch.tensor(action), 
-                                   reward=reward,
-                                   log_prob=log_prob,
-                                   done=done)
+                    policy_storage.insert(state=state.clone(), 
+                                   next_state=next_state.clone(),
+                                   action=action.clone(), 
+                                   reward=reward.clone(),
+                                   log_prob=log_prob.clone(),
+                                   done=torch.tensor(done).float())
 
-                state = next_state
+                state = next_state.clone()
                 curr_timestep += 1
 
             if policy_storage is not None:
@@ -289,9 +296,13 @@ class MetaLearner:
                 if name == 'policy':
                     self.logger.add('weights/policy_std', param_list[0].data.mean(), self.iter_idx)
                 if param_list[0].grad is not None:
-                    param_grad_mean = np.mean(
-                        [param_list[i].grad.cpu().numpy().mean() for i in range(len(param_list))])
-                    self.logger.add('gradients/{}'.format(name), param_grad_mean, self.iter_idx)
+                    try:
+                        param_grad_mean = np.mean(
+                            [param_list[i].grad.cpu().numpy().mean() for i in range(len(param_list))])
+
+                        self.logger.add('gradients/{}'.format(name), param_grad_mean, self.iter_idx)
+                    except:
+                        print("Error in Logging gradients")
 
         for k, v in logs.items():
             self.logger.add(k, v, self.iter_idx)

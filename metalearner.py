@@ -200,9 +200,9 @@ class MetaLearner:
             if self.iter_idx % self.config["log_interval"] == 0:
                 self.log(logs)
 
-                self.test_oracle = get_test_proxy()
                 df = pd.DataFrame(data=self.env.evaluate)
                 df.to_pickle('logs/D3.pkl')
+                self.test_oracle = get_test_proxy()
 
                 
                 score = self.test_oracle.give_score()

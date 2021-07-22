@@ -136,3 +136,4 @@ dmypy.json
 # Project Specific
 logs
 log.txt
+sync_script.sh

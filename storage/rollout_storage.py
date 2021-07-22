@@ -11,26 +11,28 @@ class RolloutStorage(BaseStorage):
                  action_dim, 
                  hidden_dim,
                  num_steps,
+                 device
                  ):
         self.num_samples = num_samples
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.hidden_dim = hidden_dim
         self.num_steps = num_steps
+        self.device = device
 
 
-        self.states = torch.zeros(num_steps+1, num_samples, *state_dim) # minor issue: state_dim = (num_steps, action_dim) -- storing unnecessary info.
-        self.next_states = torch.zeros(num_steps+1, num_samples, *state_dim)
-        self.actions = torch.zeros(num_steps+1, num_samples, action_dim)
+        self.states = torch.zeros(num_steps+1, num_samples, *state_dim).to(device) # minor issue: state_dim = (num_steps, action_dim) -- storing unnecessary info.
+        self.next_states = torch.zeros(num_steps+1, num_samples, *state_dim).to(device)
+        self.actions = torch.zeros(num_steps+1, num_samples, action_dim).to(device)
         if hidden_dim is not None:
-            self.hidden_states = torch.zeros(num_steps+1, num_samples, hidden_dim)
-        self.rewards = torch.zeros(num_steps+1, num_samples, 1)
-        self.log_probs = torch.zeros(num_steps+1, num_samples, 1)
-        self.dones = torch.zeros(num_steps+1, num_samples, 1)
-        self.masks = torch.zeros(num_steps+1, num_samples, 1) # 1 when action is performed, 0 when episode ends.
+            self.hidden_states = torch.zeros(num_steps+1, num_samples, hidden_dim).to(device)
+        self.rewards = torch.zeros(num_steps+1, num_samples, 1).to(device)
+        self.log_probs = torch.zeros(num_steps+1, num_samples, 1).to(device)
+        self.dones = torch.zeros(num_steps+1, num_samples, 1).to(device)
+        self.masks = torch.zeros(num_steps+1, num_samples, 1).to(device) # 1 when action is performed, 0 when episode ends.
 
 
-        self.returns = torch.zeros(num_steps+1, num_samples, 1)
+        self.returns = torch.zeros(num_steps+1, num_samples, 1).to(device)
 
 
 

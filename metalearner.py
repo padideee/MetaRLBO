@@ -86,11 +86,11 @@ class MetaLearner:
                                                 hidden_size = self.config["policy"]["model_config"]["hidden_dim"],
                                                 state_dim = self.env.action_space.n + 1,
                                                 state_embed_dim = self.config["policy"]["model_config"]["state_embedding_size"],
-                                                )
+                                                ).to(device)
         elif self.config["policy"]["model_name"] == "MLP":
             from policies.mlp_policy import Policy as MLPPolicy
             self.policy = MLPPolicy((self.env.observation_space.shape[0] * self.env.observation_space.shape[1],),
-                                   self.env.action_space)
+                                   self.env.action_space).to(device)
         else:
             raise NotImplementedError
 
@@ -117,7 +117,7 @@ class MetaLearner:
             # Sample molecules to train proxy oracles
             if self.iter_idx == 0:
 
-                random_policy = RandomPolicy(input_size = self.env.observation_space.shape, output_size = 1, num_actions=self.env.action_space.n)
+                random_policy = RandomPolicy(input_size = self.env.observation_space.shape, output_size = 1, num_actions=self.env.action_space.n).to(device)
                 sampled_mols = self.sample_policy(random_policy, self.env, self.config["num_initial_samples"]) # Sample from true env. using random policy (num_starting_mols, dim of mol)
 
 
@@ -151,7 +151,8 @@ class MetaLearner:
                                                    state_dim = self.env.observation_space.shape,
                                                    action_dim = 1, # Discrete value
                                                    hidden_dim = self.config["policy"]["hidden_dim"] if "hidden_dim" in self.config["policy"] else None,
-                                                   num_steps = self.env.max_AMP_length
+                                                   num_steps = self.env.max_AMP_length,
+                                                   device=device
                                                    )
                         
 

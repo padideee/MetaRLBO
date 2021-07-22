@@ -52,7 +52,6 @@ class MetaLearner:
         self.true_oracle = AMPTrueOracle(training_storage=D_AMP)
         self.true_oracle_model = utl.get_true_oracle_model(self.config)
 
-        self.test_oracle = get_test_proxy()
 
         # -- BEGIN ---
         # Leo: Temporary putting this here (probably want to organise this better)
@@ -201,6 +200,7 @@ class MetaLearner:
             if self.iter_idx % self.config["log_interval"] == 0:
                 self.log(logs)
 
+                self.test_oracle = get_test_proxy()
                 df = pd.DataFrame(data=self.env.evaluate)
                 df.to_pickle('logs/D3.pkl')
 

@@ -162,8 +162,8 @@ class MetaLearner:
                         self.D_j.compute_log_probs(inner_policy)
                         inner_loss = rl_utl.reinforce_loss(self.D_j) # Leo: This is bugged -- the log_probs need to be recalculated
 
-                        logs[f"inner_loop/proxy-{j}/loss/{k}"] = inner_loss.item()
-                        logs[f"inner_loop/policy-{j}/action_logprob"] = self.D_j.log_probs.mean().item()
+                        logs[f"inner_loop/proxy/{j}/loop/{k}/loss/"] = inner_loss.item()
+                        logs[f"inner_loop/policy/{j}/loop/{k}/action_logprob/"] = self.D_j.log_probs.mean().item()
                         
 
                         # Inner update
@@ -182,12 +182,12 @@ class MetaLearner:
                     # sampled_mols = utl.to_one_hot(self.config, sampled_mols)
                     sampled_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, sampled_mols, flatten_input = self.flatten_true_oracle_input))[:, 1]
 
-                    logs[f"inner_loop/proxy-{j}/sampled_mols_scores/mean"] = sampled_mols_scores.mean().item()
-                    logs[f"inner_loop/proxy-{j}/sampled_mols_scores/max"] = sampled_mols_scores.max().item()
-                    logs[f"inner_loop/proxy-{j}/sampled_mols_scores/min"] = sampled_mols_scores.min().item()
+                    logs[f"inner_loop/proxy/{j}/sampled_mols_scores/mean"] = sampled_mols_scores.mean().item()
+                    logs[f"inner_loop/proxy/{j}/sampled_mols_scores/max"] = sampled_mols_scores.max().item()
+                    logs[f"inner_loop/proxy/{j}/sampled_mols_scores/min"] = sampled_mols_scores.min().item()
 
                     topk_values, _ = sampled_mols_scores.topk(self.config["logging"]["top-k"])
-                    logs[f"inner_loop/proxy-{j}/sampled_mols_scores/top-k/mean"] = topk_values.mean().item()
+                    logs[f"inner_loop/proxy/{j}/sampled_mols_scores/top-k/mean"] = topk_values.mean().item()
 
                     self.D_train.insert(sampled_mols, sampled_mols_scores)
 

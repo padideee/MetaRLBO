@@ -249,7 +249,7 @@ class MetaLearner:
                     action, log_prob, hidden_state = policy.act(s, hidden_state) 
                 else:
                     masks = None
-                    s = state.float().unsqueeze(0).flatten(-2, -1) # batch size is 1
+                    s = state.float().unsqueeze(0).flatten(-2, -1).to(device) # batch size is 1
                     value, action, log_prob, hidden_state = policy.act(s, hidden_state, masks=masks)
                     action = action[0] # batch size = 1
                     log_prob = log_prob[0] # batch size = 1

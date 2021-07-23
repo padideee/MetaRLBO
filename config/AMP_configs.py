@@ -2,7 +2,7 @@
 
 amp_000 = {
 	"exp_label": "AMP-XGBoost",
-	"num_proxies": 8, 
+	"num_proxies": 4, 
 	"num_meta_proxy_samples": 4,
 	"num_initial_samples": 100,
 	"num_samples_per_iter": 10, 
@@ -29,7 +29,7 @@ amp_000 = {
 
 amp_knr_001 = {
 	"exp_label": "AMP-KNR-001",
-	"num_proxies": 8, 
+	"num_proxies": 4, 
 	"num_inner_updates": 1, 
 	"num_meta_proxy_samples": 4,
 	"num_initial_samples": 100,
@@ -53,7 +53,7 @@ amp_knr_001 = {
 
 amp_knr_002 = { # incr. inner updates
 	"exp_label": "AMP-KNR-002",
-	"num_proxies": 8, 
+	"num_proxies": 4, 
 	"num_inner_updates": 2, 
 	"num_meta_proxy_samples": 4,
 	"num_initial_samples": 100,
@@ -78,7 +78,7 @@ amp_knr_002 = { # incr. inner updates
 
 amp_knr_003 = {
 	"exp_label": "AMP-KNR-003",
-	"num_proxies": 8, 
+	"num_proxies": 4, 
 	"num_inner_updates": 2, 
 	"num_meta_proxy_samples": 8,
 	"num_initial_samples": 100,
@@ -102,12 +102,92 @@ amp_knr_003 = {
 
 amp_knr_004 = {
 	"exp_label": "AMP-KNR-004",
-	"num_proxies": 8, 
+	"num_proxies": 4, 
 	"num_inner_updates": 2, 
 	"num_meta_proxy_samples": 8,
 	"num_initial_samples": 100,
 	"num_samples_per_iter": 4, 
 	"num_samples_per_task_update": 16, 
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"logging": {
+		"top-k": 4, # k for top-k
+	},
+	"log_interval": 4,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+
+amp_knr_005 = {
+	"exp_label": "AMP-KNR-005",
+	"num_proxies": 4, 
+	"num_inner_updates": 2, 
+	"num_meta_proxy_samples": 8,
+	"num_initial_samples": 100,
+	"num_samples_per_iter": 4, 
+	"num_samples_per_task_update": 16, 
+	"inner_lr": 1e-1,
+	"outer_lr": 1e-1,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"logging": {
+		"top-k": 4, # k for top-k
+	},
+	"log_interval": 4,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+
+amp_knr_006 = {
+	"exp_label": "AMP-KNR-006",
+	"num_proxies": 4, 
+	"num_inner_updates": 2, 
+	"num_meta_proxy_samples": 8,
+	"num_initial_samples": 100,
+	"num_samples_per_iter": 4, 
+	"num_samples_per_task_update": 16, 
+	"inner_lr": 1.0,
+	"outer_lr": 1e-1,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"logging": {
+		"top-k": 4, # k for top-k
+	},
+	"log_interval": 4,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+amp_knr_007 = {
+	"exp_label": "AMP-KNR-007",
+	"num_proxies": 4, 
+	"num_inner_updates": 2, 
+	"num_meta_proxy_samples": 8,
+	"num_initial_samples": 100,
+	"num_samples_per_iter": 4, 
+	"num_samples_per_task_update": 16, 
+	"inner_lr": 1.0,
+	"outer_lr": 1e-2,
 	"proxy_oracle": {
 		"model_name": "KNR",
 		"p": 0.8, # Proportion of data to sample to train proxy oracles

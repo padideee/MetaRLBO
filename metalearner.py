@@ -134,13 +134,12 @@ class MetaLearner:
                 self.proxy_oracle_models[j] = self.proxy_oracles[j].fit(self.proxy_oracle_models[j], flatten_input = self.flatten_proxy_oracle_input)
 
 
-            inner_opt = optim.SGD(self.policy.parameters(), lr=1e-1)
-            meta_opt = optim.SGD(self.policy.parameters(), lr=1e-3)
+            inner_opt = optim.SGD(self.policy.parameters(), lr=self.config["inner_lr"])
+            meta_opt = optim.SGD(self.policy.parameters(), lr=self.config["outer_lr"])
             meta_opt.zero_grad()
 
             # Proxy(Task)-specific updates
             for j in range(self.config["num_proxies"]):
-
 
                 with higher.innerloop_ctx(
                         self.policy, inner_opt, copy_initial_weights=False
@@ -165,6 +164,7 @@ class MetaLearner:
 
                         logs[f"inner_loop/proxy-{j}/loss/{k}"] = inner_loss.item()
                         logs[f"inner_loop/policy-{j}/action_logprob"] = self.D_j.log_probs.mean().item()
+                        
 
                         # Inner update
                         diffopt.step(inner_loss) 

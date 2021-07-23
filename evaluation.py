@@ -26,7 +26,7 @@ class get_test_proxy:
         seq = seq.reshape((n, x * y))
 
         self.model_test = RandomForestClassifier(random_state=0, bootstrap=True, max_depth=50, n_estimators=200)
-        self.model_test.fit(seq, label)
+        self.model_test.fit(seq, label.flatten())
 
         self.df = pd.read_pickle('logs/D3.pkl')  # D3 contains the generated AMP
 

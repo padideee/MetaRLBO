@@ -178,7 +178,7 @@ class MetaLearner:
 
 
                     # Sample mols for training the proxy oracles later
-                    sampled_mols = self.sample_policy(inner_policy, self.env, self.config["num_samples_per_iter"]) # Sample from policies -- preferably make this parallelised in the future
+                    sampled_mols = self.sample_policy(inner_policy, self.env, self.config["num_samples_per_iter"]).detach() # Sample from policies -- preferably make this parallelised in the future
                     # sampled_mols = utl.to_one_hot(self.config, sampled_mols)
                     sampled_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, sampled_mols, flatten_input = self.flatten_true_oracle_input))[:, 1]
 
@@ -265,12 +265,12 @@ class MetaLearner:
 
 
                 if policy_storage is not None:
-                    policy_storage.insert(state=state.clone(), 
-                                   next_state=next_state.clone(),
-                                   action=action.clone(), 
-                                   reward=reward.clone(),
+                    policy_storage.insert(state=state.detach().clone(), 
+                                   next_state=next_state.detach().clone(),
+                                   action=action.detach().clone(), 
+                                   reward=reward.detach().clone(),
                                    log_prob=log_prob.clone(),
-                                   done=torch.tensor(done).float())
+                                   done=torch.tensor(done).detach().float())
 
                 state = next_state.clone()
                 curr_timestep += 1

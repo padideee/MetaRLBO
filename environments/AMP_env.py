@@ -26,7 +26,7 @@ class AMPEnv(gym.Env):
         self.obs_shape = [max_AMP_length, self.num_actions]
         self.observation_space = gym.spaces.Box(low=0, high=1, shape=self.obs_shape, dtype=float)
 
-        self.start_state = torch.tensor(np.zeros(self.obs_shape))
+        self.start_state = torch.tensor(np.zeros(self.obs_shape)) 
         self.curr_state = self.start_state  # TODO: Need to update this outside of class
 
         self.time_step = 0 # TODO: Need to update this outside of class

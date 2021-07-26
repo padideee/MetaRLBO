@@ -101,7 +101,7 @@ class MetaLearner:
     def run(self):
 
         self.true_oracle_model = self.true_oracle.fit(self.true_oracle_model, flatten_input = self.flatten_true_oracle_input)
-        updated_params = [None for _ in range(self.config["num_proxies"])]
+        # updated_params = [None for _ in range(self.config["num_proxies"])]
 
         for self.iter_idx in tqdm(range(self.config["num_meta_updates"])):
             self.D_meta_query = RolloutStorage(num_samples = self.config["num_meta_proxy_samples"],
@@ -160,7 +160,7 @@ class MetaLearner:
                         self.sample_policy(self.policy, self.proxy_envs[j], self.config["num_samples_per_task_update"], policy_storage=self.D_j) # Sample from policy[j]
 
                         self.D_j.compute_log_probs(inner_policy)
-                        inner_loss = rl_utl.reinforce_loss(self.D_j) # Leo: This is bugged -- the log_probs need to be recalculated
+                        inner_loss = rl_utl.reinforce_loss(self.D_j) 
 
                         logs[f"inner_loop/proxy/{j}/loop/{k}/loss/"] = inner_loss.item()
                         logs[f"inner_loop/policy/{j}/loop/{k}/action_logprob/"] = self.D_j.log_probs.mean().item()
@@ -197,9 +197,9 @@ class MetaLearner:
             outer_loss.backward() 
             meta_opt.step()
 
-            logs[f"outer_loop/sampled_mols_scores/cumulative/mean"] = self.D_train.scores.mean().item()
-            logs[f"outer_loop/sampled_mols_scores/cumulative/max"] = self.D_train.scores.max().item()
-            logs[f"outer_loop/sampled_mols_scores/cumulative/min"] = self.D_train.scores.min().item()
+            logs[f"outer_loop/sampled_mols_scores/cumulative/mean"] = self.D_train.scores[:self.D_train.storage_filled].mean().item()
+            logs[f"outer_loop/sampled_mols_scores/cumulative/max"] = self.D_train.scores[:self.D_train.storage_filled].max().item() 
+            logs[f"outer_loop/sampled_mols_scores/cumulative/min"] = self.D_train.scores[:self.D_train.storage_filled].min().item()
 
             # Logging
             if self.iter_idx % self.config["log_interval"] == 0:

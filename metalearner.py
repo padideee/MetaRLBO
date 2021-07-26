@@ -104,7 +104,7 @@ class MetaLearner:
         # updated_params = [None for _ in range(self.config["num_proxies"])]
 
         for self.iter_idx in tqdm(range(self.config["num_meta_updates"])):
-            self.D_meta_query = RolloutStorage(num_samples = self.config["num_meta_proxy_samples"],
+            self.D_meta_query = RolloutStorage(num_samples = self.config["num_meta_proxy_samples"] * self.config["num_proxies"],
                                                state_dim = self.env.observation_space.shape,
                                                action_dim = 1, # Discrete value
                                                hidden_dim = self.config["policy"]["hidden_dim"] if "hidden_dim" in self.config["policy"] else None,
@@ -157,7 +157,7 @@ class MetaLearner:
                         
 
 
-                        self.sample_policy(self.policy, self.proxy_envs[j], self.config["num_samples_per_task_update"], policy_storage=self.D_j) # Sample from policy[j]
+                        self.sample_policy(inner_policy, self.proxy_envs[j], self.config["num_samples_per_task_update"], policy_storage=self.D_j) # Sample from policy[j]
 
                         self.D_j.compute_log_probs(inner_policy)
                         inner_loss = rl_utl.reinforce_loss(self.D_j) 

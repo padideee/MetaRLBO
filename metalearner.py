@@ -25,6 +25,8 @@ from utils.tb_logger import TBLogger
 from evaluation import get_test_proxy
 
 
+
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
@@ -72,13 +74,15 @@ class MetaLearner:
 
         # -- END ---
         
-        self.env = AMPEnv(self.true_oracle_model)
+        self.env = AMPEnv(self.true_oracle_model, lambd=self.config["env"]["lambda"], radius = self.config["env"]["radius"]) # The reward will not be needed in this env.
 
         self.D_train = QueryStorage(storage_size=self.config["max_num_queries"], state_dim = self.env.observation_space.shape)
 
+
+        self.query_history = []
         self.proxy_oracles = [AMPProxyOracle(training_storage=self.D_train, p=self.config["proxy_oracle"]["p"]) for j in range(self.config["num_proxies"])]
         self.proxy_oracle_models = [utl.get_proxy_oracle_model(self.config) for j in range(self.config["num_proxies"])]
-        self.proxy_envs = [AMPEnv(self.proxy_oracle_models[j]) for j in range(self.config["num_proxies"])]
+        self.proxy_envs = [AMPEnv(self.proxy_oracle_models[j], lambd=self.config["env"]["lambda"], query_history = self.query_history) for j in range(self.config["num_proxies"])]
 
 
         if self.config["policy"]["model_name"] == "GRU":
@@ -104,13 +108,6 @@ class MetaLearner:
         # updated_params = [None for _ in range(self.config["num_proxies"])]
 
         for self.iter_idx in tqdm(range(self.config["num_meta_updates"])):
-            self.D_meta_query = RolloutStorage(num_samples = self.config["num_meta_proxy_samples"] * self.config["num_proxies"],
-                                               state_dim = self.env.observation_space.shape,
-                                               action_dim = 1, # Discrete value
-                                               hidden_dim = self.config["policy"]["hidden_dim"] if "hidden_dim" in self.config["policy"] else None,
-                                               num_steps = self.env.max_AMP_length,
-                                               device = device
-                                               )
 
             logs = {} 
 
@@ -120,10 +117,11 @@ class MetaLearner:
 
                 random_policy = RandomPolicy(input_size = self.env.observation_space.shape, output_size = 1, num_actions=self.env.action_space.n).to(device)
                 sampled_mols = self.sample_policy(random_policy, self.env, self.config["num_initial_samples"]) # Sample from true env. using random policy (num_starting_mols, dim of mol)
-
-
-                # sampled_mols = utl.to_one_hot(self.config, sampled_mols) # Leo: There could be an issue with the end of state token...
                 
+
+                self.query_history += [sampled_mols[i] for i in range(sampled_mols.shape[0])]
+
+
                 sampled_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, sampled_mols, flatten_input = self.flatten_true_oracle_input))
                 #[Prob. False, Prob. True]
 
@@ -137,14 +135,23 @@ class MetaLearner:
             inner_opt = optim.SGD(self.policy.parameters(), lr=self.config["inner_lr"])
             meta_opt = optim.SGD(self.policy.parameters(), lr=self.config["outer_lr"])
             meta_opt.zero_grad()
+            meta_losses = []
+            meta_scores = []
 
             # Proxy(Task)-specific updates
             for j in range(self.config["num_proxies"]):
-
+                
                 with higher.innerloop_ctx(
                         self.policy, inner_opt, copy_initial_weights=False
                 ) as (inner_policy, diffopt):
 
+                    self.D_meta_query = RolloutStorage(num_samples = self.config["num_meta_proxy_samples"],
+                                                       state_dim = self.env.observation_space.shape,
+                                                       action_dim = 1, # Discrete value
+                                                       hidden_dim = self.config["policy"]["hidden_dim"] if "hidden_dim" in self.config["policy"] else None,
+                                                       num_steps = self.env.max_AMP_length,
+                                                       device = device
+                                                       )
 
                     for k in range(self.config["num_inner_updates"]):
                         self.D_j = RolloutStorage(num_samples = self.config["num_samples_per_task_update"],
@@ -172,15 +179,19 @@ class MetaLearner:
 
 
                     # Sample mols for meta update
-                    sampled_mols = self.sample_policy(inner_policy, self.proxy_envs[j], self.config["num_meta_proxy_samples"], policy_storage=self.D_meta_query) # Sample from policies using (update_params)
+                    self.sample_policy(inner_policy, self.proxy_envs[j], self.config["num_meta_proxy_samples"], policy_storage=self.D_meta_query) # Sample from policies using (update_params)
 
 
 
 
-                    # Sample mols for training the proxy oracles later
+                    # Sample mols (and query) for training the proxy oracles later
                     sampled_mols = self.sample_policy(inner_policy, self.env, self.config["num_samples_per_iter"]).detach() # Sample from policies -- preferably make this parallelised in the future
-                    # sampled_mols = utl.to_one_hot(self.config, sampled_mols)
+                    
+                    self.query_history += [sampled_mols[i] for i in range(sampled_mols.shape[0])]
+
+                    # Query the scores
                     sampled_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, sampled_mols, flatten_input = self.flatten_true_oracle_input))[:, 1]
+                    meta_scores.append(sampled_mols_scores)
 
                     logs[f"inner_loop/proxy/{j}/sampled_mols_scores/mean"] = sampled_mols_scores.mean().item()
                     logs[f"inner_loop/proxy/{j}/sampled_mols_scores/max"] = sampled_mols_scores.max().item()
@@ -191,10 +202,19 @@ class MetaLearner:
 
                     self.D_train.insert(sampled_mols, sampled_mols_scores)
 
-            outer_loss = rl_utl.reinforce_loss(self.D_meta_query) 
-            print("Outer Loss:", outer_loss)
-            logs["outer_loss"] = outer_loss.item()
-            outer_loss.backward() 
+
+                    meta_loss = rl_utl.reinforce_loss(self.D_meta_query)
+                    meta_losses.append(meta_loss.detach())
+                    meta_loss.backward() 
+
+
+            print(len(self.query_history), len(self.proxy_envs[0].history))
+            outer_loss = sum(meta_losses) / self.config["num_meta_proxy_samples"] / self.config["num_proxies"]
+            outer_score = sum(meta_scores).sum() / self.config["num_meta_proxy_samples"] / self.config["num_proxies"]
+            print(f"Outer Loss: {outer_loss}")
+            print(f"Outer Scores: {outer_score}")
+            logs["outer_loop/loss"] = outer_loss.item()
+            logs["outer_loop/score"] = outer_score.item()
             meta_opt.step()
 
             logs[f"outer_loop/sampled_mols_scores/cumulative/mean"] = self.D_train.scores[:self.D_train.storage_filled].mean().item()
@@ -227,18 +247,27 @@ class MetaLearner:
             Return:
              - Molecules: Tensor of size (num_samples, dim of mol)
 
+
+            When policy_storage is None, the goal is to return a set of molecules to query.
+            When policy_storage is not None, the goal is to return trajectories.
         """
         state_dim = env.observation_space.shape # Currently hardcoded
         return_mols = torch.zeros(num_samples, *state_dim)
 
         curr_sample = 0
-        while curr_sample < num_samples:
+        curr_queried = 0
+        while (policy_storage is None and curr_queried < num_samples) or (policy_storage is not None and curr_sample < num_samples):
+            """
+                Either policy_storage is None, meaning return queried molecules
+                Or policy_storage is not None, meaning fill up the storage
+            """
 
 
             end_traj = False
             state = env.reset().clone() # Returns (46, )
             hidden_state = None
             curr_timestep = 0
+            curr_sample += 1
             while not end_traj:
                 
                 if self.config["policy"]["model_name"] == "GRU":
@@ -251,15 +280,16 @@ class MetaLearner:
                     masks = None
                     s = state.float().unsqueeze(0).flatten(-2, -1).to(device) # batch size is 1
                     value, action, log_prob, hidden_state = policy.act(s, hidden_state, masks=masks)
-                    action = action[0] # batch size = 1
+
+                    action = action[0].detach() # batch size = 1
                     log_prob = log_prob[0] # batch size = 1
 
                 next_state, reward, pred_prob, done, info = env.step(action)
 
                 if action.item() == env.EOS_idx: # Query
-                    return_mols[curr_sample] = next_state
-                    curr_sample += 1
-                    end_traj = True # Leo: The question is whether we should only query if the policy picks the token to query with...
+                    return_mols[curr_queried] = next_state
+                    curr_queried += 1
+                    end_traj = True 
                 if done:
                     end_traj = True
 

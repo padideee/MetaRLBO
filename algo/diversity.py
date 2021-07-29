@@ -2,11 +2,12 @@ import torch
 
 
 class diversity():
-    def __init__(self, seq, history, div=False):
+    def __init__(self, seq, history, div=False, radius = 2):
         super(diversity, self).__init__()
         self.div=div
         self.seq = seq
         self.history = torch.stack(history)
+        self.radius = radius
 
     # def hamming_distance(self, radius=2):
     #     if self.div:
@@ -23,13 +24,13 @@ class diversity():
     #         return 0.0
 
 
-    def density(self, radius=2):
+    def density(self):
         if self.div:
             
             # Hamming Distance is equiv. to XOR
             sums = ((1 - self.history) * self.seq + self.history * (1 - self.seq)).sum([1, 2])
 
-            ret = (sums <= radius).sum().item() / len(self.history)  
+            ret = (sums <= self.radius).sum().item() / len(self.history)  
             
             return ret
 

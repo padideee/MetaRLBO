@@ -27,6 +27,10 @@ DEFAULT_CONFIG = {
 	"logging": {
 		"top-k": 5, # k for top-k  (per proxy) --- This needs to be lower than "num_samples_per_iter"
 	},
+	"env": {
+		"lambda": 0.1, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+		"radius": 5,
+	},
 	"log_interval": 25,
 	"results_log_dir": "./logs",
 	"seed": 73,

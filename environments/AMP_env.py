@@ -8,7 +8,7 @@ import torch.nn.functional as F
 
 
 class AMPEnv(gym.Env):
-    def __init__(self, reward_oracle, max_AMP_length = 51):
+    def __init__(self, reward_oracle, lambd = 0.1, radius = 2, max_AMP_length = 51, query_history = None):
 
 
         # Actions in AMP design are the 20 amino acids
@@ -30,7 +30,7 @@ class AMPEnv(gym.Env):
         self.curr_state = self.start_state  # TODO: Need to update this outside of class
 
         self.time_step = 0 # TODO: Need to update this outside of class
-        self.history = []
+        self.history = query_history if query_history is not None else []
         self.evaluate = {'seq': [], 'embed_seq': [], 'reward': [], 'pred_prob': []}
 
         self.max_AMP_length = max_AMP_length
@@ -38,7 +38,8 @@ class AMPEnv(gym.Env):
         self.proxy_oracles = []
         self.modelbased = False
 
-        self.lambd = 0.1  # TODO: tune + add this to config
+        self.lambd = lambd  # TODO: tune + add this to config
+        self.radius = radius
 
     def update_proxy_oracles(self, oracle):
         self.proxy_oracles = oracle
@@ -64,10 +65,10 @@ class AMPEnv(gym.Env):
             # compute density of similar sequences in the history
             if len(self.history) > 1:
                 # Use div=False to test without diversity promotion
-                dens = diversity(self.curr_state, self.history, div=True).density()
+                dens = diversity(self.curr_state, self.history, div=True, radius = self.radius).density()
             else:
                 dens = 0.0
-            self.history.append(self.curr_state)
+            # self.history.append(self.curr_state)
 
             # Store predictive probability for regression
             if self.modelbased:

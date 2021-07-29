@@ -70,8 +70,8 @@ debug_KNR = {
 	"num_initial_samples": 20,
 	"num_samples_per_iter": 4, 
 	"num_samples_per_task_update": 4, 
-	"inner_lr": 1e-1,
-	"outer_lr": 1e-3,
+	"inner_lr": 1e0,
+	"outer_lr": 1e-1,
 	"proxy_oracle": {
 		"model_name": "KNR",
 		"p": 0.8, # Proportion of data to sample to train proxy oracles

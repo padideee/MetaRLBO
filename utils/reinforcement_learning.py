@@ -14,4 +14,5 @@
 def reinforce_loss(episodes, params=None):
     losses = episodes.log_probs * episodes.returns * episodes.masks
 
-    return -losses.sum() / episodes.masks.sum() # This is not neccesarily correct if the episodes end early.
+    return -losses.sum() / episodes.masks.sum()
+    # return -losses.sum() / episodes.num_samples

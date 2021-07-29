@@ -33,7 +33,7 @@ def seq_to_encoding(seq):
 
     seqN = seq + p_enc
     # s = (seqN.detach().cpu().numpy()).reshape((1, 46*21))
-    return seqN.flatten(start_dim=-2, end_dim=-1)
+    return seqN
 
 
 def get_data(data):
@@ -49,8 +49,8 @@ def get_data(data):
 
     data_y = np.array(my_data['ytrain'])
 
-    pos_enc = PositionalEncoding1D(x1)
-    p_enc = pos_enc(data_x)
+    # pos_enc = PositionalEncoding1D(x1)
+    # p_enc = pos_enc(data_x)
     # print("PE shape: ", p_enc.shape) # (batchsize, x, ch dimension)
 
     # mean = np.mean(data_y)
@@ -61,8 +61,8 @@ def get_data(data):
             labels[i] = 'negative'
     # print(data_x.shape)
 
-    # data_x shape: (batch, 46, 21)
-    return data_x + p_enc, labels
+    # data_x shape: (batch, 51, 21)
+    return data_x, labels
 
 
 

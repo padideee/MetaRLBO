@@ -23,6 +23,7 @@ import higher
 from utils.tb_logger import TBLogger
 
 from evaluation import get_test_proxy
+from data.process_data import seq_to_encoding
 
 
 
@@ -105,6 +106,7 @@ class MetaLearner:
     def run(self):
 
         self.true_oracle_model = self.true_oracle.fit(self.true_oracle_model, flatten_input = self.flatten_true_oracle_input)
+        
         # updated_params = [None for _ in range(self.config["num_proxies"])]
 
         for self.iter_idx in tqdm(range(self.config["num_meta_updates"])):
@@ -278,7 +280,9 @@ class MetaLearner:
                     action, log_prob, hidden_state = policy.act(s, hidden_state) 
                 else:
                     masks = None
-                    s = state.float().unsqueeze(0).flatten(-2, -1).to(device) # batch size is 1
+                    s = state.float().unsqueeze(0) # batch size is 1
+                    s = seq_to_encoding(s).flatten(-2, -1).to(device) # batch size is 1 and positional encoding
+                    
                     value, action, log_prob, hidden_state = policy.act(s, hidden_state, masks=masks)
 
                     action = action[0].detach() # batch size = 1

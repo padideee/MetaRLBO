@@ -79,6 +79,10 @@ debug_KNR = {
 	"logging": {
 		"top-k": 4, # k for top-k
 	},
+	"env": {
+		"lambda": 0.1, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+		"radius": 2,
+	},
 	"log_interval": 1,
 }
 

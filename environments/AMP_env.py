@@ -78,7 +78,8 @@ class AMPEnv(gym.Env):
 
                 pred = []
                 for m in self.proxy_oracles:
-                    s = seq_to_encoding(self.curr_state.unsqueeze(0)) # seq_to_encoding -- not the one hot encoding...
+                    # s = seq_to_encoding(self.curr_state.unsqueeze(0)) # seq_to_encoding -- not the one hot encoding...
+                    s = self.curr_state.unsqueeze(0)
                     d = m.predict(s.numpy()[np.newaxis, :])
                     pred.append(d)
                 predictionAMP = np.average(pred)
@@ -100,7 +101,8 @@ class AMPEnv(gym.Env):
             else:
                 # (returns prob. per classification class --> [Prob. Neg., Prob. Pos.])
 
-                s = seq_to_encoding(self.curr_state.unsqueeze(0)) # Leo: TODO (this takes as input -- not the one hot encoding...)
+                # s = seq_to_encoding(self.curr_state.unsqueeze(0)) # Leo: TODO (this takes as input -- not the one hot encoding...)
+                s = self.curr_state.unsqueeze(0).flatten(-2, -1)
                 try:
                     pred_prob = torch.tensor(self.reward_oracle.predict_proba(s))
                     reward = pred_prob[0][1] 

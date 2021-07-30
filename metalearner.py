@@ -216,7 +216,7 @@ class MetaLearner:
             print(f"Outer Loss: {outer_loss}")
             print(f"Outer Scores: {outer_score}")
             logs["outer_loop/loss"] = outer_loss.item()
-            logs["outer_loop/score"] = outer_score.item()
+            logs["outer_loop/sampled_mols_scores/current_batch/mean"] = outer_score.item()
             meta_opt.step()
 
             logs[f"outer_loop/sampled_mols_scores/cumulative/mean"] = self.D_train.scores[:self.D_train.storage_filled].mean().item()

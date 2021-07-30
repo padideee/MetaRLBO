@@ -227,15 +227,15 @@ class MetaLearner:
             if self.iter_idx % self.config["log_interval"] == 0:
                 self.log(logs)
 
-                df = pd.DataFrame(data=self.env.evaluate)
-                df.to_pickle('logs/D3.pkl')
-                self.test_oracle = get_test_proxy()
+                # df = pd.DataFrame(data=self.env.evaluate)
+                # # df.to_pickle('logs/D3.pkl')
+                # self.test_oracle = get_test_proxy(df)
 
                 
-                score = self.test_oracle.give_score()
-                # wandb.log({"Performance based on classifier trained on test set": score})
-                # TODO adding to log
-                print('Iteration {}, test oracle accuracy: {}'.format(self.iter_idx, score))
+                # score = self.test_oracle.give_score()
+                # # wandb.log({"Performance based on classifier trained on test set": score})
+                # # TODO adding to log
+                # print('Iteration {}, test oracle accuracy: {}'.format(self.iter_idx, score))
                 
 
     def sample_policy(self, policy, env, num_samples, policy_storage = None):

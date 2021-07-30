@@ -11,7 +11,7 @@ class get_test_proxy:
     TODO: move this to oracle folder
     TODO: other method for evaluation
     """
-    def __init__(self):
+    def __init__(self, df):
 
         # path to pickle format instead: 'data/data_test.pickle'
         data_storage = get_AMP_data('data/data_test.hkl')  # our held-out AMP for training the classifier for evaluation
@@ -28,7 +28,7 @@ class get_test_proxy:
         self.model_test = RandomForestClassifier(random_state=0, bootstrap=True, max_depth=50, n_estimators=200)
         self.model_test.fit(seq, label.flatten())
 
-        self.df = pd.read_pickle('logs/D3.pkl')  # D3 contains the generated AMP
+        self.df = df
 
 
     def give_class_label(self):

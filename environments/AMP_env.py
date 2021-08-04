@@ -109,6 +109,7 @@ class AMPEnv(gym.Env):
                 except:
                     reward = torch.tensor(self.reward_oracle.predict(s))
                     pred_prob = torch.tensor([[1 - reward, reward]])
+                reward -= self.lambd * dens
                 # # ---- Modification ---------
                 # """
                 #     Modification to env.:

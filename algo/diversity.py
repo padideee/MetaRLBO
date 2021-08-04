@@ -30,7 +30,7 @@ class diversity():
             # Hamming Distance is equiv. to XOR
             sums = ((1 - self.history) * self.seq + self.history * (1 - self.seq)).sum([1, 2])
 
-            ret = (sums <= self.radius).sum().item() / len(self.history)  
+            ret = (sums <= self.radius).sum().item()
             
             return ret
 

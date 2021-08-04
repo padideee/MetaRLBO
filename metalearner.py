@@ -229,9 +229,14 @@ class MetaLearner:
             if self.iter_idx % self.config["log_interval"] == 0:
                 self.log(logs)
 
-                # df = pd.DataFrame(data=self.env.evaluate)
-                # # df.to_pickle('logs/D3.pkl')
-                # self.test_oracle = get_test_proxy(df)
+                mols = self.D_train.mols[:self.D_train.storage_filled].numpy()
+                mols = [mols[i] for i in range(mols.shape[0])]
+                data = {
+                    "seq": mols,
+                    'pred_prob': self.D_train.scores[:self.D_train.storage_filled].numpy()
+                }
+                df = pd.DataFrame(data=data)
+                df.to_pickle(os.path.join(self.logger.full_output_folder, 'queried_mols.pkl'))
 
                 
                 # score = self.test_oracle.give_score()

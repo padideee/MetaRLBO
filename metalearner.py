@@ -193,7 +193,7 @@ class MetaLearner:
 
                     # Query the scores
                     sampled_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, sampled_mols, flatten_input = self.flatten_true_oracle_input))[:, 1]
-                    meta_scores.append(sampled_mols_scores)
+                    meta_scores.append(sampled_mols_scores.mean())
 
                     logs[f"inner_loop/proxy/{j}/sampled_mols_scores/mean"] = sampled_mols_scores.mean().item()
                     logs[f"inner_loop/proxy/{j}/sampled_mols_scores/max"] = sampled_mols_scores.max().item()
@@ -211,8 +211,8 @@ class MetaLearner:
 
 
             print(len(self.query_history), len(self.proxy_envs[0].history))
-            outer_loss = sum(meta_losses) / self.config["num_meta_proxy_samples"] / self.config["num_proxies"]
-            outer_score = sum(meta_scores).sum() / self.config["num_meta_proxy_samples"] / self.config["num_proxies"]
+            outer_loss = sum(meta_losses) / self.config["num_proxies"]
+            outer_score = sum(meta_scores) / self.config["num_proxies"]
             print(f"Outer Loss: {outer_loss}")
             print(f"Outer Scores: {outer_score}")
             logs["outer_loop/loss"] = outer_loss.item()

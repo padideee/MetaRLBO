@@ -453,3 +453,202 @@ amp_knr_016 = {
 	"results_log_dir": "./logs",
 	"seed": 73,
 }
+
+
+
+amp_knr_010_2 = {
+	"exp_label": "AMP-KNR-010-2",
+	"num_proxies": 4, 
+	"num_inner_updates": 2, 
+	"num_meta_proxy_samples": 2,
+	"num_initial_samples": 100,
+	"num_samples_per_iter": 4, 
+	"num_samples_per_task_update": 16, 
+	"inner_lr": 1e-1,
+	"outer_lr": 1e-1,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"logging": {
+		"top-k": 4, # k for top-k
+	},
+	"env": {
+		"lambda": 0.1, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+		"radius": 2,
+	},
+	"log_interval": 10,
+	"results_log_dir": "./logs",
+	"seed": 2,
+}
+
+
+amp_knr_011_2 = {
+	"exp_label": "AMP-KNR-011-2",
+	"num_proxies": 4, 
+	"num_inner_updates": 2, 
+	"num_meta_proxy_samples": 2,
+	"num_initial_samples": 100,
+	"num_samples_per_iter": 4, 
+	"num_samples_per_task_update": 16, 
+	"inner_lr": 1e-1,
+	"outer_lr": 1e-1,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"logging": {
+		"top-k": 4, # k for top-k
+	},
+	"env": {
+		"lambda": 0.05, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+		"radius": 2,
+	},
+	"log_interval": 10,
+	"results_log_dir": "./logs",
+	"seed": 2,
+}
+
+
+amp_knr_012_2 = {
+	"exp_label": "AMP-KNR-012-2",
+	"num_proxies": 4, 
+	"num_inner_updates": 2, 
+	"num_meta_proxy_samples": 4,
+	"num_initial_samples": 100,
+	"num_samples_per_iter": 4, 
+	"num_samples_per_task_update": 16, 
+	"inner_lr": 1e-1,
+	"outer_lr": 1e-1,
+	"proxy_oracle": {
+		"model_name": "XGBoost",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"logging": {
+		"top-k": 4, # k for top-k
+	},
+	"env": {
+		"lambda": 0.05, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+		"radius": 2,
+	},
+	"log_interval": 10,
+	"results_log_dir": "./logs",
+	"seed": 2,
+}
+
+amp_knr_013_2 = {
+	"exp_label": "AMP-KNR-013-2",
+	"num_proxies": 4, 
+	"num_inner_updates": 1, 
+	"num_meta_proxy_samples": 8,
+	"num_initial_samples": 100,
+	"num_samples_per_iter": 4, 
+	"num_samples_per_task_update": 16, 
+	"inner_lr": 1e-1,
+	"outer_lr": 1e-1,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"logging": {
+		"top-k": 4, # k for top-k
+	},
+	"log_interval": 10,
+	"results_log_dir": "./logs",
+	"seed": 2,
+}
+
+
+amp_knr_014_2 = {
+	"exp_label": "AMP-KNR-014-2",
+	"num_proxies": 4, 
+	"num_inner_updates": 1, 
+	"num_meta_proxy_samples": 8,
+	"num_initial_samples": 100,
+	"num_samples_per_iter": 4, 
+	"num_samples_per_task_update": 16, 
+	"inner_lr": 1.0,
+	"outer_lr": 1.0,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"logging": {
+		"top-k": 4, # k for top-k
+	},
+	"log_interval": 10,
+	"results_log_dir": "./logs",
+	"seed": 2,
+}
+
+amp_knr_015_2 = {
+	"exp_label": "AMP-KNR-015-2",
+	"num_proxies": 4, 
+	"num_inner_updates": 1, 
+	"num_meta_proxy_samples": 8,
+	"num_initial_samples": 100,
+	"num_samples_per_iter": 4, 
+	"num_samples_per_task_update": 16, 
+	"inner_lr": 5.0,
+	"outer_lr": 1.0,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"logging": {
+		"top-k": 4, # k for top-k
+	},
+	"log_interval": 10,
+	"results_log_dir": "./logs",
+	"seed": 2,
+}
+
+amp_knr_016_2 = {
+	"exp_label": "AMP-KNR-016-2",
+	"num_proxies": 4, 
+	"num_inner_updates": 1, 
+	"num_meta_proxy_samples": 8,
+	"num_initial_samples": 100,
+	"num_samples_per_iter": 4, 
+	"num_samples_per_task_update": 16, 
+	"inner_lr": 1.0,
+	"outer_lr": 5.0,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"logging": {
+		"top-k": 4, # k for top-k
+	},
+	"log_interval": 10,
+	"results_log_dir": "./logs",
+	"seed": 2,
+}

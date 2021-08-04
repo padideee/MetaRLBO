@@ -96,6 +96,8 @@ class MetaLearner:
             from policies.mlp_policy import Policy as MLPPolicy
             self.policy = MLPPolicy((self.env.observation_space.shape[0] * self.env.observation_space.shape[1],),
                                    self.env.action_space).to(device)
+        elif self.config["policy"]["model_name"] == "RANDOM":
+            self.policy = RandomPolicy(input_size = self.env.observation_space.shape, output_size = 1, num_actions=self.env.action_space.n).to(device)
         else:
             raise NotImplementedError
 
@@ -109,6 +111,7 @@ class MetaLearner:
         
         # updated_params = [None for _ in range(self.config["num_proxies"])]
 
+        meta_opt = optim.SGD(self.policy.parameters(), lr=self.config["outer_lr"])
         for self.iter_idx in tqdm(range(self.config["num_meta_updates"])):
 
             logs = {} 
@@ -135,7 +138,6 @@ class MetaLearner:
 
 
             inner_opt = optim.SGD(self.policy.parameters(), lr=self.config["inner_lr"])
-            meta_opt = optim.SGD(self.policy.parameters(), lr=self.config["outer_lr"])
             meta_opt.zero_grad()
             meta_losses = []
             meta_scores = []

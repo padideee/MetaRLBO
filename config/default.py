@@ -9,7 +9,8 @@ DEFAULT_CONFIG = {
 	"num_proxies": 8, # Number of proxies (i.e., tasks)
 	"num_meta_proxy_samples": 10, # Number of samples (per proxy) to perform meta updates with
 	"num_initial_samples": 100, # Number of initial samples to train proxy models on
-	"num_samples_per_iter": 5, # Number of samples per proxy/task to query the true oracle on (after inner loop updates)
+	"num_samples_per_iter": 5, # Number of samples per proxy/task to (select from) to query the true oracle 
+	"num_query_per_iter": 8,  # Number of samples to query the true oracle (per iteration)
 	"num_samples_per_task_update": 16, # Number of samples to train policy on per proxy
 	"inner_lr": 1e-1,
 	"outer_lr": 1e-2,
@@ -21,6 +22,10 @@ DEFAULT_CONFIG = {
 		"model_name": "MLP",
 	},
 
+
+	"select_samples": { # Configs for selecting the samples
+		"method": "RANDOM", 
+	},
 	"true_oracle": {
 		"model_name": "RFC",
 	},

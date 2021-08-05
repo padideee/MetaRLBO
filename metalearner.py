@@ -140,8 +140,9 @@ class MetaLearner:
             inner_opt = optim.SGD(self.policy.parameters(), lr=self.config["inner_lr"])
             meta_opt.zero_grad()
             meta_losses = []
-            meta_scores = []
 
+
+            sampled_mols = []
             # Proxy(Task)-specific updates
             for j in range(self.config["num_proxies"]):
                 
@@ -186,25 +187,10 @@ class MetaLearner:
                     self.sample_policy(inner_policy, self.proxy_envs[j], self.config["num_meta_proxy_samples"], policy_storage=self.D_meta_query) # Sample from policies using (update_params)
 
 
-
-
                     # Sample mols (and query) for training the proxy oracles later
-                    sampled_mols = self.sample_policy(inner_policy, self.env, self.config["num_samples_per_iter"]).detach() # Sample from policies -- preferably make this parallelised in the future
-                    
-                    self.query_history += [sampled_mols[i] for i in range(sampled_mols.shape[0])]
+                    sampled_mols.append(self.sample_policy(inner_policy, self.env, self.config["num_samples_per_iter"]).detach()) # Sample from policies -- preferably make this parallelised in the future
 
-                    # Query the scores
-                    sampled_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, sampled_mols, flatten_input = self.flatten_true_oracle_input))[:, 1]
-                    meta_scores.append(sampled_mols_scores.mean())
 
-                    logs[f"inner_loop/proxy/{j}/sampled_mols_scores/mean"] = sampled_mols_scores.mean().item()
-                    logs[f"inner_loop/proxy/{j}/sampled_mols_scores/max"] = sampled_mols_scores.max().item()
-                    logs[f"inner_loop/proxy/{j}/sampled_mols_scores/min"] = sampled_mols_scores.min().item()
-
-                    topk_values, _ = sampled_mols_scores.topk(self.config["logging"]["top-k"])
-                    logs[f"inner_loop/proxy/{j}/sampled_mols_scores/top-k/mean"] = topk_values.mean().item()
-
-                    self.D_train.insert(sampled_mols, sampled_mols_scores)
 
 
                     meta_loss = rl_utl.reinforce_loss(self.D_meta_query)
@@ -212,13 +198,26 @@ class MetaLearner:
                     meta_loss.backward() 
 
 
-            print(len(self.query_history), len(self.proxy_envs[0].history))
+            sampled_mols = torch.cat(sampled_mols, dim = 0)
+
+            # Do some filtering of the molecules here...
+            queried_mols = self.select_molecules(sampled_mols)
+
+
+            self.query_history += [queried_mols[i] for i in range(queried_mols.shape[0])]
+
+            # Query the scores
+            queried_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, queried_mols, flatten_input = self.flatten_true_oracle_input))[:, 1]
+
+            self.D_train.insert(queried_mols, queried_mols_scores)
+
+
             outer_loss = sum(meta_losses) / self.config["num_proxies"]
-            outer_score = sum(meta_scores) / self.config["num_proxies"]
+            # outer_score = sum(meta_scores) / self.config["num_proxies"]
             print(f"Outer Loss: {outer_loss}")
-            print(f"Outer Scores: {outer_score}")
+            # print(f"Outer Scores: {outer_score}")
             logs["outer_loop/loss"] = outer_loss.item()
-            logs["outer_loop/sampled_mols_scores/current_batch/mean"] = outer_score.item()
+            logs["outer_loop/queried_mols_scores/current_batch/mean"] = queried_mols_scores.mean().item()
             meta_opt.step()
 
             logs[f"outer_loop/sampled_mols_scores/cumulative/mean"] = self.D_train.scores[:self.D_train.storage_filled].mean().item()
@@ -325,11 +324,31 @@ class MetaLearner:
 
 
 
+    def select_molecules(self, mols):
+        """
+            Selects the molecules to query 
+
+        """
+
+        selected_mols = mols.clone()
+
+
+        if self.config["select_samples"]["method"] == "RANDOM":
+            perm = torch.randperm(mols.shape[0])
+        else:
+            raise NotImplementedError
+
+        idx = perm[:self.config["num_query_per_iter"]]
+        selected_mols = mols[idx]
+        return selected_mols
+
+
 
     def log(self, logs):
         """
             Tentatively Tensorboard, but perhaps we want WANDB
         """
+        num_queried = self.iter_idx * self.config["num_query_per_iter"]
 
         # log the average weights and gradients of all models (where applicable)
         for [model, name] in [
@@ -338,10 +357,10 @@ class MetaLearner:
             if model is not None:
                 param_list = list(model.parameters())
                 param_mean = np.mean([param_list[i].data.cpu().numpy().mean() for i in range(len(param_list))])
-                self.logger.add('weights/{}'.format(name), param_mean, self.iter_idx)
+                self.logger.add('weights/{}'.format(name), param_mean, num_queried)
 
                 if name == 'policy':
-                    self.logger.add('weights/policy_std', param_list[0].data.mean(), self.iter_idx)
+                    self.logger.add('weights/policy_std', param_list[0].data.mean(), num_queried)
                 
                 if param_list[0].grad is not None:
                     
@@ -351,7 +370,7 @@ class MetaLearner:
                     param_grad_mean = np.mean(
                         [param_list_grad[i].cpu().numpy().mean() for i in range(len(param_list_grad))])
 
-                    self.logger.add('gradients/{}'.format(name), param_grad_mean, self.iter_idx)
+                    self.logger.add('gradients/{}'.format(name), param_grad_mean, num_queried)
 
         for k, v in logs.items():
-            self.logger.add(k, v, self.iter_idx)
+            self.logger.add(k, v, num_queried)

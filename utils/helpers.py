@@ -2,6 +2,18 @@ from oracles.models import *
 from torch.nn import functional as F
 import copy
 from torch import nn
+import pandas as pd
+import os
+
+def save_mols(mols, scores, folder):
+    mols = [mols[i] for i in range(mols.shape[0])]
+    data = {
+        "seq": mols,
+        'pred_prob': scores,
+    }
+    df = pd.DataFrame(data=data)
+    df.to_pickle(os.path.join(folder, 'queried_mols.pkl'))
+
 
 def get_true_oracle_model(config):
     """

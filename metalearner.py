@@ -228,14 +228,10 @@ class MetaLearner:
             if self.iter_idx % self.config["log_interval"] == 0:
                 self.log(logs)
 
-                mols = self.D_train.mols[:self.D_train.storage_filled].numpy()
-                mols = [mols[i] for i in range(mols.shape[0])]
-                data = {
-                    "seq": mols,
-                    'pred_prob': self.D_train.scores[:self.D_train.storage_filled].numpy()
-                }
-                df = pd.DataFrame(data=data)
-                df.to_pickle(os.path.join(self.logger.full_output_folder, 'queried_mols.pkl'))
+
+                utl.save_mols(mols=self.D_train.mols[:self.D_train.storage_filled].numpy(), 
+                                scores=self.D_train.scores[:self.D_train.storage_filled].numpy(),
+                                folder=self.logger.full_output_folder)
 
                 
                 # score = self.test_oracle.give_score()
@@ -272,7 +268,7 @@ class MetaLearner:
 
 
             end_traj = False
-            state = env.reset().clone() # Returns (46, )
+            state = env.reset().clone() # Returns (51, 21)
             hidden_state = None
             curr_timestep = 0
             curr_sample += 1
@@ -326,12 +322,8 @@ class MetaLearner:
 
     def select_molecules(self, mols):
         """
-            Selects the molecules to query 
-
+            Selects the molecules to query from the ones proposed by the policy trained on each of the proxy oracle
         """
-
-        selected_mols = mols.clone()
-
 
         if self.config["select_samples"]["method"] == "RANDOM":
             perm = torch.randperm(mols.shape[0])
@@ -339,7 +331,7 @@ class MetaLearner:
             raise NotImplementedError
 
         idx = perm[:self.config["num_query_per_iter"]]
-        selected_mols = mols[idx]
+        selected_mols = mols.clone()[idx]
         return selected_mols
 
 

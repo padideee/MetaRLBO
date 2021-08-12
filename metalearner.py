@@ -22,7 +22,7 @@ from data.process_data import get_AMP_data
 import higher 
 from utils.tb_logger import TBLogger
 
-from evaluation import get_test_proxy
+from evaluation import get_test_oracle
 from data.process_data import seq_to_encoding
 
 
@@ -102,6 +102,8 @@ class MetaLearner:
             raise NotImplementedError
 
 
+
+        self.test_oracle = get_test_oracle()
         self.iter_idx = 0
 
 
@@ -112,7 +114,7 @@ class MetaLearner:
         # updated_params = [None for _ in range(self.config["num_proxies"])]
 
         meta_opt = optim.SGD(self.policy.parameters(), lr=self.config["outer_lr"])
-        for self.iter_idx in tqdm(range(self.config["num_meta_updates"])):
+        for self.iter_idx in tqdm(range(self.config["num_meta_updates"] // self.config["num_meta_updates_per_iter"])):
 
             logs = {} 
 
@@ -131,7 +133,7 @@ class MetaLearner:
                 #[Prob. False, Prob. True]
 
                 self.D_train.insert(sampled_mols, sampled_mols_scores[:, 1]) 
-
+ 
             # Fit proxy oracles
             for j in range(self.config["num_proxies"]):
                 self.proxy_oracle_models[j] = self.proxy_oracles[j].fit(self.proxy_oracle_models[j], flatten_input = self.flatten_proxy_oracle_input)
@@ -143,86 +145,102 @@ class MetaLearner:
 
 
             sampled_mols = []
-            # Proxy(Task)-specific updates
-            for j in range(self.config["num_proxies"]):
-                
-                with higher.innerloop_ctx(
-                        self.policy, inner_opt, copy_initial_weights=False
-                ) as (inner_policy, diffopt):
 
-                    self.D_meta_query = RolloutStorage(num_samples = self.config["num_meta_proxy_samples"],
+
+            for mi in range(self.config["num_meta_updates_per_iter"]):
+                # Proxy(Task)-specific updates
+                for j in range(self.config["num_proxies"]):
+                    
+                    with higher.innerloop_ctx(
+                            self.policy, inner_opt, copy_initial_weights=False
+                    ) as (inner_policy, diffopt):
+
+                        self.D_meta_query = RolloutStorage(num_samples = self.config["num_meta_proxy_samples"],
+                                                           state_dim = self.env.observation_space.shape,
+                                                           action_dim = 1, # Discrete value
+                                                           hidden_dim = self.config["policy"]["hidden_dim"] if "hidden_dim" in self.config["policy"] else None,
+                                                           num_steps = self.env.max_AMP_length,
+                                                           device = device
+                                                           )
+
+                        for k in range(self.config["num_inner_updates"]):
+                            self.D_j = RolloutStorage(num_samples = self.config["num_samples_per_task_update"],
                                                        state_dim = self.env.observation_space.shape,
                                                        action_dim = 1, # Discrete value
                                                        hidden_dim = self.config["policy"]["hidden_dim"] if "hidden_dim" in self.config["policy"] else None,
                                                        num_steps = self.env.max_AMP_length,
-                                                       device = device
+                                                       device=device
                                                        )
-
-                    for k in range(self.config["num_inner_updates"]):
-                        self.D_j = RolloutStorage(num_samples = self.config["num_samples_per_task_update"],
-                                                   state_dim = self.env.observation_space.shape,
-                                                   action_dim = 1, # Discrete value
-                                                   hidden_dim = self.config["policy"]["hidden_dim"] if "hidden_dim" in self.config["policy"] else None,
-                                                   num_steps = self.env.max_AMP_length,
-                                                   device=device
-                                                   )
-                        
+                            
 
 
-                        self.sample_policy(inner_policy, self.proxy_envs[j], self.config["num_samples_per_task_update"], policy_storage=self.D_j) # Sample from policy[j]
+                            self.sample_policy(inner_policy, self.proxy_envs[j], self.config["num_samples_per_task_update"], policy_storage=self.D_j) # Sample from policy[j]
 
-                        self.D_j.compute_log_probs(inner_policy)
-                        inner_loss = rl_utl.reinforce_loss(self.D_j) 
+                            self.D_j.compute_log_probs(inner_policy)
+                            inner_loss = rl_utl.reinforce_loss(self.D_j) 
 
-                        logs[f"inner_loop/proxy/{j}/loop/{k}/loss/"] = inner_loss.item()
-                        logs[f"inner_loop/policy/{j}/loop/{k}/action_logprob/"] = self.D_j.log_probs.mean().item()
-                        
+                            logs[f"inner_loop/proxy/{j}/loop/{k}/loss/"] = inner_loss.item()
+                            logs[f"inner_loop/policy/{j}/loop/{k}/action_logprob/"] = self.D_j.log_probs.mean().item()
+                            
 
-                        # Inner update
-                        diffopt.step(inner_loss) 
-
-
-
-                    # Sample mols for meta update
-                    self.sample_policy(inner_policy, self.proxy_envs[j], self.config["num_meta_proxy_samples"], policy_storage=self.D_meta_query) # Sample from policies using (update_params)
-
-
-                    # Sample mols (and query) for training the proxy oracles later
-                    sampled_mols.append(self.sample_policy(inner_policy, self.env, self.config["num_samples_per_iter"]).detach()) # Sample from policies -- preferably make this parallelised in the future
+                            # Inner update
+                            diffopt.step(inner_loss) 
 
 
 
 
-                    meta_loss = rl_utl.reinforce_loss(self.D_meta_query)
-                    meta_losses.append(meta_loss.detach())
-                    meta_loss.backward() 
+                        # Sample mols for meta update
+                        if self.config["outerloop_oracle"] == 'proxy':
+                            self.sample_policy(inner_policy, self.proxy_envs[j], self.config["num_meta_proxy_samples"], policy_storage=self.D_meta_query) 
+                        elif self.config["outerloop_oracle"] == 'true':
+                            self.sample_policy(inner_policy, self.true_oracle, self.config["num_meta_proxy_samples"], policy_storage=self.D_meta_query) 
+                        else:
+                            raise NotImplementedError
 
 
-            sampled_mols = torch.cat(sampled_mols, dim = 0)
-
-            # Do some filtering of the molecules here...
-            queried_mols = self.select_molecules(sampled_mols)
-
-
-            self.query_history += [queried_mols[i] for i in range(queried_mols.shape[0])]
-
-            # Query the scores
-            queried_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, queried_mols, flatten_input = self.flatten_true_oracle_input))[:, 1]
-
-            self.D_train.insert(queried_mols, queried_mols_scores)
+                        if mi == self.config["num_meta_updates_per_iter"] - 1:
+                            # Sample mols (and query) for training the proxy oracles later
+                            sampled_mols.append(self.sample_policy(inner_policy, self.env, self.config["num_samples_per_iter"]).detach()) # Sample from policies -- preferably make this parallelised in the future
 
 
-            outer_loss = sum(meta_losses) / self.config["num_proxies"]
-            # outer_score = sum(meta_scores) / self.config["num_proxies"]
-            print(f"Outer Loss: {outer_loss}")
-            # print(f"Outer Scores: {outer_score}")
-            logs["outer_loop/loss"] = outer_loss.item()
-            logs["outer_loop/queried_mols_scores/current_batch/mean"] = queried_mols_scores.mean().item()
-            meta_opt.step()
+                        meta_loss = rl_utl.reinforce_loss(self.D_meta_query)
+                        meta_losses.append(meta_loss.detach())
+                        meta_loss.backward() 
 
-            logs[f"outer_loop/sampled_mols_scores/cumulative/mean"] = self.D_train.scores[:self.D_train.storage_filled].mean().item()
-            logs[f"outer_loop/sampled_mols_scores/cumulative/max"] = self.D_train.scores[:self.D_train.storage_filled].max().item() 
-            logs[f"outer_loop/sampled_mols_scores/cumulative/min"] = self.D_train.scores[:self.D_train.storage_filled].min().item()
+
+                meta_opt.step()
+
+
+                if mi == self.config["num_meta_updates_per_iter"] - 1:
+                    sampled_mols = torch.cat(sampled_mols, dim = 0)
+
+                    # Do some filtering of the molecules here...
+                    queried_mols = self.select_molecules(sampled_mols)
+
+
+                    self.query_history += [queried_mols[i] for i in range(queried_mols.shape[0])]
+
+                    # Query the scores
+                    queried_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, queried_mols, flatten_input = self.flatten_true_oracle_input))[:, 1]
+
+                    self.D_train.insert(queried_mols, queried_mols_scores)
+
+
+                    outer_loss = sum(meta_losses) / self.config["num_proxies"]
+                    # outer_score = sum(meta_scores) / self.config["num_proxies"]
+                    print(f"Outer Loss: {outer_loss}")
+                    # print(f"Outer Scores: {outer_score}")
+                    logs["outer_loop/loss"] = outer_loss.item()
+                    logs["outer_loop/queried_mols_scores/current_batch/mean"] = queried_mols_scores.mean().item()
+                    logs["outer_loop/queried_mols_scores/current_batch/max"] = queried_mols_scores.max().item()
+                    
+
+                    logs[f"outer_loop/sampled_mols_scores/cumulative/mean"] = self.D_train.scores[:self.D_train.storage_filled].mean().item()
+                    logs[f"outer_loop/sampled_mols_scores/cumulative/max"] = self.D_train.scores[:self.D_train.storage_filled].max().item() 
+                    logs[f"outer_loop/sampled_mols_scores/cumulative/min"] = self.D_train.scores[:self.D_train.storage_filled].min().item()
+
+                    # TODO: Log diversity here...
+
 
             # Logging
             if self.iter_idx % self.config["log_interval"] == 0:
@@ -234,8 +252,28 @@ class MetaLearner:
                                 folder=self.logger.full_output_folder)
 
                 
-                # score = self.test_oracle.give_score()
-                # # wandb.log({"Performance based on classifier trained on test set": score})
+
+                # TODO: Record the results according to the final test oracle of the new samples and the cumulative samples
+                
+
+                # Leo: What do we even want to record for the test oracle?
+                #      Perhaps the likeliness of our molecule being an AMP according to that oracle?
+
+                # cur_batch_test_score = self.test_oracle.give_score(queried_mols, queried_mols_scores)
+                # cum_batch_test_score = self.test_oracle.give_score(self.D_train.mols[:self.D_train.storage_filled], self.D_train.scores[:self.D_train.storage_filled])
+
+                batch_test_prob = self.test_oracle.get_prob(queried_mols)
+                cumul_test_prob = self.test_oracle.get_prob(self.D_train.mols[:self.D_train.storage_filled])
+
+                logs["test_oracle/scores/current_batch/min"] = batch_test_prob.min().item()
+                logs["test_oracle/scores/current_batch/mean"] = batch_test_prob.mean().item()
+                logs["test_oracle/scores/current_batch/max"] = batch_test_prob.max().item()
+
+                logs["test_oracle/scores/cumulative/min"] = cumul_test_prob.min().item()
+                logs["test_oracle/scores/cumulative/mean"] = cumul_test_prob.mean().item()
+                logs["test_oracle/scores/cumulative/max"] = cumul_test_prob.max().item()
+                
+
                 # # TODO adding to log
                 # print('Iteration {}, test oracle accuracy: {}'.format(self.iter_idx, score))
                 
@@ -349,10 +387,10 @@ class MetaLearner:
             if model is not None:
                 param_list = list(model.parameters())
                 param_mean = np.mean([param_list[i].data.cpu().numpy().mean() for i in range(len(param_list))])
-                self.logger.add('weights/{}'.format(name), param_mean, num_queried)
+                self.logger.add('weights/{}/mean'.format(name), param_mean, num_queried)
 
                 if name == 'policy':
-                    self.logger.add('weights/policy_std', param_list[0].data.mean(), num_queried)
+                    self.logger.add('weights/policy/std', param_list[0].data.mean(), num_queried)
                 
                 if param_list[0].grad is not None:
                     

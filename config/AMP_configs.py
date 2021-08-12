@@ -25,6 +25,41 @@ amp_000 = {
 }
 
 
+amp_random = {
+	"exp_label": "AMP-RANDOM",
+	"num_proxies": 4, 
+	"num_inner_updates": 2, 
+	"num_meta_proxy_samples": 2,
+	"num_initial_samples": 100,
+	"num_samples_per_iter": 4, 
+	"num_samples_per_task_update": 16, 
+	"inner_lr": 1e-1,
+	"outer_lr": 1e-1,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+	"policy": {
+		"model_name": "RANDOM",
+	},
+
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"logging": {
+		"top-k": 4, # k for top-k
+	},
+	"env": {
+		"lambda": 0.1, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+		"radius": 2,
+	},
+	"log_interval": 10,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+
 # ======================= Proxy Oracles: K Nearest Regressors
 
 amp_knr_001 = {

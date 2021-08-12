@@ -12,8 +12,10 @@ DEFAULT_CONFIG = {
 	"num_samples_per_iter": 5, # Number of samples per proxy/task to (select from) to query the true oracle 
 	"num_query_per_iter": 8,  # Number of samples to query the true oracle (per iteration)
 	"num_samples_per_task_update": 16, # Number of samples to train policy on per proxy
+	"num_meta_updates_per_iter": 1,
 	"inner_lr": 1e-1,
 	"outer_lr": 1e-2,
+	"outerloop_oracle": "proxy",  # Options: proxy, true
 	"proxy_oracle": {
 		"model_name": "KNR", 
 		"p": 0.8, # Proportion of data to sample to train proxy oracles

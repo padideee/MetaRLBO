@@ -26,7 +26,7 @@ class AMPTrueOracle(BaseOracle):
 
 
 		assert model.classes_.shape[-1] <= 2
-
+		# Special case (Only a single class):
 		if pred_prob.shape[-1] == 1:
 			pred_prob = np.zeros((*pred_prob.shape[:-1], 2))
 

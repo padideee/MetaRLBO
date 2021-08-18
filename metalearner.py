@@ -25,7 +25,7 @@ from utils.tb_logger import TBLogger
 from evaluation import get_test_oracle
 from data.process_data import seq_to_encoding
 from algo.diversity import pairwise_hamming_distance
-
+import time
 
 
 
@@ -151,11 +151,9 @@ class MetaLearner:
 
             sampled_mols = []
 
-
             for mi in range(self.config["num_meta_updates_per_iter"]):
                 # Proxy(Task)-specific updates
                 for j in range(self.config["num_proxies"]):
-                    
                     with higher.innerloop_ctx(
                             self.policy, inner_opt, copy_initial_weights=False
                     ) as (inner_policy, diffopt):
@@ -196,17 +194,21 @@ class MetaLearner:
 
                         # Sample mols for meta update
                         if self.config["outerloop_oracle"] == 'proxy':
+
                             self.sample_policy(inner_policy, self.proxy_envs[j], self.config["num_meta_proxy_samples"], policy_storage=self.D_meta_query) 
                         elif self.config["outerloop_oracle"] == 'true':
-                            queried_mols = self.sample_policy(inner_policy, self.env, self.config["num_meta_proxy_samples"], policy_storage=self.D_meta_query) 
+                            queried_mols = self.sample_policy(inner_policy, self.env, self.config["num_meta_proxy_samples"], policy_storage=self.D_meta_query).detach()
                             self.query_history += [queried_mols[i] for i in range(queried_mols.shape[0])]
                         else:
                             raise NotImplementedError
 
 
                         if mi == self.config["num_meta_updates_per_iter"] - 1:
+                            # Leo: This is the one that's slow... -- I'm forcing it to query something that actually ends within 50 steps -- this could be an issue... and be really slow if a policy is bad
+
                             # Sample mols (and query) for training the proxy oracles later
                             sampled_mols.append(self.sample_policy(inner_policy, self.env, self.config["num_samples_per_iter"]).detach()) # Sample from policies -- preferably make this parallelised in the future
+
 
 
                         meta_loss = rl_utl.reinforce_loss(self.D_meta_query)
@@ -218,10 +220,13 @@ class MetaLearner:
 
 
                 if mi == self.config["num_meta_updates_per_iter"] - 1:
+
+
                     sampled_mols = torch.cat(sampled_mols, dim = 0)
 
                     # Do some filtering of the molecules here...
                     queried_mols = self.select_molecules(sampled_mols)
+
 
 
                     self.query_history += [queried_mols[i] for i in range(queried_mols.shape[0])]
@@ -231,7 +236,6 @@ class MetaLearner:
 
                     self.D_train.insert(queried_mols, queried_mols_scores)
 
-
                     outer_loss = sum(meta_losses) / self.config["num_proxies"]
                     # outer_score = sum(meta_scores) / self.config["num_proxies"]
                     print(f"Outer Loss: {outer_loss}")
@@ -240,7 +244,6 @@ class MetaLearner:
                     logs["outer_loop/queried_mols_scores/current_batch/mean"] = queried_mols_scores.mean().item()
                     logs["outer_loop/queried_mols_scores/current_batch/max"] = queried_mols_scores.max().item()
                     
-
                     logs[f"outer_loop/sampled_mols_scores/cumulative/mean"] = self.D_train.scores[:self.D_train.storage_filled].mean().item()
                     logs[f"outer_loop/sampled_mols_scores/cumulative/max"] = self.D_train.scores[:self.D_train.storage_filled].max().item() 
                     logs[f"outer_loop/sampled_mols_scores/cumulative/min"] = self.D_train.scores[:self.D_train.storage_filled].min().item()
@@ -256,6 +259,7 @@ class MetaLearner:
                 self.log(logs)
 
 
+                
                 utl.save_mols(mols=self.D_train.mols[:self.D_train.storage_filled].numpy(), 
                                 scores=self.D_train.scores[:self.D_train.storage_filled].numpy(),
                                 folder=self.logger.full_output_folder)
@@ -342,12 +346,16 @@ class MetaLearner:
                 next_state, reward, pred_prob, done, info = env.step(action, query_reward = policy_storage is not None)
 
                 if action.item() == env.EOS_idx: # Query
-                    return_mols[curr_queried] = next_state
+                    return_mols[curr_queried] = next_state # Leo: The return mols is bugged if we're using the "true oracle" to perform the meta-update....
                     curr_queried += 1
                     end_traj = True 
-                if done:
+                elif done:
+                    return_mols[curr_queried] = next_state # Leo: The return mols is bugged if we're using the "true oracle" to perform the meta-update....
+                    curr_queried += 1
                     end_traj = True
 
+
+                # 2 choices: Either we forcibly generate the molecules (cut off at 50 or we let it generate until then...)
 
                 if policy_storage is not None:
                     policy_storage.insert(state=state.detach().clone(), 
@@ -364,7 +372,6 @@ class MetaLearner:
                 policy_storage.compute_returns()
                 policy_storage.after_rollout()
 
-
         return return_mols
 
 
@@ -373,6 +380,8 @@ class MetaLearner:
         """
             Selects the molecules to query from the ones proposed by the policy trained on each of the proxy oracle
         """
+
+        assert self.config["num_query_per_iter"] <= self.config["num_proxies"] * self.config["num_samples_per_iter"]
 
         if self.config["select_samples"]["method"] == "RANDOM":
             perm = torch.randperm(mols.shape[0])

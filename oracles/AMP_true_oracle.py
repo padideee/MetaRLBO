@@ -33,12 +33,12 @@ class AMPTrueOracle(BaseOracle):
 
 			if tuple(x[i]) in self.queried_scores:
 				pred_prob[i] = self.queried_scores[tuple(x[i])]
-				print("Same Query Count")
+				# print("Same Query Count")
 			else:
 				# Leo: Should be parallelised
 				score = model.predict_proba(x[i][np.newaxis, ...])
 				self.query_count += 1
-				print("+1 Query Count")
+				# print("+1 Query Count")
 
 				if score.shape[-1] == 1:
 					score = np.zeros((2, ))

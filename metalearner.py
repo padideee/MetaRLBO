@@ -24,6 +24,7 @@ from utils.tb_logger import TBLogger
 
 from evaluation import get_test_oracle
 from data.process_data import seq_to_encoding
+from algo.diversity import pairwise_hamming_distance
 
 
 
@@ -75,7 +76,7 @@ class MetaLearner:
 
         # -- END ---
         
-        self.env = AMPEnv(self.true_oracle_model, lambd=self.config["env"]["lambda"], radius = self.config["env"]["radius"]) # The reward will not be needed in this env.
+        self.env = AMPEnv(self.true_oracle, self.true_oracle_model, lambd=self.config["env"]["lambda"], radius = self.config["env"]["radius"]) # The reward will not be needed in this env.
 
         self.D_train = QueryStorage(storage_size=self.config["max_num_queries"], state_dim = self.env.observation_space.shape)
 
@@ -83,8 +84,12 @@ class MetaLearner:
         self.query_history = []
         self.proxy_oracles = [AMPProxyOracle(training_storage=self.D_train, p=self.config["proxy_oracle"]["p"]) for j in range(self.config["num_proxies"])]
         self.proxy_oracle_models = [utl.get_proxy_oracle_model(self.config) for j in range(self.config["num_proxies"])]
-        self.proxy_envs = [AMPEnv(self.proxy_oracle_models[j], lambd=self.config["env"]["lambda"], query_history = self.query_history) for j in range(self.config["num_proxies"])]
+        self.proxy_envs = [AMPEnv(self.proxy_oracles[j], self.proxy_oracle_models[j], lambd=self.config["env"]["lambda"], query_history = self.query_history) for j in range(self.config["num_proxies"])]
 
+
+        # We need to include the molecules... in terms of diversity. 
+        # We need to add the model to the environment... in order to query.
+        # We need to fix the query function in the environment...
 
         if self.config["policy"]["model_name"] == "GRU":
             self.policy = CategoricalGRUPolicy(num_actions = self.env.action_space.n + 1,
@@ -132,7 +137,7 @@ class MetaLearner:
                 sampled_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, sampled_mols, flatten_input = self.flatten_true_oracle_input))
                 #[Prob. False, Prob. True]
 
-                self.D_train.insert(sampled_mols, sampled_mols_scores[:, 1]) 
+                self.D_train.insert(sampled_mols, sampled_mols_scores) 
  
             # Fit proxy oracles
             for j in range(self.config["num_proxies"]):
@@ -193,7 +198,8 @@ class MetaLearner:
                         if self.config["outerloop_oracle"] == 'proxy':
                             self.sample_policy(inner_policy, self.proxy_envs[j], self.config["num_meta_proxy_samples"], policy_storage=self.D_meta_query) 
                         elif self.config["outerloop_oracle"] == 'true':
-                            self.sample_policy(inner_policy, self.true_oracle, self.config["num_meta_proxy_samples"], policy_storage=self.D_meta_query) 
+                            queried_mols = self.sample_policy(inner_policy, self.env, self.config["num_meta_proxy_samples"], policy_storage=self.D_meta_query) 
+                            self.query_history += [queried_mols[i] for i in range(queried_mols.shape[0])]
                         else:
                             raise NotImplementedError
 
@@ -221,7 +227,7 @@ class MetaLearner:
                     self.query_history += [queried_mols[i] for i in range(queried_mols.shape[0])]
 
                     # Query the scores
-                    queried_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, queried_mols, flatten_input = self.flatten_true_oracle_input))[:, 1]
+                    queried_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, queried_mols, flatten_input = self.flatten_true_oracle_input))
 
                     self.D_train.insert(queried_mols, queried_mols_scores)
 
@@ -239,7 +245,10 @@ class MetaLearner:
                     logs[f"outer_loop/sampled_mols_scores/cumulative/max"] = self.D_train.scores[:self.D_train.storage_filled].max().item() 
                     logs[f"outer_loop/sampled_mols_scores/cumulative/min"] = self.D_train.scores[:self.D_train.storage_filled].min().item()
 
-                    # TODO: Log diversity here...
+                    logs["outer_loop/num_queried/unique"] = self.true_oracle.query_count
+
+                    # TODO: Log diversity here... parallelise the querying (after the unique checking)
+                    logs["outer_loop/queried_mols/diversity"] = pairwise_hamming_distance(queried_mols) # TODO
 
 
             # Logging
@@ -328,7 +337,9 @@ class MetaLearner:
                     action = action[0].detach() # batch size = 1
                     log_prob = log_prob[0] # batch size = 1
 
-                next_state, reward, pred_prob, done, info = env.step(action)
+
+
+                next_state, reward, pred_prob, done, info = env.step(action, query_reward = policy_storage is not None)
 
                 if action.item() == env.EOS_idx: # Query
                     return_mols[curr_queried] = next_state
@@ -367,6 +378,9 @@ class MetaLearner:
             perm = torch.randperm(mols.shape[0])
         else:
             raise NotImplementedError
+
+
+        # TODO: Some kind of filtering proess to ensure that only new ones are being selected...
 
         idx = perm[:self.config["num_query_per_iter"]]
         selected_mols = mols.clone()[idx]

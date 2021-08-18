@@ -1,5 +1,29 @@
 import torch
 
+def hamming_distance(history, seq):
+    """
+        Args:
+            - history: (length, 51, 21)
+            - seq: (51, 21)
+
+        Return:
+            - Hamming Distance between seq and each in "history"
+               - (length, )
+    """
+    return ((1 - history) * seq + history * (1 - seq)).sum([1, 2])
+
+
+def pairwise_hamming_distance(history):
+    n = history.shape[0]
+
+    ret = 0
+    for i in range(n):
+        ret += hamming_distance(history, history[i]).sum()
+    ret /= n*(n-1)
+    return ret
+
+
+
 
 class diversity():
     def __init__(self, seq, history, div=False, radius = 2):

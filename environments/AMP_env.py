@@ -8,7 +8,7 @@ import torch.nn.functional as F
 
 
 class AMPEnv(gym.Env):
-    def __init__(self, reward_oracle, lambd = 0.1, radius = 2, max_AMP_length = 51, query_history = None):
+    def __init__(self, reward_oracle, reward_oracle_model, lambd = 0.1, radius = 2, max_AMP_length = 51, query_history = None):
 
 
         # Actions in AMP design are the 20 amino acids
@@ -35,6 +35,7 @@ class AMPEnv(gym.Env):
 
         self.max_AMP_length = max_AMP_length
         self.reward_oracle = reward_oracle
+        self.reward_oracle_model = reward_oracle_model
         self.proxy_oracles = []
         self.modelbased = False
 
@@ -47,7 +48,11 @@ class AMPEnv(gym.Env):
     def update_opt_method(self, modelbased):
         self.modelbased = modelbased
 
-    def step(self, action):
+    def step(self, action, query_reward=False):
+
+        """
+            query_reward: True if the reward is to be queried... (TODO: Use true oracle)
+        """
         # Return: (state, reward, done, info)
         # NOTE: Reward is the prediction probability of whether
         # a sequence is antimicrobial towards a certain pathogen
@@ -86,8 +91,9 @@ class AMPEnv(gym.Env):
                 # print("Avg. prediction: ", predictionAMP)
                 # Return avg. prediction based on proxy models
                 pred_prob = torch.tensor([[1 - predictionAMP, predictionAMP]])
-                reward = torch.tensor(predictionAMP)
-                reward -= self.lambd * dens
+                if query_reward:
+                    reward = torch.tensor(predictionAMP)
+                    reward -= self.lambd * dens
 
                 with open('logs/log.txt', 'a+') as f:
                     f.write('Model Based' + '\t' + str(reward.detach().cpu().numpy()) + '\n')
@@ -103,46 +109,29 @@ class AMPEnv(gym.Env):
 
                 # s = seq_to_encoding(self.curr_state.unsqueeze(0)) # Leo: TODO (this takes as input -- not the one hot encoding...)
                 s = self.curr_state.unsqueeze(0).flatten(-2, -1)
-                try:
-                    pred_prob = torch.tensor(self.reward_oracle.predict_proba(s))
-                    reward = pred_prob[0][1] 
-                except:
-                    reward = torch.tensor(self.reward_oracle.predict(s))
-                    pred_prob = torch.tensor([[1 - reward, reward]])
-                reward -= self.lambd * dens
-                # # ---- Modification ---------
-                # """
-                #     Modification to env.:
 
-                #     There's a special case where if the reward oracle was only trained on neg./pos. data, then it will output a
-                #     pred_prob w/ a final dimension of 1, which leads to an error.
-                # """
-                # assert self.reward_oracle.classes_.shape[-1] <= 2
-
-                # if pred_prob.shape[-1] == 1:
+                if query_reward:
+                    # try:
+                    #     pred_prob = torch.tensor(self.reward_oracle.predict_proba(s))
+                    #     reward = pred_prob[0][1] 
+                    # except:
+                    #     reward = torch.tensor(self.reward_oracle.predict(s))
+                    #     pred_prob = torch.tensor([[1 - reward, reward]])
                     
-                #     prob = torch.zeros((*pred_prob.shape[:-1], 2))
+                    pred_prob = self.reward_oracle.query(self.reward_oracle_model, self.curr_state.unsqueeze(0), flatten_input=True)
 
-                #     if self.reward_oracle.classes_[0] == 0:
-                #         prob[:, 0] = 1
-                #     elif self.reward_oracle.classes_[0] == 1:
-                #         prob[:, 1] = 1
-
-                #     pred_prob = prob
-
-                # # ---- End Modification -----
+                    reward = torch.tensor(pred_prob[0])
+                    reward -= self.lambd * dens
 
                    
-                with open('logs/log.txt', 'a+') as f:
-                    f.write('Model Free' + '\t' + str(reward.detach().cpu().numpy()) + '\n')
-                self.evaluate['seq'].append(self.curr_state.detach().cpu().numpy())
-                self.evaluate['embed_seq'].append(s.detach().cpu().numpy())
-                self.evaluate['reward'].append(reward.detach().cpu().numpy())
-                self.evaluate['pred_prob'].append(pred_prob[0][1].detach().cpu().numpy())
+                    # with open('logs/log.txt', 'a+') as f:
+                    #     f.write('Model Free' + '\t' + str(reward.detach().cpu().numpy()) + '\n')
+                    # self.evaluate['seq'].append(self.curr_state.detach().cpu().numpy())
+                    # self.evaluate['embed_seq'].append(s.detach().cpu().numpy())
+                    # self.evaluate['reward'].append(reward.detach().cpu().numpy())
+                    # self.evaluate['pred_prob'].append(pred_prob[0][1].detach().cpu().numpy())
 
-                # wandb.log({"train_pred_prob": pred_prob[0][1].detach().cpu().numpy()})
-
-                #TODO adding the pred_prob to Tensorboard log
+                    # # wandb.log({"train_pred_prob": pred_prob[0][1].detach().cpu().numpy()})
 
 
         self.time_step += 1

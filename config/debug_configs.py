@@ -65,7 +65,7 @@ debug_RR = {
 debug_KNR = {
 	"exp_label": "DEBUG-KNR",
 	"num_proxies": 2, 
-	"num_inner_updates": 3, 
+	"num_inner_updates": 1, 
 	"num_meta_proxy_samples": 4,
 	"num_initial_samples": 20,
 	"num_samples_per_iter": 4, 
@@ -86,6 +86,31 @@ debug_KNR = {
 	"log_interval": 1,
 }
 
+
+debug_KNR_OL = {
+	"exp_label": "DEBUG-KNR",
+	"num_proxies": 2, 
+	"num_inner_updates": 1, 
+	"num_meta_proxy_samples": 4,
+	"num_initial_samples": 20,
+	"num_samples_per_iter": 4, 
+	"num_samples_per_task_update": 4, 
+	"inner_lr": 1e0,
+	"outer_lr": 1e-1,
+	"outerloop_oracle": "true",
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+	"logging": {
+		"top-k": 4, # k for top-k
+	},
+	"env": {
+		"lambda": 0.1, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+		"radius": 2,
+	},
+	"log_interval": 1,
+}
 
 # Varying Policy Models
 

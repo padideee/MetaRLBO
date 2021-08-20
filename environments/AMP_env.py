@@ -8,7 +8,7 @@ import torch.nn.functional as F
 
 
 class AMPEnv(gym.Env):
-    def __init__(self, reward_oracle, reward_oracle_model, lambd = 0.1, radius = 2, max_AMP_length = 51, query_history = None):
+    def __init__(self, reward_oracle, reward_oracle_model, lambd = 0.1, radius = 2, max_AMP_length = 50, query_history = None):
 
 
         # Actions in AMP design are the 20 amino acids
@@ -16,7 +16,7 @@ class AMPEnv(gym.Env):
         # represent the "end of sequence" token
         self.max_AMP_length = max_AMP_length
         self.num_actions = 21
-        self.EOS_idx = 20
+        self.EOS_idx = 20 # EOS/Padding token
 
         self.action_space = gym.spaces.Discrete(self.num_actions) # 20 amino acids, End of Sequence Token
 
@@ -64,9 +64,15 @@ class AMPEnv(gym.Env):
         self.curr_state[self.time_step] = F.one_hot(action, num_classes = self.num_actions)
 
         queried = False
-        if action.item() == self.EOS_idx:
+        if action.item() == self.EOS_idx or self.time_step + 1 == self.max_AMP_length:
             queried = True
             done = True
+
+            # Pad the rest of the state...
+            padding = F.one_hot(torch.tensor(self.EOS_idx), num_classes = self.num_actions)
+            self.curr_state[self.time_step+1:] = padding            
+
+
             # compute density of similar sequences in the history
             if len(self.history) > 1:
                 # Use div=False to test without diversity promotion
@@ -135,9 +141,6 @@ class AMPEnv(gym.Env):
 
 
         self.time_step += 1
-
-        if self.time_step >= self.max_AMP_length:
-            done = True
 
         # Info must be a dictionary
         info = [{"action": action, "state": self.curr_state, "pred_prob": pred_prob, "queried": queried}]

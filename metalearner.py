@@ -345,11 +345,7 @@ class MetaLearner:
 
                 next_state, reward, pred_prob, done, info = env.step(action, query_reward = policy_storage is not None)
 
-                if action.item() == env.EOS_idx: # Query
-                    return_mols[curr_queried] = next_state # Leo: The return mols is bugged if we're using the "true oracle" to perform the meta-update....
-                    curr_queried += 1
-                    end_traj = True 
-                elif done:
+                if done:
                     return_mols[curr_queried] = next_state # Leo: The return mols is bugged if we're using the "true oracle" to perform the meta-update....
                     curr_queried += 1
                     end_traj = True

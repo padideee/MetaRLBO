@@ -3,14 +3,15 @@ import torch
 def hamming_distance(history, seq):
     """
         Args:
-            - history: (length, 51, 21)
-            - seq: (51, 21)
+            - history: (length, 50, 21)
+            - seq: (50, 21)
 
         Return:
             - Hamming Distance between seq and each in "history"
                - (length, )
     """
-    return ((1 - history) * seq + history * (1 - seq)).sum([1, 2])
+    seq_length = seq.shape[1]
+    return ((1 - history) * seq + history * (1 - seq)).sum([1, 2]) / seq_length
 
 
 def pairwise_hamming_distance(history):
@@ -54,7 +55,7 @@ class diversity():
             # Hamming Distance is equiv. to XOR
             sums = ((1 - self.history) * self.seq + self.history * (1 - self.seq)).sum([1, 2])
 
-            ret = (sums <= self.radius).sum().item()
+            ret = (sums <= self.radius).sum().item() # 
             
             return ret
 

@@ -1,4 +1,9 @@
 import torch
+import Bio
+from Bio.Blast.Applications import NcbiblastpCommandline
+from io import StringIO
+from Bio.Blast import NCBIXML
+
 
 def hamming_distance(history, seq):
     """
@@ -22,7 +27,21 @@ def pairwise_hamming_distance(history):
     ret /= n*(n-1)
     return ret
 
+def blast_score(query_fasta, subject_fasta):
+    """
+    We would use blast Score rather than E-value when the database size is changing.
+    Note: in case of error with this function try installing "ncbi-blast+"
+    """
+    scores = []
+    cmd = NcbiblastpCommandline(query=query_fasta, subject=subject_fasta, outfmt=5)()[0]
+    blast_output = NCBIXML.read(StringIO(cmd))
+    for alignment in blast_output.alignments:
+        for hsp in alignment.hsps:
+            scores.append(hsp.score)
+    return scores
 
+def blast_density(scores):
+    raise NotImplementedError()
 
 
 class diversity():
@@ -32,20 +51,6 @@ class diversity():
         self.seq = seq
         self.history = torch.stack(history)
         self.radius = radius
-
-    # def hamming_distance(self, radius=2):
-    #     if self.div:
-    #         mult = self.history * self.seq
-
-    #         sum = torch.sum(mult, dim=(1,2))
-    #         count=0
-    #         for i in sum:
-    #             if i >= radius:
-    #                 count+=1
-    #         return count / len(self.history)
-
-    #     else:
-    #         return 0.0
 
 
     def density(self):
@@ -60,6 +65,7 @@ class diversity():
 
         else:
             return 0.0
+
 
     def nearest_neighbour(self):
         pass

@@ -1,9 +1,16 @@
 from oracles.models import *
 from torch.nn import functional as F
 import copy
+import torch
 from torch import nn
 import pandas as pd
 import os
+from collections import OrderedDict
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
+from Bio import SeqIO
+
+
 
 def save_mols(mols, scores, folder):
     mols = [mols[i] for i in range(mols.shape[0])]
@@ -160,3 +167,50 @@ class FeatureExtractor(nn.Module):
             return self.activation_function(self.fc(inputs))
         else:
             return torch.zeros(0, ).to(device)
+
+
+class convertor:
+    def __init__(self):
+        self.AA_intg = OrderedDict([('A', 0), ('R', 1), ('N', 2), ('D', 3), ('C', 4), ('E', 5), ('Q', 6), ('G', 7),
+                                 ('H', 8), ('I', 9), ('L', 10), ('K', 11), ('M', 12), ('F', 13), ('P', 14), ('S', 15),
+                                 ('T', 16), ('W', 17), ('Y', 18), ('V', 19), ('>', 20)])
+
+        self.intg_AA = {v: k for k, v in self.AA_intg.items()}
+
+
+    def AA_to_one_hot(self):
+        # TODO : moving the to_one_hot function in this class
+        pass
+
+
+    def one_hot_to_AA(self, one_hot):
+
+        intg = torch.argmax(one_hot, dim=-1)
+
+        AA_seq = [self.intg_AA[int(i)] for i in intg]
+
+        return ''.join(AA_seq)
+
+
+def make_fasta(seq, idx):
+    """
+        input seq is in string format
+        This function creates a fasta file for the given sequence
+    """
+    seq1 = SeqRecord(Seq(seq), id="seq{}".format(idx))
+    SeqIO.write(seq1, "seq.fasta", "fasta") # for now just save in ./
+
+
+def append_history_fasta(seq, history):
+    """
+    inputs are the path to the sequence and history in the fasta format
+    """
+    with open(history, 'a+') as f:
+        with open(seq, 'r') as g:
+            new_seq = g.read()
+            f.write(new_seq)
+
+
+
+
+

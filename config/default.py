@@ -31,6 +31,9 @@ DEFAULT_CONFIG = {
 	},
 	"true_oracle": {
 		"model_name": "RFC",
+		"config": {
+			"n_estimators": 128,
+		}
 	},
 	"logging": {
 		"top-k": 5, # k for top-k  (per proxy) --- This needs to be lower than "num_samples_per_iter"
@@ -39,6 +42,8 @@ DEFAULT_CONFIG = {
 		"lambda": 0.1, # Diversity hyperparameter -- higher is more penalty for more similar mols.
 		"radius": 2,
 	},
+	"data_source": "DynaPPO", # Either: DynaPPO or Custom (Custom being data Padideh generated)
+	"mode": "test", # mode -- val (hyperparameter opt.), test (eval. )
 	"log_interval": 25,
 	"results_log_dir": "./logs",
 	"seed": 73,

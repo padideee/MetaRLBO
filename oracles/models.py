@@ -5,8 +5,8 @@ import xgboost as xgb
 
 # Classifiers
 
-def RFC():
-	model = RandomForestClassifier(random_state=0, bootstrap= True, max_depth=50, n_estimators=200)
+def RFC(n_estimators=200):
+	model = RandomForestClassifier(n_estimators=n_estimators)
 	return model
 
 

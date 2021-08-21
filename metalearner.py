@@ -18,7 +18,7 @@ from oracles.AMP_true_oracle import AMPTrueOracle
 from oracles.proxy.AMP_proxy_oracle import AMPProxyOracle
 
 from environments.AMP_env import AMPEnv
-from data.process_data import get_AMP_data
+
 import higher 
 from utils.tb_logger import TBLogger
 
@@ -49,7 +49,14 @@ class MetaLearner:
         # The seq and the label from library
         # seq shape: (batch, 46*21)
         # label shape: (batch) -> in binary format:{'positive': AMP, 'negative': not AMP}
-        D_AMP = get_AMP_data('data/data_train.hkl')
+        if self.config["data_source"] == 'DynaPPO':
+            from data import dynappo_data
+            D_AMP = dynappo_data.get_AMP_data(self.config["mode"])
+        elif self.config["data_source"] == 'Custom':
+            from data.process_data import get_AMP_data
+            D_AMP = get_AMP_data('data/data_train.hkl')
+        else:
+            raise NotImplementedError
         # path to pickle 'data/data_train.pickle'
         # TODO : the data for train and test as sys argument
 

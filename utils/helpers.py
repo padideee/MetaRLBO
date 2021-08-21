@@ -21,7 +21,7 @@ def get_true_oracle_model(config):
     """
 
     if config["true_oracle"]["model_name"] == 'RFC':
-        model = RFC()
+        model = RFC(n_estimators = config["true_oracle"]["config"]["n_estimators"])
     elif config["true_oracle"]["model_name"] == 'NN':
         model = NN()
     else:

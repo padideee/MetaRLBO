@@ -52,6 +52,7 @@ class AMPTrueOracle(BaseOracle):
 					else:
 						raise NotImplementedError
 				pred_prob[i] = score
+				self.queried_scores[tuple(x[i])] = score
 
 			
 

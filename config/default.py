@@ -39,7 +39,6 @@ DEFAULT_CONFIG = {
 		"lambda": 0.1, # Diversity hyperparameter -- higher is more penalty for more similar mols.
 		"radius": 2,
 	},
-	""
 	"log_interval": 25,
 	"results_log_dir": "./logs",
 	"seed": 73,

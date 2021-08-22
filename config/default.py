@@ -27,7 +27,7 @@ DEFAULT_CONFIG = {
 
 
 	"select_samples": { # Configs for selecting the samples
-		"method": "RANDOM", 
+		"method": "PROXY_MEAN", 
 	},
 	"true_oracle": {
 		"model_name": "RFC",

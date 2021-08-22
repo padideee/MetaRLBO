@@ -147,9 +147,6 @@ class MetaLearner:
                 # Sync query_history with D_train
                 self.query_history += list(self.D_train.mols[len(self.query_history):self.D_train.storage_filled])
 
-            # Fit proxy oracles
-            for j in range(self.config["num_proxies"]):
-                self.proxy_oracle_models[j] = self.proxy_oracles[j].fit(self.proxy_oracle_models[j], flatten_input = self.flatten_proxy_oracle_input)
 
 
             inner_opt = optim.SGD(self.policy.parameters(), lr=self.config["inner_lr"])
@@ -160,6 +157,13 @@ class MetaLearner:
             sampled_mols = []
 
             for mi in range(self.config["num_meta_updates_per_iter"]):
+
+
+                # Fit proxy oracles
+                for j in range(self.config["num_proxies"]):
+                    self.proxy_oracle_models[j] = self.proxy_oracles[j].fit(self.proxy_oracle_models[j], flatten_input = self.flatten_proxy_oracle_input)
+
+
                 # Proxy(Task)-specific updates
                 for j in range(self.config["num_proxies"]):
                     with higher.innerloop_ctx(
@@ -397,25 +401,43 @@ class MetaLearner:
         """
 
 
-        # Remove duplicate molecules... but there might be duplicates in query_history... what tod o
-        filtered_mols = np.unique(mols, axis = 0) 
+        # Remove duplicate molecules... in current batch
+        mols = np.unique(mols, axis = 0) 
 
-        to_return = True
 
-        if to_return:
-            assert self.config["num_query_per_iter"] <= self.config["num_proxies"] * self.config["num_samples_per_iter"]
+        # Remove duplicate molecules that have been queried...
+        valid_idx = []
+        for i in range(mols.shape[0]):
+            tuple_mol = tuple(mols[i].flatten().tolist())
+            if tuple_mol not in self.D_train.mols_set:
+                valid_idx.append(i)
+            else:
+                print("Already queried...")
+        mols = mols[valid_idx]
 
+        if mols.shape[0] > 0:
+            mols = torch.tensor(mols)
+
+            n_query = min(self.config["num_query_per_iter"], mols.shape[0])
+            
             if self.config["select_samples"]["method"] == "RANDOM":
                 perm = torch.randperm(mols.shape[0])
+                idx = perm[:n_query]
+            elif self.config["select_samples"]["method"] == "PROXY_MEAN":
+                proxy_scores = []
+                for j in range(self.config["num_proxies"]):
+                    proxy_scores.append(torch.tensor(self.proxy_oracles[j].query(self.proxy_oracle_models[j], mols, flatten_input = self.flatten_proxy_oracle_input)))
+                proxy_scores_mean = sum(proxy_scores) / self.config["num_proxies"]
+                
+                _, sorted_idx = torch.sort(proxy_scores_mean)
+
+                sorted_idx = torch.flip(sorted_idx, dims=(0,)) # Largest to Smallest
+                
+                idx = sorted_idx[:n_query] # Select top scores
             else:
                 raise NotImplementedError
 
-
-            # TODO: Some kind of filtering proess to ensure that only new ones are being selected...
-
-            idx = perm[:self.config["num_query_per_iter"]]
             selected_mols = mols.clone()[idx]
-
 
             # TODO: Filter the duplicate molecules... so there's no duplicates between the ones being queried and the "query_history..."
             return selected_mols

@@ -29,16 +29,17 @@ class AMPTrueOracle(BaseOracle):
 		pred_prob = np.zeros((batch_size, 2))
 
 		for i in range(batch_size):
+			tuple_xi = tuple(x[i].numpy().tolist())
 
-
-			if tuple(x[i]) in self.queried_scores:
-				pred_prob[i] = self.queried_scores[tuple(x[i])]
-				# print("Same Query Count")
+			if tuple_xi in self.queried_scores:
+				pred_prob[i] = self.queried_scores[tuple_xi]
+				
+				print("Duplicate")
 			else:
 				# Leo: Should be parallelised
 				score = model.predict_proba(x[i][np.newaxis, ...])
+				self.queried_scores[tuple_xi] = score
 				self.query_count += 1
-				# print("+1 Query Count")
 
 				if score.shape[-1] == 1:
 					score = np.zeros((2, ))
@@ -52,7 +53,6 @@ class AMPTrueOracle(BaseOracle):
 					else:
 						raise NotImplementedError
 				pred_prob[i] = score
-				self.queried_scores[tuple(x[i])] = score
 
 			
 

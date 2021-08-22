@@ -30,6 +30,16 @@ def get_true_oracle_model(config):
 
     return model
 
+
+# def add_mols_to_history(mols, query_history):
+#     """
+#         Args:
+#             - mols: list of numpy arrays of dim (50, 21)
+#             - query_history: list of numpy arrays of dim (50 , 21)
+#         Return:
+#             - True if mol is not in query_history
+#     """
+
     
 def get_proxy_oracle_model(config):
     """

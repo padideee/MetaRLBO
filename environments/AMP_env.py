@@ -30,6 +30,7 @@ class AMPEnv(gym.Env):
         self.curr_state = self.start_state  # TODO: Need to update this outside of class
 
         self.time_step = 0 # TODO: Need to update this outside of class
+        print(query_history)
         self.history = query_history if query_history is not None else []
         self.evaluate = {'seq': [], 'embed_seq': [], 'reward': [], 'pred_prob': []}
 
@@ -79,6 +80,8 @@ class AMPEnv(gym.Env):
                 dens = diversity(self.curr_state, self.history, div=True, radius = self.radius).density()
             else:
                 dens = 0.0
+
+            print(len(self.history))
             # self.history.append(self.curr_state)
 
             # Store predictive probability for regression

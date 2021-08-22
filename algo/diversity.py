@@ -52,11 +52,15 @@ class diversity():
     def density(self):
         if self.div:
             
-            # Hamming Distance is equiv. to XOR
-            sums = ((1 - self.history) * self.seq + self.history * (1 - self.seq)).sum([1, 2])
+            # Hamming Distance is equiv. to XOR, but in our case, it's not exactly XOR since we're one hot encoding characters.
+            sums = (((1 - self.history) * self.seq + self.history * (1 - self.seq)).sum([1, 2]))/2
 
-            ret = (sums <= self.radius).sum().item() # 
+            penalty_sums = sums[(sums < self.radius)]
             
+            # ret = (sums < self.radius).sum().item() 
+
+            ret = ((self.radius - penalty_sums)/2).sum().item() # Linear penalty weighting...
+
             return ret
 
         else:

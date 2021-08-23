@@ -295,12 +295,15 @@ class MetaLearner:
                 # cur_batch_test_score = self.test_oracle.give_score(queried_mols, queried_mols_scores)
                 # cum_batch_test_score = self.test_oracle.give_score(self.D_train.mols[:self.D_train.storage_filled], self.D_train.scores[:self.D_train.storage_filled])
 
-                batch_test_prob = self.test_oracle.get_prob(queried_mols)
-                cumul_test_prob = self.test_oracle.get_prob(self.D_train.mols[:self.D_train.storage_filled])
 
-                logs["test_oracle/scores/current_batch/min"] = batch_test_prob.min().item()
-                logs["test_oracle/scores/current_batch/mean"] = batch_test_prob.mean().item()
-                logs["test_oracle/scores/current_batch/max"] = batch_test_prob.max().item()
+                if queried_mols is not None:
+                    batch_test_prob = self.test_oracle.get_prob(queried_mols)
+
+                    logs["test_oracle/scores/current_batch/min"] = batch_test_prob.min().item()
+                    logs["test_oracle/scores/current_batch/mean"] = batch_test_prob.mean().item()
+                    logs["test_oracle/scores/current_batch/max"] = batch_test_prob.max().item()
+
+                cumul_test_prob = self.test_oracle.get_prob(self.D_train.mols[:self.D_train.storage_filled])
 
                 logs["test_oracle/scores/cumulative/min"] = cumul_test_prob.min().item()
                 logs["test_oracle/scores/cumulative/mean"] = cumul_test_prob.mean().item()
@@ -405,7 +408,7 @@ class MetaLearner:
         mols = np.unique(mols, axis = 0) 
 
 
-        # Remove duplicate molecules that have been queried...
+        # Remove duplicate molecules that have already been queried...
         valid_idx = []
         for i in range(mols.shape[0]):
             tuple_mol = tuple(mols[i].flatten().tolist())

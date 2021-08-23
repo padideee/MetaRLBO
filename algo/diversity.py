@@ -59,7 +59,7 @@ class diversity():
             
             # ret = (sums < self.radius).sum().item() 
 
-            ret = ((self.radius - penalty_sums)/2).sum().item() # Linear penalty weighting...
+            ret = ((self.radius - penalty_sums)/self.radius).sum().item() # Linear penalty weighting...
 
             return ret
 

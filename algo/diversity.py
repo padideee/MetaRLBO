@@ -11,7 +11,7 @@ def hamming_distance(history, seq):
                - (length, )
     """
     seq_length = seq.shape[1]
-    return ((1 - history) * seq + history * (1 - seq)).sum([1, 2]) / seq_length
+    return ((1 - history) * seq + history * (1 - seq)).sum([1, 2]) / 2 # Hamming distance between the strings?
 
 
 def pairwise_hamming_distance(history):

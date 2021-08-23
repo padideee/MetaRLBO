@@ -307,6 +307,11 @@ class MetaLearner:
                     logs["test_oracle/scores/current_batch/mean"] = batch_test_prob.mean().item()
                     logs["test_oracle/scores/current_batch/max"] = batch_test_prob.max().item()
 
+                    logs["test_oracle/num_mols_queried"] = queried_mols.shape[0]
+                else:
+                    logs["test_oracle/num_mols_queried"] = 0
+
+
                 cumul_test_prob = self.test_oracle.get_prob(self.D_train.mols[:self.D_train.storage_filled])
 
                 logs["test_oracle/scores/cumulative/min"] = cumul_test_prob.min().item()

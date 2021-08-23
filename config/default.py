@@ -3,7 +3,8 @@
 DEFAULT_CONFIG = {
 	"exp_label": "DEFAULT",
 	"task": "AMP",
-	"max_num_queries": 100000,
+	"max_num_queries": 5000,
+	"query_storage_size": 100000,
 	"num_inner_updates": 1, # Number of inner loop updates per meta update
 	"num_meta_updates": 5000,
 	"num_proxies": 8, # Number of proxies (i.e., tasks)

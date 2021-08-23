@@ -85,7 +85,7 @@ class MetaLearner:
         
         self.env = AMPEnv(self.true_oracle, self.true_oracle_model, lambd=self.config["env"]["lambda"], radius = self.config["env"]["radius"]) # The reward will not be needed in this env.
 
-        self.D_train = QueryStorage(storage_size=self.config["max_num_queries"], state_dim = self.env.observation_space.shape)
+        self.D_train = QueryStorage(storage_size=self.config["query_storage_size"], state_dim = self.env.observation_space.shape)
 
 
         self.query_history = []
@@ -129,6 +129,10 @@ class MetaLearner:
         for self.iter_idx in tqdm(range(self.config["num_meta_updates"] // self.config["num_meta_updates_per_iter"])):
 
             assert self.true_oracle.query_count == self.D_train.storage_filled
+
+            if self.true_oracle.query_count > self.config["max_num_queries"]:
+                # 
+                break
 
             logs = {} 
 

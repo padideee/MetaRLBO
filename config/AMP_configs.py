@@ -1363,6 +1363,62 @@ amp_knr_large_009 = {
 	"seed": 73,
 }
 
+amp_knr_large_010 = {
+	"exp_label": "AMP-KNR-Large-010",
+	"num_proxies": 32, # 16 -> 32
+	"num_inner_updates": 2, # 1 -> 2
+	"num_meta_proxy_samples": 2, # 4 -> 2
+	"num_initial_samples": 250,
+	"num_samples_per_iter": 16, 
+	"num_samples_per_task_update": 16, 
+	"num_query_per_iter": 250,
+	"inner_lr": 1.0,
+	"outer_lr": 0.1,
+	"num_meta_updates_per_iter": 20, # 10 -> 20
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.7, # Proportion of data to sample to train proxy oracles
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"logging": {
+		"top-k": 4, # k for top-k
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+amp_knr_large_011 = {
+	"exp_label": "AMP-KNR-Large-011",
+	"num_proxies": 32, # 16 -> 32
+	"num_inner_updates": 2, # 1 -> 2 
+	"num_meta_proxy_samples": 2, # 4 -> 2
+	"num_initial_samples": 250,
+	"num_samples_per_iter": 16, 
+	"num_samples_per_task_update": 16, 
+	"num_query_per_iter": 250,
+	"inner_lr": 1.0,
+	"outer_lr": 0.1,
+	"num_meta_updates_per_iter": 40, # 10 -> 40
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.7, # Proportion of data to sample to train proxy oracles
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"logging": {
+		"top-k": 4, # k for top-k
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
 
 
 # Medium Batches -- smaller batches than DynaPPO paper but still large

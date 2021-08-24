@@ -89,10 +89,16 @@ class MetaLearner:
 
 
         self.query_history = []
+        # Proxy -- used for training
         self.proxy_oracles = [AMPProxyOracle(training_storage=self.D_train, p=self.config["proxy_oracle"]["p"]) for j in range(self.config["num_proxies"])]
         self.proxy_oracle_models = [utl.get_proxy_oracle_model(self.config) for j in range(self.config["num_proxies"])]
         self.proxy_envs = [AMPEnv(self.proxy_oracles[j], self.proxy_oracle_models[j], lambd=self.config["env"]["lambda"], query_history = self.query_history) for j in range(self.config["num_proxies"])]
 
+
+        # Proxy -- used for generating molecules for querying
+        self.proxy_query_oracles = [AMPProxyOracle(training_storage=self.D_train, p=self.config["proxy_oracle"]["p"]) for j in range(self.config["num_query_proxies"])]
+        self.proxy_query_oracle_models = [utl.get_proxy_oracle_model(self.config) for j in range(self.config["num_query_proxies"])]
+        self.proxy_query_envs = [AMPEnv(self.proxy_query_oracles[j], self.proxy_query_oracle_models[j], lambd=self.config["env"]["lambda"], query_history = self.query_history) for j in range(self.config["num_query_proxies"])]
 
         # We need to include the molecules... in terms of diversity. 
         # We need to add the model to the environment... in order to query.
@@ -114,7 +120,7 @@ class MetaLearner:
             raise NotImplementedError
 
 
-
+        self.meta_opt = optim.SGD(self.policy.parameters(), lr=self.config["outer_lr"])
         self.test_oracle = get_test_oracle()
         self.iter_idx = 0
 
@@ -125,7 +131,7 @@ class MetaLearner:
         
         # updated_params = [None for _ in range(self.config["num_proxies"])]
 
-        meta_opt = optim.SGD(self.policy.parameters(), lr=self.config["outer_lr"])
+        
         for self.iter_idx in tqdm(range(self.config["num_meta_updates"] // self.config["num_meta_updates_per_iter"])):
 
             assert self.true_oracle.query_count == self.D_train.storage_filled
@@ -153,133 +159,91 @@ class MetaLearner:
 
 
 
-            inner_opt = optim.SGD(self.policy.parameters(), lr=self.config["inner_lr"])
-            meta_opt.zero_grad()
-            meta_losses = []
 
-
-            sampled_mols = []
-
+            # Training
             for mi in range(self.config["num_meta_updates_per_iter"]):
-
-
-                # Fit proxy oracles
-                for j in range(self.config["num_proxies"]):
-                    self.proxy_oracle_models[j] = self.proxy_oracles[j].fit(self.proxy_oracle_models[j], flatten_input = self.flatten_proxy_oracle_input)
-
-
-                # Proxy(Task)-specific updates
-                for j in range(self.config["num_proxies"]):
-                    with higher.innerloop_ctx(
-                            self.policy, inner_opt, copy_initial_weights=False
-                    ) as (inner_policy, diffopt):
-
-                        self.D_meta_query = RolloutStorage(num_samples = self.config["num_meta_proxy_samples"],
-                                                           state_dim = self.env.observation_space.shape,
-                                                           action_dim = 1, # Discrete value
-                                                           hidden_dim = self.config["policy"]["hidden_dim"] if "hidden_dim" in self.config["policy"] else None,
-                                                           num_steps = self.env.max_AMP_length,
-                                                           device = device
-                                                           )
-
-                        for k in range(self.config["num_inner_updates"]):
-                            self.D_j = RolloutStorage(num_samples = self.config["num_samples_per_task_update"],
-                                                       state_dim = self.env.observation_space.shape,
-                                                       action_dim = 1, # Discrete value
-                                                       hidden_dim = self.config["policy"]["hidden_dim"] if "hidden_dim" in self.config["policy"] else None,
-                                                       num_steps = self.env.max_AMP_length,
-                                                       device=device
-                                                       )
-                            
-
-
-                            self.sample_policy(inner_policy, self.proxy_envs[j], self.config["num_samples_per_task_update"], policy_storage=self.D_j) # Sample from policy[j]
-
-                            self.D_j.compute_log_probs(inner_policy)
-                            inner_loss = rl_utl.reinforce_loss(self.D_j) 
-
-                            logs[f"inner_loop/proxy/{j}/loop/{k}/loss/"] = inner_loss.item()
-                            logs[f"inner_loop/policy/{j}/loop/{k}/action_logprob/"] = self.D_j.log_probs.mean().item()
-                            
-
-                            # Inner update
-                            diffopt.step(inner_loss) 
+                logs = self.meta_update(logs)
 
 
 
-
-                        # Sample mols for meta update
-                        if self.config["outerloop_oracle"] == 'proxy':
-
-                            self.sample_policy(inner_policy, self.proxy_envs[j], self.config["num_meta_proxy_samples"], policy_storage=self.D_meta_query) 
-                        elif self.config["outerloop_oracle"] == 'true':
-                            queried_mols = self.sample_policy(inner_policy, self.env, self.config["num_meta_proxy_samples"], policy_storage=self.D_meta_query).detach()
-                            queried_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, queried_mols, flatten_input = self.flatten_true_oracle_input))
-
-                            self.D_train.insert(queried_mols, queried_mols_scores) 
-
-                            # Sync query_history with D_train
-                            self.query_history += list(self.D_train.mols[len(self.query_history):self.D_train.storage_filled])
-                        else:
-                            raise NotImplementedError
+            # Sample molecules for Querying:
+            # Fit proxy query oracles
+            for j in range(self.config["num_query_proxies"]):
+                self.proxy_query_oracle_models[j] = self.proxy_query_oracles[j].fit(self.proxy_query_oracle_models[j], flatten_input = self.flatten_proxy_oracle_input)
 
 
-                        if mi == self.config["num_meta_updates_per_iter"] - 1:
-                            # Leo: This is the one that's slow... -- I'm forcing it to query something that actually ends within 50 steps -- this could be an issue... and be really slow if a policy is bad
+            sampled_mols, logs = self.sample_query_mols(logs)
 
-                            # Sample mols (and query) for training the proxy oracles later
-                            sampled_mols.append(self.sample_policy(inner_policy, self.env, self.config["num_samples_per_iter"]).detach()) # Sample from policies -- preferably make this parallelised in the future
+            # Perform the querying stage
+            # This is a bug...
+            sampled_mols = torch.cat(sampled_mols, dim = 0)
 
-
-
-                        meta_loss = rl_utl.reinforce_loss(self.D_meta_query)
-                        meta_losses.append(meta_loss.detach())
-                        meta_loss.backward() 
+            # Do some filtering of the molecules here...
+            queried_mols = self.select_molecules(sampled_mols)
 
 
-                meta_opt.step()
+            # Perform the querying
+            if queried_mols is not None:
+
+                # Query the scores
+                queried_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, queried_mols, flatten_input = self.flatten_true_oracle_input))
+
+                self.D_train.insert(queried_mols, queried_mols_scores)
+
+                # Sync query_history with D_train
+                self.query_history += list(self.D_train.mols[len(self.query_history):self.D_train.storage_filled])
 
 
-                if mi == self.config["num_meta_updates_per_iter"] - 1:
-                    # This is a bug...
-                    sampled_mols = torch.cat(sampled_mols, dim = 0)
+                logs["outer_loop/queried_mols_scores/current_batch/mean"] = queried_mols_scores.mean().item()
+                logs["outer_loop/queried_mols_scores/current_batch/max"] = queried_mols_scores.max().item()
 
-                    # Do some filtering of the molecules here...
-                    queried_mols = self.select_molecules(sampled_mols)
-
-                    if queried_mols is not None:
-
-                        # Query the scores
-                        queried_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, queried_mols, flatten_input = self.flatten_true_oracle_input))
-
-                        self.D_train.insert(queried_mols, queried_mols_scores)
-
-                        # Sync query_history with D_train
-                        self.query_history += list(self.D_train.mols[len(self.query_history):self.D_train.storage_filled])
+                # TODO: Log diversity here... parallelise the querying (after the unique checking)
+                logs["outer_loop/queried_mols/diversity"] = pairwise_hamming_distance(queried_mols) # TODO
+            
+            logs[f"outer_loop/sampled_mols_scores/cumulative/mean"] = self.D_train.scores[:self.D_train.storage_filled].mean().item()
+            logs[f"outer_loop/sampled_mols_scores/cumulative/max"] = self.D_train.scores[:self.D_train.storage_filled].max().item() 
+            logs[f"outer_loop/sampled_mols_scores/cumulative/min"] = self.D_train.scores[:self.D_train.storage_filled].min().item()
 
 
-                        logs["outer_loop/queried_mols_scores/current_batch/mean"] = queried_mols_scores.mean().item()
-                        logs["outer_loop/queried_mols_scores/current_batch/max"] = queried_mols_scores.max().item()
-
-                        # TODO: Log diversity here... parallelise the querying (after the unique checking)
-                        logs["outer_loop/queried_mols/diversity"] = pairwise_hamming_distance(queried_mols) # TODO
-                    
-                    logs[f"outer_loop/sampled_mols_scores/cumulative/mean"] = self.D_train.scores[:self.D_train.storage_filled].mean().item()
-                    logs[f"outer_loop/sampled_mols_scores/cumulative/max"] = self.D_train.scores[:self.D_train.storage_filled].max().item() 
-                    logs[f"outer_loop/sampled_mols_scores/cumulative/min"] = self.D_train.scores[:self.D_train.storage_filled].min().item()
+            logs["outer_loop/num_queried/unique"] = self.true_oracle.query_count
 
 
-                    logs["outer_loop/num_queried/unique"] = self.true_oracle.query_count
-
-
-                    outer_loss = sum(meta_losses) / self.config["num_proxies"]
-                    # outer_score = sum(meta_scores) / self.config["num_proxies"]
-                    print(f"Outer Loss: {outer_loss}")
-                    # print(f"Outer Scores: {outer_score}")
-                    logs["outer_loop/loss"] = outer_loss.item()
 
             # Logging
             if self.iter_idx % self.config["log_interval"] == 0:
+                # # TODO: Record the results according to the final test oracle of the new samples and the cumulative samples
+                
+
+                # # Leo: What do we even want to record for the test oracle?
+                # #      Perhaps the likeliness of our molecule being an AMP according to that oracle?
+
+                # # cur_batch_test_score = self.test_oracle.give_score(queried_mols, queried_mols_scores)
+                # # cum_batch_test_score = self.test_oracle.give_score(self.D_train.mols[:self.D_train.storage_filled], self.D_train.scores[:self.D_train.storage_filled])
+
+
+                # if queried_mols is not None:
+                #     batch_test_prob = self.test_oracle.get_prob(queried_mols)
+
+                #     logs["test_oracle/scores/current_batch/min"] = batch_test_prob.min().item()
+                #     logs["test_oracle/scores/current_batch/mean"] = batch_test_prob.mean().item()
+                #     logs["test_oracle/scores/current_batch/max"] = batch_test_prob.max().item()
+
+                #     logs["test_oracle/num_mols_queried"] = queried_mols.shape[0]
+                # else:
+                #     logs["test_oracle/num_mols_queried"] = queried_mols.shape[0]
+
+
+                # cumul_test_prob = self.test_oracle.get_prob(self.D_train.mols[:self.D_train.storage_filled])
+
+                # logs["test_oracle/scores/cumulative/min"] = cumul_test_prob.min().item()
+                # logs["test_oracle/scores/cumulative/mean"] = cumul_test_prob.mean().item()
+                # logs["test_oracle/scores/cumulative/max"] = cumul_test_prob.max().item()
+                
+
+                # # # TODO adding to log
+                # # print('Iteration {}, test oracle accuracy: {}'.format(self.iter_idx, score))
+
+
                 self.log(logs)
 
 
@@ -290,38 +254,132 @@ class MetaLearner:
 
                 
 
-                # TODO: Record the results according to the final test oracle of the new samples and the cumulative samples
                 
 
-                # Leo: What do we even want to record for the test oracle?
-                #      Perhaps the likeliness of our molecule being an AMP according to that oracle?
 
-                # cur_batch_test_score = self.test_oracle.give_score(queried_mols, queried_mols_scores)
-                # cum_batch_test_score = self.test_oracle.give_score(self.D_train.mols[:self.D_train.storage_filled], self.D_train.scores[:self.D_train.storage_filled])
+    def meta_update(self, logs):
+
+        inner_opt = optim.SGD(self.policy.parameters(), lr=self.config["inner_lr"])
+        self.meta_opt.zero_grad()
+
+        # Fit proxy oracles
+        for j in range(self.config["num_proxies"]):
+            self.proxy_oracle_models[j] = self.proxy_oracles[j].fit(self.proxy_oracle_models[j], flatten_input = self.flatten_proxy_oracle_input)
 
 
-                if queried_mols is not None:
-                    batch_test_prob = self.test_oracle.get_prob(queried_mols)
+        # Proxy(Task)-specific updates
+        for j in range(self.config["num_proxies"]):
+            with higher.innerloop_ctx(
+                    self.policy, inner_opt, copy_initial_weights=False
+            ) as (inner_policy, diffopt):
 
-                    logs["test_oracle/scores/current_batch/min"] = batch_test_prob.min().item()
-                    logs["test_oracle/scores/current_batch/mean"] = batch_test_prob.mean().item()
-                    logs["test_oracle/scores/current_batch/max"] = batch_test_prob.max().item()
+                self.D_meta_query = RolloutStorage(num_samples = self.config["num_meta_proxy_samples"],
+                                                   state_dim = self.env.observation_space.shape,
+                                                   action_dim = 1, # Discrete value
+                                                   hidden_dim = self.config["policy"]["hidden_dim"] if "hidden_dim" in self.config["policy"] else None,
+                                                   num_steps = self.env.max_AMP_length,
+                                                   device = device
+                                                   )
 
-                    logs["test_oracle/num_mols_queried"] = queried_mols.shape[0]
+                for k in range(self.config["num_inner_updates"]):
+                    self.D_j = RolloutStorage(num_samples = self.config["num_samples_per_task_update"],
+                                               state_dim = self.env.observation_space.shape,
+                                               action_dim = 1, # Discrete value
+                                               hidden_dim = self.config["policy"]["hidden_dim"] if "hidden_dim" in self.config["policy"] else None,
+                                               num_steps = self.env.max_AMP_length,
+                                               device=device
+                                               )
+                    
+
+
+                    self.sample_policy(inner_policy, self.proxy_envs[j], self.config["num_samples_per_task_update"], policy_storage=self.D_j) # Sample from policy[j]
+
+                    self.D_j.compute_log_probs(inner_policy)
+                    inner_loss = rl_utl.reinforce_loss(self.D_j) 
+
+                    logs[f"inner_loop/proxy/{j}/loop/{k}/loss/"] = inner_loss.item()
+                    logs[f"inner_loop/policy/{j}/loop/{k}/action_logprob/"] = self.D_j.log_probs.mean().item()
+                    
+
+                    # Inner update
+                    diffopt.step(inner_loss) 
+
+
+
+
+                # Sample mols for meta update
+                if self.config["outerloop_oracle"] == 'proxy':
+
+                    self.sample_policy(inner_policy, self.proxy_envs[j], self.config["num_meta_proxy_samples"], policy_storage=self.D_meta_query) 
+                elif self.config["outerloop_oracle"] == 'true':
+                    queried_mols = self.sample_policy(inner_policy, self.env, self.config["num_meta_proxy_samples"], policy_storage=self.D_meta_query).detach()
+                    queried_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, queried_mols, flatten_input = self.flatten_true_oracle_input))
+
+                    self.D_train.insert(queried_mols, queried_mols_scores) 
+
+                    # Sync query_history with D_train
+                    self.query_history += list(self.D_train.mols[len(self.query_history):self.D_train.storage_filled])
                 else:
-                    logs["test_oracle/num_mols_queried"] = 0
+                    raise NotImplementedError
 
 
-                cumul_test_prob = self.test_oracle.get_prob(self.D_train.mols[:self.D_train.storage_filled])
 
-                logs["test_oracle/scores/cumulative/min"] = cumul_test_prob.min().item()
-                logs["test_oracle/scores/cumulative/mean"] = cumul_test_prob.mean().item()
-                logs["test_oracle/scores/cumulative/max"] = cumul_test_prob.max().item()
-                
 
-                # # TODO adding to log
-                # print('Iteration {}, test oracle accuracy: {}'.format(self.iter_idx, score))
-                
+                meta_loss = rl_utl.reinforce_loss(self.D_meta_query)
+                meta_loss.backward() 
+
+
+        self.meta_opt.step()
+        return logs
+
+    def sample_query_mols(self, logs):
+        inner_opt = optim.SGD(self.policy.parameters(), lr=self.config["inner_lr"])
+        sampled_mols = []
+        for j in range(self.config["num_query_proxies"]):
+            # Proxy(Task)-specific updates
+            with higher.innerloop_ctx(
+                    self.policy, inner_opt, copy_initial_weights=False
+            ) as (inner_policy, diffopt):
+
+                self.D_meta_query = RolloutStorage(num_samples = self.config["num_meta_proxy_samples"],
+                                                   state_dim = self.env.observation_space.shape,
+                                                   action_dim = 1, # Discrete value
+                                                   hidden_dim = self.config["policy"]["hidden_dim"] if "hidden_dim" in self.config["policy"] else None,
+                                                   num_steps = self.env.max_AMP_length,
+                                                   device = device
+                                                   )
+
+                for k in range(self.config["num_inner_updates"]):
+                    self.D_j = RolloutStorage(num_samples = self.config["num_samples_per_task_update"],
+                                               state_dim = self.env.observation_space.shape,
+                                               action_dim = 1, # Discrete value
+                                               hidden_dim = self.config["policy"]["hidden_dim"] if "hidden_dim" in self.config["policy"] else None,
+                                               num_steps = self.env.max_AMP_length,
+                                               device=device
+                                               )
+                    
+
+
+                    self.sample_policy(inner_policy, self.proxy_query_envs[j], self.config["num_samples_per_task_update"], policy_storage=self.D_j) # Sample from policy[j]
+
+                    self.D_j.compute_log_probs(inner_policy)
+                    inner_loss = rl_utl.reinforce_loss(self.D_j) 
+
+                    logs[f"query/inner_loop/proxy/{j}/loop/{k}/loss/"] = inner_loss.item()
+                    logs[f"query/inner_loop/policy/{j}/loop/{k}/action_logprob/"] = self.D_j.log_probs.mean().item()
+                    
+
+                    # Inner update
+                    diffopt.step(inner_loss) 
+
+                # Sample mols (and query) for training the proxy oracles later
+                sampled_mols.append(self.sample_policy(inner_policy, self.env, self.config["num_samples_per_iter"]).detach()) # Sample from policies -- preferably make this parallelised in the future
+
+
+        return sampled_mols, logs
+
+
+
 
     def sample_policy(self, policy, env, num_samples, policy_storage = None):
         """

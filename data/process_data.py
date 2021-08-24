@@ -1,6 +1,9 @@
 '''
     Taken from https://github.com/padideee/MBRL-for-AMP/blob/43a1b3b247faeb28b64eaa06a4d0abdc301fba21/data/process_data.py
 
+
+
+    Process data from custom generated data...
 '''
 
 import numpy as np
@@ -8,7 +11,7 @@ import torch
 import hickle as hkl
 import pickle as pkl
 from positional_encodings import PositionalEncoding1D, PositionalEncoding2D
-
+import torch.nn.functional as F
 
 def seq_to_encoding(seq):
     """
@@ -28,7 +31,7 @@ def seq_to_encoding(seq):
 
     # enc = torch.from_numpy(enc.reshape(1,46,21))
     # import pdb; pdb.set_trace()
-    pos_enc = PositionalEncoding1D(seq.shape[1] - 1)
+    pos_enc = PositionalEncoding1D(seq.shape[1])
     p_enc = pos_enc(seq)
 
     seqN = seq + p_enc
@@ -72,13 +75,23 @@ def get_AMP_data(data_path):
 
     orig_data, labels = get_data(data_path)
 
-    # Leo: TODO - pad to 51, 21
 
-    data = torch.zeros((orig_data.shape[0], 51, orig_data.shape[2]))
+    # Some tricks to get the padding correct for the data...
+
+    # import pdb; pdb.set_trace()
+
+
+    data = F.one_hot(torch.ones((orig_data.shape[0], 50)).long() * 20, num_classes=21).double()
+
+
+    data[:, :orig_data.shape[1], :] *= (1 - (orig_data > 0).sum(-1)).unsqueeze(-1)
+
 
     data[:, :orig_data.shape[1], :] += orig_data
 
 
+    # Leo: TODO - pad to 50, 21
+    # import pdb; pdb.set_trace()
 
     labels = torch.tensor([x == 'positive' for x in labels]).long().unsqueeze(-1)
 

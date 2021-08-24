@@ -18,7 +18,7 @@ from oracles.AMP_true_oracle import AMPTrueOracle
 from oracles.proxy.AMP_proxy_oracle import AMPProxyOracle
 
 from environments.AMP_env import AMPEnv
-from data.process_data import get_AMP_data
+
 import higher 
 from utils.tb_logger import TBLogger
 
@@ -49,7 +49,14 @@ class MetaLearner:
         # The seq and the label from library
         # seq shape: (batch, 46*21)
         # label shape: (batch) -> in binary format:{'positive': AMP, 'negative': not AMP}
-        D_AMP = get_AMP_data('data/data_train.hkl')
+        if self.config["data_source"] == 'DynaPPO':
+            from data import dynappo_data
+            D_AMP = dynappo_data.get_AMP_data(self.config["mode"])
+        elif self.config["data_source"] == 'Custom':
+            from data.process_data import get_AMP_data
+            D_AMP = get_AMP_data('data/data_train.hkl')
+        else:
+            raise NotImplementedError
         # path to pickle 'data/data_train.pickle'
         # TODO : the data for train and test as sys argument
 
@@ -121,6 +128,8 @@ class MetaLearner:
         meta_opt = optim.SGD(self.policy.parameters(), lr=self.config["outer_lr"])
         for self.iter_idx in tqdm(range(self.config["num_meta_updates"] // self.config["num_meta_updates_per_iter"])):
 
+            assert self.true_oracle.query_count == self.D_train.storage_filled
+
             logs = {} 
 
 
@@ -129,19 +138,15 @@ class MetaLearner:
 
                 random_policy = RandomPolicy(input_size = self.env.observation_space.shape, output_size = 1, num_actions=self.env.action_space.n).to(device)
                 sampled_mols = self.sample_policy(random_policy, self.env, self.config["num_initial_samples"]) # Sample from true env. using random policy (num_starting_mols, dim of mol)
-                
-
-                self.query_history += [sampled_mols[i] for i in range(sampled_mols.shape[0])]
-
 
                 sampled_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, sampled_mols, flatten_input = self.flatten_true_oracle_input))
                 #[Prob. False, Prob. True]
 
                 self.D_train.insert(sampled_mols, sampled_mols_scores) 
- 
-            # Fit proxy oracles
-            for j in range(self.config["num_proxies"]):
-                self.proxy_oracle_models[j] = self.proxy_oracles[j].fit(self.proxy_oracle_models[j], flatten_input = self.flatten_proxy_oracle_input)
+
+                # Sync query_history with D_train
+                self.query_history += list(self.D_train.mols[len(self.query_history):self.D_train.storage_filled])
+
 
 
             inner_opt = optim.SGD(self.policy.parameters(), lr=self.config["inner_lr"])
@@ -152,6 +157,13 @@ class MetaLearner:
             sampled_mols = []
 
             for mi in range(self.config["num_meta_updates_per_iter"]):
+
+
+                # Fit proxy oracles
+                for j in range(self.config["num_proxies"]):
+                    self.proxy_oracle_models[j] = self.proxy_oracles[j].fit(self.proxy_oracle_models[j], flatten_input = self.flatten_proxy_oracle_input)
+
+
                 # Proxy(Task)-specific updates
                 for j in range(self.config["num_proxies"]):
                     with higher.innerloop_ctx(
@@ -198,7 +210,12 @@ class MetaLearner:
                             self.sample_policy(inner_policy, self.proxy_envs[j], self.config["num_meta_proxy_samples"], policy_storage=self.D_meta_query) 
                         elif self.config["outerloop_oracle"] == 'true':
                             queried_mols = self.sample_policy(inner_policy, self.env, self.config["num_meta_proxy_samples"], policy_storage=self.D_meta_query).detach()
-                            self.query_history += [queried_mols[i] for i in range(queried_mols.shape[0])]
+                            queried_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, queried_mols, flatten_input = self.flatten_true_oracle_input))
+
+                            self.D_train.insert(queried_mols, queried_mols_scores) 
+
+                            # Sync query_history with D_train
+                            self.query_history += list(self.D_train.mols[len(self.query_history):self.D_train.storage_filled])
                         else:
                             raise NotImplementedError
 
@@ -220,39 +237,42 @@ class MetaLearner:
 
 
                 if mi == self.config["num_meta_updates_per_iter"] - 1:
-
-
+                    # This is a bug...
                     sampled_mols = torch.cat(sampled_mols, dim = 0)
 
                     # Do some filtering of the molecules here...
                     queried_mols = self.select_molecules(sampled_mols)
 
+                    if queried_mols is not None:
+
+                        # Query the scores
+                        queried_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, queried_mols, flatten_input = self.flatten_true_oracle_input))
+
+                        self.D_train.insert(queried_mols, queried_mols_scores)
+
+                        # Sync query_history with D_train
+                        self.query_history += list(self.D_train.mols[len(self.query_history):self.D_train.storage_filled])
 
 
-                    self.query_history += [queried_mols[i] for i in range(queried_mols.shape[0])]
+                        logs["outer_loop/queried_mols_scores/current_batch/mean"] = queried_mols_scores.mean().item()
+                        logs["outer_loop/queried_mols_scores/current_batch/max"] = queried_mols_scores.max().item()
 
-                    # Query the scores
-                    queried_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, queried_mols, flatten_input = self.flatten_true_oracle_input))
+                        # TODO: Log diversity here... parallelise the querying (after the unique checking)
+                        logs["outer_loop/queried_mols/diversity"] = pairwise_hamming_distance(queried_mols) # TODO
+                    
+                    logs[f"outer_loop/sampled_mols_scores/cumulative/mean"] = self.D_train.scores[:self.D_train.storage_filled].mean().item()
+                    logs[f"outer_loop/sampled_mols_scores/cumulative/max"] = self.D_train.scores[:self.D_train.storage_filled].max().item() 
+                    logs[f"outer_loop/sampled_mols_scores/cumulative/min"] = self.D_train.scores[:self.D_train.storage_filled].min().item()
 
-                    self.D_train.insert(queried_mols, queried_mols_scores)
+
+                    logs["outer_loop/num_queried/unique"] = self.true_oracle.query_count
+
 
                     outer_loss = sum(meta_losses) / self.config["num_proxies"]
                     # outer_score = sum(meta_scores) / self.config["num_proxies"]
                     print(f"Outer Loss: {outer_loss}")
                     # print(f"Outer Scores: {outer_score}")
                     logs["outer_loop/loss"] = outer_loss.item()
-                    logs["outer_loop/queried_mols_scores/current_batch/mean"] = queried_mols_scores.mean().item()
-                    logs["outer_loop/queried_mols_scores/current_batch/max"] = queried_mols_scores.max().item()
-                    
-                    logs[f"outer_loop/sampled_mols_scores/cumulative/mean"] = self.D_train.scores[:self.D_train.storage_filled].mean().item()
-                    logs[f"outer_loop/sampled_mols_scores/cumulative/max"] = self.D_train.scores[:self.D_train.storage_filled].max().item() 
-                    logs[f"outer_loop/sampled_mols_scores/cumulative/min"] = self.D_train.scores[:self.D_train.storage_filled].min().item()
-
-                    logs["outer_loop/num_queried/unique"] = self.true_oracle.query_count
-
-                    # TODO: Log diversity here... parallelise the querying (after the unique checking)
-                    logs["outer_loop/queried_mols/diversity"] = pairwise_hamming_distance(queried_mols) # TODO
-
 
             # Logging
             if self.iter_idx % self.config["log_interval"] == 0:
@@ -274,7 +294,7 @@ class MetaLearner:
 
                 # cur_batch_test_score = self.test_oracle.give_score(queried_mols, queried_mols_scores)
                 # cum_batch_test_score = self.test_oracle.give_score(self.D_train.mols[:self.D_train.storage_filled], self.D_train.scores[:self.D_train.storage_filled])
-
+                # import pdb; pdb.set_trace()
                 batch_test_prob = self.test_oracle.get_prob(queried_mols)
                 cumul_test_prob = self.test_oracle.get_prob(self.D_train.mols[:self.D_train.storage_filled])
 
@@ -345,12 +365,8 @@ class MetaLearner:
 
                 next_state, reward, pred_prob, done, info = env.step(action, query_reward = policy_storage is not None)
 
-                if action.item() == env.EOS_idx: # Query
-                    return_mols[curr_queried] = next_state # Leo: The return mols is bugged if we're using the "true oracle" to perform the meta-update....
-                    curr_queried += 1
-                    end_traj = True 
-                elif done:
-                    return_mols[curr_queried] = next_state # Leo: The return mols is bugged if we're using the "true oracle" to perform the meta-update....
+                if done:
+                    return_mols[curr_queried] = next_state.detach().clone() # Leo: The return mols is bugged if we're using the "true oracle" to perform the meta-update....
                     curr_queried += 1
                     end_traj = True
 
@@ -379,21 +395,58 @@ class MetaLearner:
     def select_molecules(self, mols):
         """
             Selects the molecules to query from the ones proposed by the policy trained on each of the proxy oracle
+
+
+             - Let's select the ones that have the highest score according to the proxy oracles? -- Check...
         """
 
-        assert self.config["num_query_per_iter"] <= self.config["num_proxies"] * self.config["num_samples_per_iter"]
 
-        if self.config["select_samples"]["method"] == "RANDOM":
-            perm = torch.randperm(mols.shape[0])
+        # Remove duplicate molecules... in current batch
+        mols = np.unique(mols, axis = 0) 
+
+
+        # Remove duplicate molecules that have been queried...
+        valid_idx = []
+        for i in range(mols.shape[0]):
+            tuple_mol = tuple(mols[i].flatten().tolist())
+            if tuple_mol not in self.D_train.mols_set:
+                valid_idx.append(i)
+            else:
+                print("Already queried...")
+        mols = mols[valid_idx]
+
+        if mols.shape[0] > 0:
+            mols = torch.tensor(mols)
+
+            n_query = min(self.config["num_query_per_iter"], mols.shape[0])
+            
+            if self.config["select_samples"]["method"] == "RANDOM":
+                perm = torch.randperm(mols.shape[0])
+                idx = perm[:n_query]
+            elif self.config["select_samples"]["method"] == "PROXY_MEAN":
+                proxy_scores = []
+                for j in range(self.config["num_proxies"]):
+                    proxy_scores.append(torch.tensor(self.proxy_oracles[j].query(self.proxy_oracle_models[j], mols, flatten_input = self.flatten_proxy_oracle_input)))
+                proxy_scores_mean = sum(proxy_scores) / self.config["num_proxies"]
+                
+                _, sorted_idx = torch.sort(proxy_scores_mean)
+
+                sorted_idx = torch.flip(sorted_idx, dims=(0,)) # Largest to Smallest
+                
+                idx = sorted_idx[:n_query] # Select top scores
+            else:
+                raise NotImplementedError
+
+            selected_mols = mols.clone()[idx]
+
+            # TODO: Filter the duplicate molecules... so there's no duplicates between the ones being queried and the "query_history..."
+            return selected_mols
+
         else:
-            raise NotImplementedError
+            return None
 
 
-        # TODO: Some kind of filtering proess to ensure that only new ones are being selected...
 
-        idx = perm[:self.config["num_query_per_iter"]]
-        selected_mols = mols.clone()[idx]
-        return selected_mols
 
 
 

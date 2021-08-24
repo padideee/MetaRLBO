@@ -5,7 +5,7 @@ Takes a flag --env-type (see below for choices) and loads the parameters from th
 import argparse
 import warnings
 import sys
-
+import os
 import torch
 
 # get configs
@@ -38,6 +38,8 @@ def main():
         raise Exception(f"Invalid Task: {name}")
 
 
+    with open(os.path.join(os.path.abspath(os.getcwd()),'data', 'history.fasta'), 'w') as f:
+        pass
     metalearner = MetaLearner(config)
     metalearner.run()
 

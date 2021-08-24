@@ -5,10 +5,11 @@ from stable_baselines3.common.env_checker import check_env
 from data.process_data import seq_to_encoding
 from algo.diversity import diversity 
 import torch.nn.functional as F
+import utils.helpers as utl
 
 
 class AMPEnv(gym.Env):
-    def __init__(self, reward_oracle, reward_oracle_model, lambd = 0.1, radius = 2, max_AMP_length = 51, query_history = None):
+    def __init__(self, reward_oracle, reward_oracle_model, lambd = 0.1, radius = 2, max_AMP_length = 50, query_history = None):
 
 
         # Actions in AMP design are the 20 amino acids
@@ -16,7 +17,7 @@ class AMPEnv(gym.Env):
         # represent the "end of sequence" token
         self.max_AMP_length = max_AMP_length
         self.num_actions = 21
-        self.EOS_idx = 20
+        self.EOS_idx = 20 # EOS/Padding token
 
         self.action_space = gym.spaces.Discrete(self.num_actions) # 20 amino acids, End of Sequence Token
 
@@ -30,6 +31,7 @@ class AMPEnv(gym.Env):
         self.curr_state = self.start_state  # TODO: Need to update this outside of class
 
         self.time_step = 0 # TODO: Need to update this outside of class
+        
         self.history = query_history if query_history is not None else []
         self.evaluate = {'seq': [], 'embed_seq': [], 'reward': [], 'pred_prob': []}
 
@@ -41,6 +43,7 @@ class AMPEnv(gym.Env):
 
         self.lambd = lambd  # TODO: tune + add this to config
         self.radius = radius
+
 
     def update_proxy_oracles(self, oracle):
         self.proxy_oracles = oracle
@@ -64,15 +67,26 @@ class AMPEnv(gym.Env):
         self.curr_state[self.time_step] = F.one_hot(action, num_classes = self.num_actions)
 
         queried = False
-        if action.item() == self.EOS_idx:
+        if action.item() == self.EOS_idx or self.time_step + 1 == self.max_AMP_length:
             queried = True
             done = True
+
+            # Pad the rest of the state...
+            padding = F.one_hot(torch.tensor(self.EOS_idx), num_classes = self.num_actions)
+            self.curr_state[self.time_step+1:] = padding            
+
+
             # compute density of similar sequences in the history
             if len(self.history) > 1:
                 # Use div=False to test without diversity promotion
-                dens = diversity(self.curr_state, self.history, div=True, radius = self.radius).density()
+                dens = diversity(self.curr_state, self.history, div=True, radius=self.radius).density_blast()
             else:
                 dens = 0.0
+                convert = utl.convertor()
+                s_seq = convert.one_hot_to_AA(self.curr_state)
+                utl.make_fasta(s_seq)
+                utl.append_history_fasta()
+
             # self.history.append(self.curr_state)
 
             # Store predictive probability for regression
@@ -135,9 +149,6 @@ class AMPEnv(gym.Env):
 
 
         self.time_step += 1
-
-        if self.time_step >= self.max_AMP_length:
-            done = True
 
         # Info must be a dictionary
         info = [{"action": action, "state": self.curr_state, "pred_prob": pred_prob, "queried": queried}]

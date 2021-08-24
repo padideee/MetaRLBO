@@ -28,7 +28,7 @@ def get_true_oracle_model(config):
     """
 
     if config["true_oracle"]["model_name"] == 'RFC':
-        model = RFC()
+        model = RFC(n_estimators = config["true_oracle"]["config"]["n_estimators"])
     elif config["true_oracle"]["model_name"] == 'NN':
         model = NN()
     else:
@@ -36,6 +36,16 @@ def get_true_oracle_model(config):
 
 
     return model
+
+
+# def add_mols_to_history(mols, query_history):
+#     """
+#         Args:
+#             - mols: list of numpy arrays of dim (50, 21)
+#             - query_history: list of numpy arrays of dim (50 , 21)
+#         Return:
+#             - True if mol is not in query_history
+#     """
 
     
 def get_proxy_oracle_model(config):
@@ -173,9 +183,11 @@ class convertor:
     def __init__(self):
         self.AA_intg = OrderedDict([('A', 0), ('R', 1), ('N', 2), ('D', 3), ('C', 4), ('E', 5), ('Q', 6), ('G', 7),
                                  ('H', 8), ('I', 9), ('L', 10), ('K', 11), ('M', 12), ('F', 13), ('P', 14), ('S', 15),
-                                 ('T', 16), ('W', 17), ('Y', 18), ('V', 19), ('>', 20)])
+                                 ('T', 16), ('W', 17), ('Y', 18), ('V', 19), ('X', 20)])
 
         self.intg_AA = {v: k for k, v in self.AA_intg.items()}
+        # TODO unit-test to make sure padding 'X' does not cause interferece (could be important for future modifications in pipeline)
+        # TODO: making sure the character "X" is the default "uncommon Amino Acid" in blast
 
 
     def AA_to_one_hot(self):
@@ -184,24 +196,32 @@ class convertor:
 
 
     def one_hot_to_AA(self, one_hot):
+        """ input is the one hot encoded sequence"""
+        # tmp = torch.sum(one_hot, dim=(1))
+        # tmp = 20 * (1 - tmp)
 
         intg = torch.argmax(one_hot, dim=-1)
+        # import pdb; pdb.set_trace()
+        # intg += tmp
 
         AA_seq = [self.intg_AA[int(i)] for i in intg]
 
-        return ''.join(AA_seq)
+        # my_seq = ''.join(i for i in AA_seq if i not in '>')
+        my_seq = ''.join(AA_seq)
+
+        return my_seq
 
 
-def make_fasta(seq, idx):
+def make_fasta(seq, idx=1):
     """
         input seq is in string format
         This function creates a fasta file for the given sequence
     """
     seq1 = SeqRecord(Seq(seq), id="seq{}".format(idx))
-    SeqIO.write(seq1, "seq.fasta", "fasta") # for now just save in ./
+    SeqIO.write(seq1, "data/seq.fasta", "fasta")
 
 
-def append_history_fasta(seq, history):
+def append_history_fasta(seq="data/seq.fasta" , history="data/history.fasta"):
     """
     inputs are the path to the sequence and history in the fasta format
     """

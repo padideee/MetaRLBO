@@ -130,7 +130,7 @@ dmypy.json
 
 
 .idea
-
+.DS_Store
 
 
 # Project Specific
@@ -138,3 +138,7 @@ logs
 log.txt
 sync_script.sh
 google3/
+wandb
+random_test.ipynb
+history.fasta
+seq.fasta

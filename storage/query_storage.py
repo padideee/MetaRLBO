@@ -10,7 +10,8 @@ class QueryStorage(BaseStorage):
 
 		self.mols = torch.zeros(self.storage_size, *state_dim)
 		self.scores = torch.zeros(self.storage_size)
-		
+
+		self.mols_set = set()		
 
 		self.storage_filled = 0
 
@@ -21,7 +22,7 @@ class QueryStorage(BaseStorage):
 
 	def insert(self, x, y):
 		"""
-			Inserts data into the storage in a queue like fashion [cur_idx, cur_idx + batch_size]
+			Performs checks for duplicates. Inserts data into the storage in a queue like fashion [cur_idx, cur_idx + batch_size]
 			
 			args:
 			 - x: (batch_size, state_dim)
@@ -30,6 +31,21 @@ class QueryStorage(BaseStorage):
 		"""
 
 		# raise NotImplementedError()
+
+		# Check for duplicates
+		valid_idx = [] # Valid only if unique
+
+		for i in range(x.shape[0]):
+			flat_x = tuple(x[i].flatten().tolist()) # tuple in order to be hashable
+			if flat_x not in self.mols_set:
+				self.mols_set.add(flat_x)
+				valid_idx.append(i)
+			else:
+				# This is a duplicate...
+				print("Duplicate Alert")
+				pass
+		x = x[valid_idx]
+		y = y[valid_idx]
 
 
 		batch_size = x.shape[0]

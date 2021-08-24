@@ -9,7 +9,7 @@ DEFAULT_CONFIG = {
 	"num_meta_updates": 5000,
 	"num_proxies": 8, # Number of proxies (i.e., tasks)
 	"num_query_proxies": 64, # Number of proxies used to generate molecules to query from...
-	"num_meta_proxy_samples": 10, # Number of samples (per proxy) to perform meta updates with
+	"num_meta_proxy_samples": 2, # Number of samples (per proxy) to perform meta updates with
 	"num_initial_samples": 100, # Number of initial samples to train proxy models on
 
 	"num_samples_per_iter": 5, # Number of samples per proxy/task to (select from) to query the true oracle 
@@ -44,6 +44,7 @@ DEFAULT_CONFIG = {
 		"lambda": 0.1, # Diversity hyperparameter -- higher is more penalty for more similar mols.
 		"radius": 2,
 	},
+	"entropy_reg_coeff": 0.0, 
 	"data_source": "DynaPPO", # Either: DynaPPO or Custom (Custom being data Padideh generated)
 	"mode": "test", # mode -- val (hyperparameter opt.), test (eval. )
 	"log_interval": 25,

@@ -295,7 +295,7 @@ class MetaLearner:
                     self.sample_policy(inner_policy, self.proxy_envs[j], self.config["num_samples_per_task_update"], policy_storage=self.D_j) # Sample from policy[j]
 
                     self.D_j.compute_log_probs(inner_policy)
-                    inner_loss = rl_utl.reinforce_loss(self.D_j) 
+                    inner_loss = rl_utl.reinforce_loss(self.D_j)  + self.config["entropy_reg_coeff"] * rl_utl.entropy_bonus(self.D_j)
 
                     logs[f"inner_loop/proxy/{j}/loop/{k}/loss/"] = inner_loss.item()
                     logs[f"inner_loop/policy/{j}/loop/{k}/action_logprob/"] = self.D_j.log_probs.mean().item()
@@ -325,7 +325,7 @@ class MetaLearner:
 
 
 
-                meta_loss = rl_utl.reinforce_loss(self.D_meta_query)
+                meta_loss = rl_utl.reinforce_loss(self.D_meta_query) + self.config["entropy_reg_coeff"] * rl_utl.entropy_bonus(self.D_meta_query)
                 meta_loss.backward() 
 
 
@@ -363,7 +363,7 @@ class MetaLearner:
                     self.sample_policy(inner_policy, self.proxy_query_envs[j], self.config["num_samples_per_task_update"], policy_storage=self.D_j) # Sample from policy[j]
 
                     self.D_j.compute_log_probs(inner_policy)
-                    inner_loss = rl_utl.reinforce_loss(self.D_j) 
+                    inner_loss = rl_utl.reinforce_loss(self.D_j) + self.config["entropy_reg_coeff"] * rl_utl.entropy_bonus(self.D_j)
 
                     logs[f"query/inner_loop/proxy/{j}/loop/{k}/loss/"] = inner_loss.item()
                     logs[f"query/inner_loop/policy/{j}/loop/{k}/action_logprob/"] = self.D_j.log_probs.mean().item()

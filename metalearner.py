@@ -524,7 +524,7 @@ class MetaLearner:
         """
             Tentatively Tensorboard, but perhaps we want WANDB
         """
-        num_queried = self.iter_idx * self.config["num_query_per_iter"]
+        num_queried = self.config["num_initial_samples"] + self.iter_idx * self.config["num_query_per_iter"]
 
         # log the average weights and gradients of all models (where applicable)
         for [model, name] in [

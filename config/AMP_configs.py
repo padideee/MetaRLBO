@@ -2149,7 +2149,7 @@ amp_knr_large_016 = {
 	"num_proxies": 8, 
 	"num_inner_updates": 2, 
 	"num_meta_proxy_samples": 2,
-	"num_initial_samples": 250,
+	"num_initial_samples": 300,
 	"num_query_proxies": 128,
 	"num_samples_per_iter": 8, 
 	"num_samples_per_task_update": 16, 
@@ -2173,6 +2173,218 @@ amp_knr_large_016 = {
 	"results_log_dir": "./logs",
 	"seed": 73,
 }
+
+amp_knr_large_017 = {
+	"exp_label": "AMP-KNR-Large-017",
+	"num_proxies": 8, 
+	"num_inner_updates": 2, 
+	"num_meta_proxy_samples": 2,
+	"num_initial_samples": 300,
+	"num_query_proxies": 128,
+	"num_samples_per_iter": 8, 
+	"num_samples_per_task_update": 16, 
+	"num_query_per_iter": 250,
+	"inner_lr": 10.0,
+	"outer_lr": 1.0,
+	"num_meta_updates_per_iter": 20,
+	"entropy_reg_coeff": 0.0, 
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"logging": {
+		"top-k": 4, # k for top-k
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+amp_knr_large_018 = {
+	"exp_label": "AMP-KNR-Large-018",
+	"num_proxies": 8, 
+	"num_inner_updates": 2, 
+	"num_meta_proxy_samples": 2,
+	"num_initial_samples": 300,
+	"num_query_proxies": 128,
+	"num_samples_per_iter": 8, 
+	"num_samples_per_task_update": 16, 
+	"num_query_per_iter": 250,
+	"inner_lr": 100.0,
+	"outer_lr": 1.0,
+	"num_meta_updates_per_iter": 20,
+	"entropy_reg_coeff": 0.0, 
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"logging": {
+		"top-k": 4, # k for top-k
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+amp_knr_large_019 = {
+	"exp_label": "AMP-KNR-Large-019",
+	"num_proxies": 8, 
+	"num_inner_updates": 2, 
+	"num_meta_proxy_samples": 2,
+	"num_initial_samples": 300,
+	"num_query_proxies": 128,
+	"num_samples_per_iter": 8, 
+	"num_samples_per_task_update": 16, 
+	"num_query_per_iter": 250,
+	"inner_lr": 100.0,
+	"outer_lr": 10.0,
+	"num_meta_updates_per_iter": 20,
+	"entropy_reg_coeff": 0.0, 
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"logging": {
+		"top-k": 4, # k for top-k
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+amp_knr_large_020 = {
+	"exp_label": "AMP-KNR-Large-020",
+	"num_proxies": 8, 
+	"num_inner_updates": 3, 
+	"num_meta_proxy_samples": 2,
+	"num_initial_samples": 300,
+	"num_query_proxies": 128,
+	"num_samples_per_iter": 8, 
+	"num_samples_per_task_update": 16, 
+	"num_query_per_iter": 250,
+	"inner_lr": 10.0,
+	"outer_lr": 1.0,
+	"num_meta_updates_per_iter": 20,
+	"entropy_reg_coeff": 0.0, 
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"logging": {
+		"top-k": 4, # k for top-k
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+amp_knr_large_021 = {
+	"exp_label": "AMP-KNR-Large-021",
+	"num_proxies": 8, 
+	"num_inner_updates": 2, 
+	"num_meta_proxy_samples": 2,
+	"num_initial_samples": 300,
+	"num_query_proxies": 128,
+	"num_samples_per_iter": 8, 
+	"num_samples_per_task_update": 16, 
+	"num_query_per_iter": 250,
+	"inner_lr": 10.0,
+	"outer_lr": 1.0,
+	"num_meta_updates_per_iter": 40,
+	"entropy_reg_coeff": 0.0, 
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"logging": {
+		"top-k": 4, # k for top-k
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+amp_knr_large_022 = {
+	"exp_label": "AMP-KNR-Large-022",
+	"num_proxies": 8, 
+	"num_inner_updates": 1, 
+	"num_meta_proxy_samples": 2,
+	"num_initial_samples": 300,
+	"num_query_proxies": 128,
+	"num_samples_per_iter": 8, 
+	"num_samples_per_task_update": 16, 
+	"num_query_per_iter": 250,
+	"inner_lr": 10.0,
+	"outer_lr": 1.0,
+	"num_meta_updates_per_iter": 20,
+	"entropy_reg_coeff": 0.0, 
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"logging": {
+		"top-k": 4, # k for top-k
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+amp_knr_large_023 = {
+	"exp_label": "AMP-KNR-Large-023",
+	"num_proxies": 8, 
+	"num_inner_updates": 2, 
+	"num_meta_proxy_samples": 2,
+	"num_initial_samples": 300,
+	"num_query_proxies": 128,
+	"num_samples_per_iter": 8, 
+	"num_samples_per_task_update": 16, 
+	"num_query_per_iter": 250,
+	"inner_lr": 10.0,
+	"outer_lr": 1.0,
+	"num_meta_updates_per_iter": 10,
+	"entropy_reg_coeff": 0.0, 
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"logging": {
+		"top-k": 4, # k for top-k
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+
 
 
 

@@ -149,34 +149,24 @@ class MetaLearner:
                 random_policy = RandomPolicy(input_size = self.env.observation_space.shape, output_size = 1, num_actions=self.env.action_space.n).to(device)
                 sampled_mols = self.sample_policy(random_policy, self.env, self.config["num_initial_samples"]) # Sample from true env. using random policy (num_starting_mols, dim of mol)
 
-                sampled_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, sampled_mols, flatten_input = self.flatten_true_oracle_input))
-                #[Prob. False, Prob. True]
-
-                self.D_train.insert(sampled_mols, sampled_mols_scores) 
-
-                # Sync query_history with D_train
-                self.query_history += list(self.D_train.mols[len(self.query_history):self.D_train.storage_filled])
+            else:
+                # Training
+                for mi in range(self.config["num_meta_updates_per_iter"]):
+                    logs = self.meta_update(logs)
 
 
 
-
-            # Training
-            for mi in range(self.config["num_meta_updates_per_iter"]):
-                logs = self.meta_update(logs)
-
-
-
-            # Sample molecules for Querying:
-            # Fit proxy query oracles
-            for j in range(self.config["num_query_proxies"]):
-                self.proxy_query_oracle_models[j] = self.proxy_query_oracles[j].fit(self.proxy_query_oracle_models[j], flatten_input = self.flatten_proxy_oracle_input)
+                # Sample molecules for Querying:
+                # Fit proxy query oracles
+                for j in range(self.config["num_query_proxies"]):
+                    self.proxy_query_oracle_models[j] = self.proxy_query_oracles[j].fit(self.proxy_query_oracle_models[j], flatten_input = self.flatten_proxy_oracle_input)
 
 
-            sampled_mols, logs = self.sample_query_mols(logs)
+                sampled_mols, logs = self.sample_query_mols(logs)
 
-            # Perform the querying stage
-            # This is a bug...
-            sampled_mols = torch.cat(sampled_mols, dim = 0)
+                # Perform the querying stage
+                # This is a bug...
+                sampled_mols = torch.cat(sampled_mols, dim = 0)
 
             # Do some filtering of the molecules here...
             queried_mols = self.select_molecules(sampled_mols)
@@ -490,7 +480,8 @@ class MetaLearner:
 
             n_query = min(self.config["num_query_per_iter"], mols.shape[0])
             
-            if self.config["select_samples"]["method"] == "RANDOM":
+            if self.config["select_samples"]["method"] == "RANDOM" or self.iter_idx == 0:
+                # In the case that the iter_idx is 0, then we can only randomly select them...
                 perm = torch.randperm(mols.shape[0])
                 idx = perm[:n_query]
             elif self.config["select_samples"]["method"] == "PROXY_MEAN":
@@ -509,7 +500,6 @@ class MetaLearner:
 
             selected_mols = mols.clone()[idx]
 
-            # TODO: Filter the duplicate molecules... so there's no duplicates between the ones being queried and the "query_history..."
             return selected_mols
 
         else:
@@ -524,7 +514,7 @@ class MetaLearner:
         """
             Tentatively Tensorboard, but perhaps we want WANDB
         """
-        num_queried = self.config["num_initial_samples"] + self.iter_idx * self.config["num_query_per_iter"]
+        num_queried = (self.iter_idx + 1) * self.config["num_query_per_iter"]
 
         # log the average weights and gradients of all models (where applicable)
         for [model, name] in [

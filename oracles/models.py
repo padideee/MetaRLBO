@@ -24,7 +24,7 @@ def RFR(max_depth = 50, max_features = "auto", n_estimators = 100):
     return model
 
 
-def KNR(n_neighbors = 7):
+def KNR(n_neighbors = 5):
 	model = KNeighborsRegressor(n_neighbors=n_neighbors) # Temporarily hardcoded
 	return model
 

@@ -10,8 +10,8 @@ def hamming_distance(history, seq):
             - Hamming Distance between seq and each in "history"
                - (length, )
     """
-    seq_length = seq.shape[1]
-    return ((1 - history) * seq + history * (1 - seq)).sum([1, 2]) / 2 # Hamming distance between the strings?
+    seq_length = seq.shape[0]
+    return ((1 - history) * seq + history * (1 - seq)).sum([1, 2]) / 2 / seq_length # Average Hamming distance (by seq. length) between the strings? 
 
 
 def pairwise_hamming_distance(history):
@@ -53,7 +53,7 @@ class diversity():
         if self.div:
             
             # Hamming Distance is equiv. to XOR, but in our case, it's not exactly XOR since we're one hot encoding characters.
-            sums = (((1 - self.history) * self.seq + self.history * (1 - self.seq)).sum([1, 2]))/2
+            sums = (((1 - self.history) * self.seq + self.history * (1 - self.seq)).sum([1, 2]))/2 
 
             penalty_sums = sums[(sums < self.radius)]
             

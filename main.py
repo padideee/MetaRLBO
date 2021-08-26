@@ -16,6 +16,7 @@ from metalearner import MetaLearner
 from utils.helpers import merge_dicts
 
 from random_prog import Program
+import utils.helpers as utl
 
 
 def main():
@@ -31,7 +32,6 @@ def main():
         amp_config = getattr(AMP_configs, config_name)
         config = merge_dicts(DEFAULT_CONFIG, amp_config)
 
-
     # standard
     if config["task"] == 'AMP':
         pass
@@ -40,6 +40,8 @@ def main():
         raise Exception(f"Invalid Task: {name}")
 
 
+    utl.seed(config["seed"])
+    
 
     if config["policy"]["model_name"] == "RANDOM":
         prog = Program(config)

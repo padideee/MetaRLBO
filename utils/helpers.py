@@ -5,6 +5,9 @@ from torch import nn
 import pandas as pd
 import os
 import json
+import random
+import torch
+import numpy as np
 
 def save_mols(mols, scores, folder):
     mols = [mols[i] for i in range(mols.shape[0])]
@@ -34,6 +37,21 @@ def get_true_oracle_model(config):
 
 
     return model
+
+def seed(seed, deterministic_execution=False):
+    print('Seeding random, torch, numpy.')
+    random.seed(seed)
+    torch.manual_seed(seed)
+    torch.random.manual_seed(seed)
+    np.random.seed(seed)
+
+    if deterministic_execution:
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+    else:
+        print('Note that due to parallel processing results will be similar but not identical. '
+              'Use only one process and set --deterministic_execution to True if you want identical results '
+              '(only recommended for debugging).')
 
 
 # def add_mols_to_history(mols, query_history):

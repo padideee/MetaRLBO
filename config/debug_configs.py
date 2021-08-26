@@ -21,6 +21,24 @@ debug = {
 }
 
 
+debug_RANDOM = {
+	"exp_label": "DEBUG-RANDOM",
+	"num_initial_samples": 400,
+	"num_query_per_iter": 250,
+	"policy": {
+		"model_name": "RANDOM",
+	},
+	"selection_criteria": {
+		"method": "RANDOM",
+	},
+	"log_interval": 1,
+}
+
+
+
+
+
+
 # Varying Proxy Oracle Models
 debug_BR = {
 	"exp_label": "DEBUG-BR",

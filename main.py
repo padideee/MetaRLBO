@@ -15,6 +15,8 @@ from config import debug_configs
 from metalearner import MetaLearner
 from utils.helpers import merge_dicts
 
+from random_prog import Program
+
 
 def main():
     if len(sys.argv) >= 2: config_name = sys.argv[1]
@@ -38,8 +40,13 @@ def main():
         raise Exception(f"Invalid Task: {name}")
 
 
-    metalearner = MetaLearner(config)
-    metalearner.run()
+
+    if config["policy"]["model_name"] == "RANDOM":
+        prog = Program(config)
+        prog.run()
+    else:
+        metalearner = MetaLearner(config)
+        metalearner.run()
 
 
 if __name__ == '__main__':

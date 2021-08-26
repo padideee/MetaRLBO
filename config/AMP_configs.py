@@ -2605,37 +2605,6 @@ amp_knr_large_023 = {
 
 
 
-
-amp_knr_large_024 = {
-	"exp_label": "AMP-KNR-Large-024",
-	"num_proxies": 8, 
-	"num_inner_updates": 2, 
-	"num_meta_proxy_samples": 2,
-	"num_initial_samples": 300,
-	"num_query_proxies": 128,
-	"num_samples_per_iter": 8, 
-	"num_samples_per_task_update": 16, 
-	"num_query_per_iter": 250,
-	"inner_lr": 10.0,
-	"outer_lr": 1.0,
-	"num_meta_updates_per_iter": 10,
-	"entropy_reg_coeff": 0.0, 
-	"proxy_oracle": {
-		"model_name": "KNR",
-		"p": 0.8, # Proportion of data to sample to train proxy oracles
-	},
-
-	"true_oracle": {
-		"model_name": "RFC",
-	},
-	"logging": {
-		"top-k": 4, # k for top-k
-	},
-	"log_interval": 1,
-	"results_log_dir": "./logs",
-	"seed": 73,
-}
-
 amp_knr_large_024 = {
 	"exp_label": "AMP-KNR-Large-024",
 	"num_proxies": 8, 
@@ -2672,7 +2641,7 @@ amp_knr_large_024 = {
 	"seed": 73,
 }
 
-amp_knr_large_024 = {
+amp_knr_large_025 = {
 	"exp_label": "AMP-KNR-Large-025",
 	"num_proxies": 8, 
 	"num_inner_updates": 2, 

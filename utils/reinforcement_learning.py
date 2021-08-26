@@ -20,4 +20,4 @@ def reinforce_loss(episodes, params=None):
     # return -losses.sum() / episodes.num_samples
 
 def entropy_bonus(episodes):
-	return - (episodes.log_probs).sum()
+	return - (episodes.log_probs).sum() / episodes.masks.sum()

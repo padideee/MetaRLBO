@@ -28,8 +28,11 @@ DEFAULT_CONFIG = {
 	},
 
 
-	"select_samples": { # Configs for selecting the samples
-		"method": "PROXY_MEAN", 
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 1.0,
+		}
 	},
 	"true_oracle": {
 		"model_name": "RFC",

@@ -62,16 +62,22 @@ class RolloutStorage(BaseStorage):
 
         self.curr_timestep = self.curr_timestep + 1
 
+
+    def after_traj(self):
+        self.curr_timestep = 0
+        self.curr_sample = (self.curr_sample + 1) % self.num_samples
+
     def compute_returns(self, gamma = 1.00):
         self.returns[self.num_steps] = self.rewards[self.num_steps]
         for step in reversed(range(self.num_steps)):
             self.returns[step] = self.rewards[step] + gamma * self.returns[step+1]
 
-    def after_rollout(self):
-        self.curr_timestep = 0
-        self.curr_sample = (self.curr_sample + 1) % self.num_samples
+    def after_rollouts(self):
+
+        self.masks[0] = 1
         for i in range(1, self.num_steps+1):
-            self.masks[i] = 1 - self.dones[i-1] - self.masks[i-1] 
+            self.masks[i] = self.masks[i-1] - self.dones[i-1]
+
 
 
     def compute_log_probs(self, policy):

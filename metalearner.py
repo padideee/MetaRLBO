@@ -46,6 +46,9 @@ class MetaLearner:
         self.logger = TBLogger(self.config, self.config["exp_label"])
 
 
+        utl.save_config(self.config, self.logger.full_output_folder)
+
+
         # The seq and the label from library
         # seq shape: (batch, 46*21)
         # label shape: (batch) -> in binary format:{'positive': AMP, 'negative': not AMP}
@@ -147,7 +150,7 @@ class MetaLearner:
             if self.iter_idx == 0:
 
                 random_policy = RandomPolicy(input_size = self.env.observation_space.shape, output_size = 1, num_actions=self.env.action_space.n).to(device)
-                sampled_mols = self.sample_policy(random_policy, self.env, self.config["num_initial_samples"]) # Sample from true env. using random policy (num_starting_mols, dim of mol)
+                sampled_mols = self.sample_policy(random_policy, self.env, self.config["num_initial_samples"] * 2) # Sample from true env. using random policy (num_starting_mols, dim of mol)
 
             else:
                 # Training
@@ -169,7 +172,7 @@ class MetaLearner:
                 sampled_mols = torch.cat(sampled_mols, dim = 0)
 
             # Do some filtering of the molecules here...
-            queried_mols = self.select_molecules(sampled_mols)
+            queried_mols, logs = self.select_molecules(sampled_mols, logs)
 
 
             # Perform the querying
@@ -315,7 +318,12 @@ class MetaLearner:
 
 
 
-                meta_loss = rl_utl.reinforce_loss(self.D_meta_query) + self.config["entropy_reg_coeff"] * rl_utl.entropy_bonus(self.D_meta_query)
+                reinforce_loss = rl_utl.reinforce_loss(self.D_meta_query)
+                entropy_bonus = self.config["entropy_reg_coeff"] * rl_utl.entropy_bonus(self.D_meta_query)
+                meta_loss = reinforce_loss + entropy_bonus
+                logs["meta/reinforce_loss"] = reinforce_loss
+                logs["meta/entropy_bonus"] = entropy_bonus
+                
                 meta_loss.backward() 
 
 
@@ -386,7 +394,7 @@ class MetaLearner:
             When policy_storage is None, the goal is to return a set of molecules to query.
             When policy_storage is not None, the goal is to return trajectories.
         """
-        state_dim = env.observation_space.shape # Currently hardcoded
+        state_dim = env.observation_space.shape 
         return_mols = torch.zeros(num_samples, *state_dim)
 
         curr_sample = 0
@@ -397,13 +405,12 @@ class MetaLearner:
                 Or policy_storage is not None, meaning fill up the storage
             """
 
-
-            end_traj = False
+            done = False
             state = env.reset().clone() # Returns (51, 21)
             hidden_state = None
             curr_timestep = 0
             curr_sample += 1
-            while not end_traj:
+            while not done:
                 
                 if self.config["policy"]["model_name"] == "GRU":
                     if curr_timestep == 0:
@@ -425,10 +432,10 @@ class MetaLearner:
 
                 next_state, reward, pred_prob, done, info = env.step(action, query_reward = policy_storage is not None)
 
+
                 if done:
                     return_mols[curr_queried] = next_state.detach().clone() # Leo: The return mols is bugged if we're using the "true oracle" to perform the meta-update....
                     curr_queried += 1
-                    end_traj = True
 
 
                 # 2 choices: Either we forcibly generate the molecules (cut off at 50 or we let it generate until then...)
@@ -439,20 +446,26 @@ class MetaLearner:
                                    action=action.detach().clone(), 
                                    reward=reward.detach().clone(),
                                    log_prob=log_prob.clone(),
-                                   done=torch.tensor(done).detach().float())
+                                   done=torch.tensor(done).float().clone().detach())
 
                 state = next_state.clone()
                 curr_timestep += 1
 
+
             if policy_storage is not None:
-                policy_storage.compute_returns()
-                policy_storage.after_rollout()
+                policy_storage.after_traj()
+
+        if policy_storage is not None:
+            policy_storage.compute_returns()
+            policy_storage.after_rollouts()
+
+            assert policy_storage.dones.sum() == num_samples
 
         return return_mols
 
 
 
-    def select_molecules(self, mols):
+    def select_molecules(self, mols, logs):
         """
             Selects the molecules to query from the ones proposed by the policy trained on each of the proxy oracle
 
@@ -478,32 +491,58 @@ class MetaLearner:
         if mols.shape[0] > 0:
             mols = torch.tensor(mols)
 
-            n_query = min(self.config["num_query_per_iter"], mols.shape[0])
+
+            if self.iter_idx == 0: # Special case: Random Policy
+                n_query = self.config["num_initial_samples"]
+            else:
+                n_query = min(self.config["num_query_per_iter"], mols.shape[0])
             
-            if self.config["select_samples"]["method"] == "RANDOM" or self.iter_idx == 0:
+            if self.config["selection_criteria"]["method"] == "RANDOM" or self.iter_idx == 0:
                 # In the case that the iter_idx is 0, then we can only randomly select them...
                 perm = torch.randperm(mols.shape[0])
                 idx = perm[:n_query]
-            elif self.config["select_samples"]["method"] == "PROXY_MEAN":
+            elif self.config["selection_criteria"]["method"] == "PROXY_MEAN":
                 proxy_scores = []
                 for j in range(self.config["num_proxies"]):
                     proxy_scores.append(torch.tensor(self.proxy_oracles[j].query(self.proxy_oracle_models[j], mols, flatten_input = self.flatten_proxy_oracle_input)))
-                proxy_scores_mean = sum(proxy_scores) / self.config["num_proxies"]
+                proxy_scores = torch.stack(proxy_scores)
+                proxy_scores_mean = proxy_scores.mean(dim=0)
                 
                 _, sorted_idx = torch.sort(proxy_scores_mean)
 
                 sorted_idx = torch.flip(sorted_idx, dims=(0,)) # Largest to Smallest
                 
                 idx = sorted_idx[:n_query] # Select top scores
+            elif self.config["selection_criteria"]["method"] == "UCB":
+                proxy_scores = []
+                for j in range(self.config["num_proxies"]):
+                    proxy_scores.append(torch.tensor(self.proxy_oracles[j].query(self.proxy_oracle_models[j], mols, flatten_input = self.flatten_proxy_oracle_input)))
+                proxy_scores = torch.stack(proxy_scores)
+                proxy_scores_mean = proxy_scores.mean(dim=0)
+
+                
+                proxy_scores_std = proxy_scores.std(dim=0)
+
+                logs["select_molecules/proxy_model/mean/mean"] = proxy_scores_mean.mean()
+                logs["select_molecules/proxy_model/std/mean"] = proxy_scores_std.mean()
+                
+
+                scores = proxy_scores_mean + self.config["selection_criteria"]["config"]["beta"] * proxy_scores_std
+                _, sorted_idx = torch.sort(scores)
+
+                sorted_idx = torch.flip(sorted_idx, dims=(0,)) # Largest to Smallest
+                
+                idx = sorted_idx[:n_query] # Select top scores
+
             else:
                 raise NotImplementedError
 
             selected_mols = mols.clone()[idx]
 
-            return selected_mols
+            return selected_mols, logs
 
         else:
-            return None
+            return None, logs
 
 
 

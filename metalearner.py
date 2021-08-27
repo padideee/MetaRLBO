@@ -477,7 +477,6 @@ class MetaLearner:
         # Remove duplicate molecules... in current batch
         mols = np.unique(mols, axis = 0) 
 
-
         # Remove duplicate molecules that have already been queried...
         valid_idx = []
         for i in range(mols.shape[0]):

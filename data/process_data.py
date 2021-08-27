@@ -8,7 +8,7 @@
 
 import numpy as np
 import torch
-import hickle as hkl
+# import hickle as hkl
 import pickle as pkl
 from positional_encodings import PositionalEncoding1D, PositionalEncoding2D
 import torch.nn.functional as F
@@ -41,10 +41,10 @@ def seq_to_encoding(seq):
 
 def get_data(data):
 
-    my_data = hkl.load(data)
+    # my_data = hkl.load(data)
     # use the pickle format for compute canada..
-    # with open(data, 'rb') as f:
-    #     my_data = pkl.load(f)
+    with open(data, 'rb') as f:
+        my_data = pkl.load(f)
     data_x = np.array(my_data['xtrain'])
     data_x = torch.from_numpy(data_x)
     n, x1, x2 = data_x.shape

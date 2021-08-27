@@ -30,6 +30,13 @@ cd logs
 tensorboard --logdir .
 ```
 
+## Dependency notes
+- For blast make sure to install ncbi-blast+ locally, on CC it's already installed you just need to load the following modules:
+module load nixpkgs/16.09 gcc/7.3.0 blast+/2.9.0
+
+
+
+
 
 
 

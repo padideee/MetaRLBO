@@ -9,7 +9,8 @@ import utils.helpers as utl
 
 
 class AMPEnv(gym.Env):
-    def __init__(self, reward_oracle, reward_oracle_model, lambd = 0.1, radius = 2, max_AMP_length = 50, query_history = None):
+    def __init__(self, reward_oracle, reward_oracle_model, lambd = 0.1, radius = 2, max_AMP_length = 50, query_history = None,
+                 div_metric_name="hamming", div_switch="ON"):
 
 
         # Actions in AMP design are the 20 amino acids
@@ -43,6 +44,12 @@ class AMPEnv(gym.Env):
 
         self.lambd = lambd  # TODO: tune + add this to config
         self.radius = radius
+
+        self.div_metric_name = div_metric_name
+
+
+        self.div_switch = div_switch
+
 
 
     def update_proxy_oracles(self, oracle):
@@ -78,8 +85,7 @@ class AMPEnv(gym.Env):
 
             # compute density of similar sequences in the history
             if len(self.history) > 1:
-                # Use div=False to test without diversity promotion
-                dens = diversity(self.curr_state, self.history, div=True, radius=self.radius).density_blast()
+                dens = diversity(self.curr_state, self.history, div_switch=self.div_switch, radius=self.radius, div_metric_name=self.div_metric_name).get_density()
             else:
                 dens = 0.0
                 convert = utl.convertor()

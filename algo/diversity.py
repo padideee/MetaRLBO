@@ -50,13 +50,16 @@ def blast_density(scores):
 class diversity():
     """ since different distance metric could lead to 'different scale', we should pay attention if
     we want use these metric for comparison purposes. """
-    def __init__(self, seq, history, div=False, radius = 2):
+    def __init__(self, seq, history, div_switch="ON", radius=2, div_metric_name="hamming"):
         super(diversity, self).__init__()
-        self.div=div
+        self.div_switch=div_switch
         self.seq = seq
         self.history = torch.stack(history)
         self.radius = radius
         # self.history = history
+        self.div_metric_name = div_metric_name
+
+
 
     # def hamming_distance(self, radius=2):
     #     # For the case of fixed length, one_hot_encoded inputs
@@ -75,8 +78,10 @@ class diversity():
     #         return 0.0
 
 
+
+
     def density_hamming(self):
-        if self.div:
+        if self.div_switch == "ON":
 
             # Hamming Distance is equiv. to XOR, but in our case, it's not exactly XOR since we're one hot encoding characters.
             sums = (((1 - self.history) * self.seq + self.history * (1 - self.seq)).sum([1, 2]))/2
@@ -93,7 +98,7 @@ class diversity():
             return 0.0
 
     def density_blast(self):
-        if self.div:
+        if self.div_switch == "ON":
             convert = utl.convertor()
             s_seq = convert.one_hot_to_AA(self.seq)
             utl.make_fasta(s_seq)
@@ -111,4 +116,12 @@ class diversity():
     def nearest_neighbour(self):
         pass
 
+
+    def get_density(self):
+        if self.div_metric_name == "blast":
+            return self.density_blast()
+        elif self.div_metric_name == "hamming":
+            return self.density_hamming()
+        else:
+            raise NotImplementedError
 

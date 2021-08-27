@@ -14,7 +14,7 @@ class get_test_oracle:
     def __init__(self):
 
         # path to pickle format instead: 'data/data_test.pickle'
-        data_storage = get_AMP_data('data/data_test.hkl')  # our held-out AMP for training the classifier for evaluation
+        data_storage = get_AMP_data('data/data_test.pickle')  # our held-out AMP for training the classifier for evaluation
 
 
         seq, label = data_storage.mols, data_storage.scores

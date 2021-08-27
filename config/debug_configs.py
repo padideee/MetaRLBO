@@ -20,7 +20,6 @@ debug = {
 	"log_interval": 1,
 }
 
-
 # Varying Proxy Oracle Models
 debug_BR = {
 	"exp_label": "DEBUG-BR",
@@ -163,6 +162,29 @@ debug_GRU = {
 			"hidden_dim": 100,
 			"state_embedding_size": 64,
 		}
+	},
+	"logging": {
+		"top-k": 4, # k for top-k
+	},
+	"log_interval": 1,
+}
+
+debug_diversity = {
+	"exp_label": "DEBUG",
+	"num_proxies": 2,
+	"num_inner_updates": 3,
+	"num_meta_proxy_samples": 4,
+	"num_initial_samples": 10,
+	"num_samples_per_iter": 4,
+	"num_samples_per_task_update": 4,
+	"proxy_oracle": {
+		"model_name": "BR",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+
+	"diversity": {
+		"div_metric_name": "blast",
+		"div_switch": "ON"
 	},
 	"logging": {
 		"top-k": 4, # k for top-k

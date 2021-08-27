@@ -26,6 +26,10 @@ DEFAULT_CONFIG = {
 		"model_name": "MLP",
 	},
 
+	"diversity": {
+		"div_metric_name": "hamming",
+		"div_switch": "ON" # switches the diversity bonus ON / OFF
+	},
 
 	"select_samples": { # Configs for selecting the samples
 		"method": "PROXY_MEAN", 

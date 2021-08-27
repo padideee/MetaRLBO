@@ -54,7 +54,7 @@ class MetaLearner:
             D_AMP = dynappo_data.get_AMP_data(self.config["mode"])
         elif self.config["data_source"] == 'Custom':
             from data.process_data import get_AMP_data
-            D_AMP = get_AMP_data('data/data_train.hkl')
+            D_AMP = get_AMP_data('data/data_train.pickle')
         else:
             raise NotImplementedError
         # path to pickle 'data/data_train.pickle'
@@ -83,7 +83,8 @@ class MetaLearner:
 
         # -- END ---
         
-        self.env = AMPEnv(self.true_oracle, self.true_oracle_model, lambd=self.config["env"]["lambda"], radius = self.config["env"]["radius"]) # The reward will not be needed in this env.
+        self.env = AMPEnv(self.true_oracle, self.true_oracle_model, lambd=self.config["env"]["lambda"], radius = self.config["env"]["radius"],
+                          div_metric_name=self.config["diversity"]["div_metric_name"], div_switch=self.config["diversity"]["div_switch"] ) # The reward will not be needed in this env.
 
         self.D_train = QueryStorage(storage_size=self.config["max_num_queries"], state_dim = self.env.observation_space.shape)
 
@@ -92,6 +93,7 @@ class MetaLearner:
         self.proxy_oracles = [AMPProxyOracle(training_storage=self.D_train, p=self.config["proxy_oracle"]["p"]) for j in range(self.config["num_proxies"])]
         self.proxy_oracle_models = [utl.get_proxy_oracle_model(self.config) for j in range(self.config["num_proxies"])]
         self.proxy_envs = [AMPEnv(self.proxy_oracles[j], self.proxy_oracle_models[j], lambd=self.config["env"]["lambda"], query_history = self.query_history) for j in range(self.config["num_proxies"])]
+
 
 
         # We need to include the molecules... in terms of diversity. 

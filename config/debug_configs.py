@@ -20,6 +20,25 @@ debug = {
 	"log_interval": 1,
 }
 
+
+debug_RANDOM = {
+	"exp_label": "DEBUG-RANDOM",
+	"num_initial_samples": 400,
+	"num_query_per_iter": 250,
+	"policy": {
+		"model_name": "RANDOM",
+	},
+	"selection_criteria": {
+		"method": "RANDOM",
+	},
+	"log_interval": 1,
+}
+
+
+
+
+
+
 # Varying Proxy Oracle Models
 debug_BR = {
 	"exp_label": "DEBUG-BR",
@@ -63,27 +82,39 @@ debug_RR = {
 
 debug_KNR = {
 	"exp_label": "DEBUG-KNR",
-	"num_proxies": 2, 
+	"num_proxies": 4,
 	"num_inner_updates": 1, 
-	"num_meta_proxy_samples": 4,
-	"num_initial_samples": 20,
+	"num_meta_proxy_samples": 2,
+	"num_initial_samples": 400,
+	"num_query_proxies": 8,
 	"num_samples_per_iter": 4, 
-	"num_samples_per_task_update": 4, 
-	"inner_lr": 1e0,
-	"outer_lr": 1e-1,
+	"num_samples_per_task_update": 8,
+	"num_query_per_iter": 10,
+	"inner_lr": 10.0,
+	"outer_lr": 1e0,
 	"proxy_oracle": {
 		"model_name": "KNR",
 		"p": 0.8, # Proportion of data to sample to train proxy oracles
 	},
-	"logging": {
-		"top-k": 4, # k for top-k
-	},
-	"env": {
-		"lambda": 0.1, # Diversity hyperparameter -- higher is more penalty for more similar mols.
-		"radius": 2,
+	"entropy_reg_coeff": 0.0,
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB",
+		"config": {
+			'beta': 4.0,
+		}
 	},
 	"log_interval": 1,
 }
+
+
+
+
+
+
+
+
+
+
 
 
 debug_KNR_OL = {

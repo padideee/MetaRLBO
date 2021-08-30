@@ -4,28 +4,11 @@ import torch.nn.functional as F
 import torch
 from storage.query_storage import QueryStorage
 
+from collections import OrderedDict
+
 enc_len = 50
 num_actions = 21
-mol_enc =   {'A': 0,
-             'F': 1,
-             'R': 2,
-             'G': 3,
-             'C': 4,
-             'W': 5,
-             'T': 6,
-             'K': 7,
-             'N': 8,
-             'Y': 9,
-             'S': 10,
-             'P': 11,
-             'L': 12,
-             'H': 13,
-             'I': 14,
-             'Q': 15,
-             'V': 16,
-             'M': 17,
-             'E': 18,
-             'D': 19}
+mol_enc =   OrderedDict([('A', 0), ('R', 1), ('N', 2), ('D', 3), ('C', 4), ('E', 5), ('Q', 6), ('G', 7), ('H', 8), ('I', 9), ('L', 10), ('K', 11), ('M', 12), ('F', 13), ('P', 14), ('S', 15), ('T', 16), ('W', 17), ('Y', 18), ('V', 19), ('>', 20)])
 
 def seq_to_enc(seq):
     enc = [None for i in range(enc_len)]

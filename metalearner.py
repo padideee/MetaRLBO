@@ -54,7 +54,7 @@ class MetaLearner:
             D_AMP = dynappo_data.get_AMP_data(self.config["mode"])
         elif self.config["data_source"] == 'Custom':
             from data.process_data import get_AMP_data
-            D_AMP = get_AMP_data('data/data_train.pickle')
+            D_AMP = get_AMP_data('data/data_train.hkl')
         else:
             raise NotImplementedError
         # path to pickle 'data/data_train.pickle'
@@ -83,8 +83,7 @@ class MetaLearner:
 
         # -- END ---
         
-        self.env = AMPEnv(self.true_oracle, self.true_oracle_model, lambd=self.config["env"]["lambda"], radius = self.config["env"]["radius"],
-                          div_metric_name=self.config["diversity"]["div_metric_name"], div_switch=self.config["diversity"]["div_switch"] ) # The reward will not be needed in this env.
+        self.env = AMPEnv(self.true_oracle, self.true_oracle_model, lambd=self.config["env"]["lambda"], radius = self.config["env"]["radius"]) # The reward will not be needed in this env.
 
         self.D_train = QueryStorage(storage_size=self.config["max_num_queries"], state_dim = self.env.observation_space.shape)
 
@@ -95,8 +94,12 @@ class MetaLearner:
         self.proxy_envs = [AMPEnv(self.proxy_oracles[j], self.proxy_oracle_models[j], lambd=self.config["env"]["lambda"], query_history = self.query_history) for j in range(self.config["num_proxies"])]
 
 
+        # Proxy -- used for generating molecules for querying
+        self.proxy_query_oracles = [AMPProxyOracle(training_storage=self.D_train, p=self.config["proxy_oracle"]["p"]) for j in range(self.config["num_query_proxies"])]
+        self.proxy_query_oracle_models = [utl.get_proxy_oracle_model(self.config) for j in range(self.config["num_query_proxies"])]
+        self.proxy_query_envs = [AMPEnv(self.proxy_query_oracles[j], self.proxy_query_oracle_models[j], lambd=self.config["env"]["lambda"], query_history = self.query_history) for j in range(self.config["num_query_proxies"])]
 
-        # We need to include the molecules... in terms of diversity. 
+        # We need to include the molecules... in terms of diversity.
         # We need to add the model to the environment... in order to query.
         # We need to fix the query function in the environment...
 
@@ -275,43 +278,6 @@ class MetaLearner:
                     print(f"Outer Loss: {outer_loss}")
                     # print(f"Outer Scores: {outer_score}")
                     logs["outer_loop/loss"] = outer_loss.item()
-
-            # Logging
-            if self.iter_idx % self.config["log_interval"] == 0:
-                self.log(logs)
-
-
-                
-                utl.save_mols(mols=self.D_train.mols[:self.D_train.storage_filled].numpy(), 
-                                scores=self.D_train.scores[:self.D_train.storage_filled].numpy(),
-                                folder=self.logger.full_output_folder)
-
-                
-
-                # TODO: Record the results according to the final test oracle of the new samples and the cumulative samples
-                
-
-                # Leo: What do we even want to record for the test oracle?
-                #      Perhaps the likeliness of our molecule being an AMP according to that oracle?
-
-                # cur_batch_test_score = self.test_oracle.give_score(queried_mols, queried_mols_scores)
-                # cum_batch_test_score = self.test_oracle.give_score(self.D_train.mols[:self.D_train.storage_filled], self.D_train.scores[:self.D_train.storage_filled])
-                # import pdb; pdb.set_trace()
-                batch_test_prob = self.test_oracle.get_prob(queried_mols)
-                cumul_test_prob = self.test_oracle.get_prob(self.D_train.mols[:self.D_train.storage_filled])
-
-                logs["test_oracle/scores/current_batch/min"] = batch_test_prob.min().item()
-                logs["test_oracle/scores/current_batch/mean"] = batch_test_prob.mean().item()
-                logs["test_oracle/scores/current_batch/max"] = batch_test_prob.max().item()
-
-                logs["test_oracle/scores/cumulative/min"] = cumul_test_prob.min().item()
-                logs["test_oracle/scores/cumulative/mean"] = cumul_test_prob.mean().item()
-                logs["test_oracle/scores/cumulative/max"] = cumul_test_prob.max().item()
-                
-
-                # # TODO adding to log
-                # print('Iteration {}, test oracle accuracy: {}'.format(self.iter_idx, score))
-                
 
     def sample_policy(self, policy, env, num_samples, policy_storage = None):
         """

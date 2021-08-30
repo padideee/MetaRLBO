@@ -5,7 +5,7 @@ Takes a flag --env-type (see below for choices) and loads the parameters from th
 import argparse
 import warnings
 import sys
-import os
+
 import torch
 
 # get configs
@@ -42,6 +42,15 @@ def main():
         pass
     metalearner = MetaLearner(config)
     metalearner.run()
+    utl.seed(config["seed"])
+
+
+    if config["policy"]["model_name"] == "RANDOM":
+        prog = Program(config)
+        prog.run()
+    else:
+        metalearner = MetaLearner(config)
+        metalearner.run()
 
 
 if __name__ == '__main__':

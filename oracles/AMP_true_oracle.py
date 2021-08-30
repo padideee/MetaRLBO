@@ -6,7 +6,8 @@ import numpy as np
 class AMPTrueOracle(BaseOracle):
 	def __init__(self, training_storage):
 		self.training_storage = training_storage
-
+		self.queried_scores = {}
+		self.query_count = 0
 
 
 	def query(self, model, x, flatten_input=True):
@@ -22,21 +23,55 @@ class AMPTrueOracle(BaseOracle):
 		if flatten_input: 
 			x = x.flatten(start_dim=-2, end_dim = -1) # Hardcoded for AMP
 
-		pred_prob = model.predict_proba(x)
 
 
-		assert model.classes_.shape[-1] <= 2
+		batch_size = x.shape[0]
+		pred_prob = np.zeros((batch_size, 2))
 
-		if pred_prob.shape[-1] == 1:
-			pred_prob = np.zeros((*pred_prob.shape[:-1], 2))
+		for i in range(batch_size):
+			tuple_xi = tuple(x[i].numpy().tolist())
 
-			if model.classes_[0] == 0:
-				pred_prob[:, 0] = 1
-			elif model.classes_[0] == 1:
-				pred_prob[:, 1] = 1
+			if tuple_xi in self.queried_scores:
+				pred_prob[i] = self.queried_scores[tuple_xi]
+				
+				print("Duplicate")
+			else:
+				# Leo: Should be parallelised
+				score = model.predict_proba(x[i][np.newaxis, ...])
+				self.queried_scores[tuple_xi] = score
+				self.query_count += 1
+
+				if score.shape[-1] == 1:
+					score = np.zeros((2, ))
+
+					assert model.classes_.shape[-1] <= 2
+					
+					if model.classes_[0] == 0:
+						score[0] = 1
+					elif model.classes_[0] == 1:
+						score[1] = 1
+					else:
+						raise NotImplementedError
+				pred_prob[i] = score
+
+			
 
 
-		return pred_prob
+
+		# pred_prob = model.predict_proba(x)
+
+		# assert model.classes_.shape[-1] <= 2
+		# # Special case (Only a single class):
+		# if pred_prob.shape[-1] == 1:
+		# 	pred_prob = np.zeros((*pred_prob.shape[:-1], 2))
+
+		# 	if model.classes_[0] == 0:
+		# 		pred_prob[:, 0] = 1
+		# 	elif model.classes_[0] == 1:
+		# 		pred_prob[:, 1] = 1
+
+
+		return pred_prob[:, 1]
 
 
 	def fit(self, model, flatten_input=True):

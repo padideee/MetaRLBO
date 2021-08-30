@@ -5,10 +5,12 @@ from stable_baselines3.common.env_checker import check_env
 from data.process_data import seq_to_encoding
 from algo.diversity import diversity 
 import torch.nn.functional as F
+import utils.helpers as utl
 
 
 class AMPEnv(gym.Env):
-    def __init__(self, reward_oracle, max_AMP_length = 51):
+    def __init__(self, reward_oracle, reward_oracle_model, lambd = 0.1, radius = 2, max_AMP_length = 50, query_history = None,
+                 div_metric_name="hamming", div_switch="ON"):
 
 
         # Actions in AMP design are the 20 amino acids
@@ -16,7 +18,7 @@ class AMPEnv(gym.Env):
         # represent the "end of sequence" token
         self.max_AMP_length = max_AMP_length
         self.num_actions = 21
-        self.EOS_idx = 20
+        self.EOS_idx = 20 # EOS/Padding token
 
         self.action_space = gym.spaces.Discrete(self.num_actions) # 20 amino acids, End of Sequence Token
 
@@ -30,15 +32,25 @@ class AMPEnv(gym.Env):
         self.curr_state = self.start_state  # TODO: Need to update this outside of class
 
         self.time_step = 0 # TODO: Need to update this outside of class
-        self.history = []
+        
+        self.history = query_history if query_history is not None else []
         self.evaluate = {'seq': [], 'embed_seq': [], 'reward': [], 'pred_prob': []}
 
         self.max_AMP_length = max_AMP_length
         self.reward_oracle = reward_oracle
+        self.reward_oracle_model = reward_oracle_model
         self.proxy_oracles = []
         self.modelbased = False
 
-        self.lambd = 0.1  # TODO: tune + add this to config
+        self.lambd = lambd  # TODO: tune + add this to config
+        self.radius = radius
+
+        self.div_metric_name = div_metric_name
+
+
+        self.div_switch = div_switch
+
+
 
     def update_proxy_oracles(self, oracle):
         self.proxy_oracles = oracle
@@ -46,7 +58,11 @@ class AMPEnv(gym.Env):
     def update_opt_method(self, modelbased):
         self.modelbased = modelbased
 
-    def step(self, action):
+    def step(self, action, query_reward=False):
+
+        """
+            query_reward: True if the reward is to be queried... (TODO: Use true oracle)
+        """
         # Return: (state, reward, done, info)
         # NOTE: Reward is the prediction probability of whether
         # a sequence is antimicrobial towards a certain pathogen
@@ -58,16 +74,26 @@ class AMPEnv(gym.Env):
         self.curr_state[self.time_step] = F.one_hot(action, num_classes = self.num_actions)
 
         queried = False
-        if action.item() == self.EOS_idx:
+        if action.item() == self.EOS_idx or self.time_step + 1 == self.max_AMP_length:
             queried = True
             done = True
+
+            # Pad the rest of the state...
+            padding = F.one_hot(torch.tensor(self.EOS_idx), num_classes = self.num_actions)
+            self.curr_state[self.time_step+1:] = padding            
+
+
             # compute density of similar sequences in the history
             if len(self.history) > 1:
-                # Use div=False to test without diversity promotion
-                dens = diversity(self.curr_state, self.history, div=True).density()
+                dens = diversity(self.curr_state, self.history, div_switch=self.div_switch, radius=self.radius, div_metric_name=self.div_metric_name).get_density()
             else:
                 dens = 0.0
-            self.history.append(self.curr_state)
+                convert = utl.convertor()
+                s_seq = convert.one_hot_to_AA(self.curr_state)
+                utl.make_fasta(s_seq)
+                utl.append_history_fasta()
+
+            # self.history.append(self.curr_state)
 
             # Store predictive probability for regression
             if self.modelbased:
@@ -77,15 +103,17 @@ class AMPEnv(gym.Env):
 
                 pred = []
                 for m in self.proxy_oracles:
-                    s = seq_to_encoding(self.curr_state.unsqueeze(0)) # seq_to_encoding -- not the one hot encoding...
+                    # s = seq_to_encoding(self.curr_state.unsqueeze(0)) # seq_to_encoding -- not the one hot encoding...
+                    s = self.curr_state.unsqueeze(0)
                     d = m.predict(s.numpy()[np.newaxis, :])
                     pred.append(d)
                 predictionAMP = np.average(pred)
                 # print("Avg. prediction: ", predictionAMP)
                 # Return avg. prediction based on proxy models
                 pred_prob = torch.tensor([[1 - predictionAMP, predictionAMP]])
-                reward = torch.tensor(predictionAMP)
-                reward -= self.lambd * dens
+                if query_reward:
+                    reward = torch.tensor(predictionAMP)
+                    reward -= self.lambd * dens
 
                 with open('logs/log.txt', 'a+') as f:
                     f.write('Model Based' + '\t' + str(reward.detach().cpu().numpy()) + '\n')
@@ -99,52 +127,34 @@ class AMPEnv(gym.Env):
             else:
                 # (returns prob. per classification class --> [Prob. Neg., Prob. Pos.])
 
-                s = seq_to_encoding(self.curr_state.unsqueeze(0)) # Leo: TODO (this takes as input -- not the one hot encoding...)
-                try:
-                    pred_prob = torch.tensor(self.reward_oracle.predict_proba(s))
-                    reward = pred_prob[0][1] 
-                except:
-                    reward = torch.tensor(self.reward_oracle.predict(s))
-                    pred_prob = torch.tensor([[1 - reward, reward]])
-                # # ---- Modification ---------
-                # """
-                #     Modification to env.:
+                # s = seq_to_encoding(self.curr_state.unsqueeze(0)) # Leo: TODO (this takes as input -- not the one hot encoding...)
+                s = self.curr_state.unsqueeze(0).flatten(-2, -1)
 
-                #     There's a special case where if the reward oracle was only trained on neg./pos. data, then it will output a
-                #     pred_prob w/ a final dimension of 1, which leads to an error.
-                # """
-                # assert self.reward_oracle.classes_.shape[-1] <= 2
-
-                # if pred_prob.shape[-1] == 1:
+                if query_reward:
+                    # try:
+                    #     pred_prob = torch.tensor(self.reward_oracle.predict_proba(s))
+                    #     reward = pred_prob[0][1] 
+                    # except:
+                    #     reward = torch.tensor(self.reward_oracle.predict(s))
+                    #     pred_prob = torch.tensor([[1 - reward, reward]])
                     
-                #     prob = torch.zeros((*pred_prob.shape[:-1], 2))
+                    pred_prob = self.reward_oracle.query(self.reward_oracle_model, self.curr_state.unsqueeze(0), flatten_input=True)
 
-                #     if self.reward_oracle.classes_[0] == 0:
-                #         prob[:, 0] = 1
-                #     elif self.reward_oracle.classes_[0] == 1:
-                #         prob[:, 1] = 1
-
-                #     pred_prob = prob
-
-                # # ---- End Modification -----
+                    reward = torch.tensor(pred_prob[0])
+                    reward -= self.lambd * dens
 
                    
-                with open('logs/log.txt', 'a+') as f:
-                    f.write('Model Free' + '\t' + str(reward.detach().cpu().numpy()) + '\n')
-                self.evaluate['seq'].append(self.curr_state.detach().cpu().numpy())
-                self.evaluate['embed_seq'].append(s.detach().cpu().numpy())
-                self.evaluate['reward'].append(reward.detach().cpu().numpy())
-                self.evaluate['pred_prob'].append(pred_prob[0][1].detach().cpu().numpy())
+                    # with open('logs/log.txt', 'a+') as f:
+                    #     f.write('Model Free' + '\t' + str(reward.detach().cpu().numpy()) + '\n')
+                    # self.evaluate['seq'].append(self.curr_state.detach().cpu().numpy())
+                    # self.evaluate['embed_seq'].append(s.detach().cpu().numpy())
+                    # self.evaluate['reward'].append(reward.detach().cpu().numpy())
+                    # self.evaluate['pred_prob'].append(pred_prob[0][1].detach().cpu().numpy())
 
-                # wandb.log({"train_pred_prob": pred_prob[0][1].detach().cpu().numpy()})
-
-                #TODO adding the pred_prob to Tensorboard log
+                    # # wandb.log({"train_pred_prob": pred_prob[0][1].detach().cpu().numpy()})
 
 
         self.time_step += 1
-
-        if self.time_step >= self.max_AMP_length:
-            done = True
 
         # Info must be a dictionary
         info = [{"action": action, "state": self.curr_state, "pred_prob": pred_prob, "queried": queried}]

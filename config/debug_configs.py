@@ -21,6 +21,24 @@ debug = {
 }
 
 
+debug_RANDOM = {
+	"exp_label": "DEBUG-RANDOM",
+	"num_initial_samples": 400,
+	"num_query_per_iter": 250,
+	"policy": {
+		"model_name": "RANDOM",
+	},
+	"selection_criteria": {
+		"method": "RANDOM",
+	},
+	"log_interval": 1,
+}
+
+
+
+
+
+
 # Varying Proxy Oracle Models
 debug_BR = {
 	"exp_label": "DEBUG-BR",
@@ -64,14 +82,52 @@ debug_RR = {
 
 debug_KNR = {
 	"exp_label": "DEBUG-KNR",
+	"num_proxies": 4,
+	"num_inner_updates": 1, 
+	"num_meta_proxy_samples": 2,
+	"num_initial_samples": 400,
+	"num_query_proxies": 8,
+	"num_samples_per_iter": 4, 
+	"num_samples_per_task_update": 8,
+	"num_query_per_iter": 10,
+	"inner_lr": 10.0,
+	"outer_lr": 1e0,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+	"entropy_reg_coeff": 0.0,
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB",
+		"config": {
+			'beta': 4.0,
+		}
+	},
+	"log_interval": 1,
+}
+
+
+
+
+
+
+
+
+
+
+
+
+debug_KNR_OL = {
+	"exp_label": "DEBUG-KNR",
 	"num_proxies": 2, 
-	"num_inner_updates": 3, 
+	"num_inner_updates": 1, 
 	"num_meta_proxy_samples": 4,
 	"num_initial_samples": 20,
 	"num_samples_per_iter": 4, 
 	"num_samples_per_task_update": 4, 
-	"inner_lr": 1e-1,
-	"outer_lr": 1e-3,
+	"inner_lr": 1e0,
+	"outer_lr": 1e-1,
+	"outerloop_oracle": "true",
 	"proxy_oracle": {
 		"model_name": "KNR",
 		"p": 0.8, # Proportion of data to sample to train proxy oracles
@@ -79,9 +135,43 @@ debug_KNR = {
 	"logging": {
 		"top-k": 4, # k for top-k
 	},
+	"env": {
+		"lambda": 0.1, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+		"radius": 2,
+	},
 	"log_interval": 1,
 }
 
+
+
+
+debug_mid = {
+	"exp_label": "DEBUG-Medium",
+	"num_proxies": 8, 
+	"num_inner_updates": 1, 
+	"num_meta_proxy_samples": 2,
+	"num_initial_samples": 250,
+	"num_samples_per_iter": 16, 
+	"num_samples_per_task_update": 16, 
+	"num_query_per_iter": 100,
+	"inner_lr": 1.0,
+	"outer_lr": 1.0,
+	"num_meta_updates_per_iter": 4,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"logging": {
+		"top-k": 1, # k for top-k
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
 
 # Varying Policy Models
 
@@ -103,6 +193,29 @@ debug_GRU = {
 			"hidden_dim": 100,
 			"state_embedding_size": 64,
 		}
+	},
+	"logging": {
+		"top-k": 4, # k for top-k
+	},
+	"log_interval": 1,
+}
+
+debug_diversity = {
+	"exp_label": "DEBUG",
+	"num_proxies": 2,
+	"num_inner_updates": 3,
+	"num_meta_proxy_samples": 4,
+	"num_initial_samples": 10,
+	"num_samples_per_iter": 4,
+	"num_samples_per_task_update": 4,
+	"proxy_oracle": {
+		"model_name": "BR",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+
+	"diversity": {
+		"div_metric_name": "blast",
+		"div_switch": "ON"
 	},
 	"logging": {
 		"top-k": 4, # k for top-k

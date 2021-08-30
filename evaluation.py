@@ -5,7 +5,7 @@ from sklearn.ensemble import RandomForestClassifier
 
 
 
-class get_test_proxy:
+class get_test_oracle:
     """
     The oracle fitted on test set
     TODO: move this to oracle folder
@@ -14,7 +14,7 @@ class get_test_proxy:
     def __init__(self):
 
         # path to pickle format instead: 'data/data_test.pickle'
-        data_storage = get_AMP_data('data/data_test.hkl')  # our held-out AMP for training the classifier for evaluation
+        data_storage = get_AMP_data('data/data_test.pickle')  # our held-out AMP for training the classifier for evaluation
 
 
         seq, label = data_storage.mols, data_storage.scores
@@ -28,29 +28,16 @@ class get_test_proxy:
         self.model_test = RandomForestClassifier(random_state=0, bootstrap=True, max_depth=50, n_estimators=200)
         self.model_test.fit(seq, label.flatten())
 
-        self.df = pd.read_pickle('logs/D3.pkl')  # D3 contains the generated AMP
 
+    # def give_score(self, mols, scores):
+    #     labels = (scores >= 0.5).float()
+    #     seqs = mols.flatten(1, 2)
 
-    def give_class_label(self):
-        pred_prob = self.df['pred_prob'].values
-        label = []
-        for i in pred_prob:
-            if i >= 0.5:
-                label.append('positive')
-            else:
-                label.append('negative')
-        return label
+    #     return self.model_test.score(seqs, labels)
 
-    def give_seqs(self):
-        seq = self.df['embed_seq'].values
-        seqs = []
-        for i in seq:
-            seqs.append(i[0])
-        return seqs
+    def get_prob(self, mols):
+        seqs = mols.flatten(1, 2)
 
-    def give_score(self):
-        labels = self.give_class_label()
-        seqs = self.give_seqs()
+        prob = self.model_test.predict_proba(seqs)
 
-        return self.model_test.score(seqs, labels)
-
+        return prob[:, 1]

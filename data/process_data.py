@@ -1,14 +1,17 @@
 '''
     Taken from https://github.com/padideee/MBRL-for-AMP/blob/43a1b3b247faeb28b64eaa06a4d0abdc301fba21/data/process_data.py
 
+
+
+    Process data from custom generated data...
 '''
 
 import numpy as np
 import torch
-import hickle as hkl
+# import hickle as hkl
 import pickle as pkl
 from positional_encodings import PositionalEncoding1D, PositionalEncoding2D
-
+import torch.nn.functional as F
 
 def seq_to_encoding(seq):
     """
@@ -28,20 +31,20 @@ def seq_to_encoding(seq):
 
     # enc = torch.from_numpy(enc.reshape(1,46,21))
     # import pdb; pdb.set_trace()
-    pos_enc = PositionalEncoding1D(seq.shape[1] - 1)
+    pos_enc = PositionalEncoding1D(seq.shape[1])
     p_enc = pos_enc(seq)
 
     seqN = seq + p_enc
     # s = (seqN.detach().cpu().numpy()).reshape((1, 46*21))
-    return seqN.flatten(start_dim=-2, end_dim=-1)
+    return seqN
 
 
 def get_data(data):
 
-    my_data = hkl.load(data)
+    # my_data = hkl.load(data)
     # use the pickle format for compute canada..
-    # with open(data, 'rb') as f:
-    #     my_data = pkl.load(f)
+    with open(data, 'rb') as f:
+        my_data = pkl.load(f)
     data_x = np.array(my_data['xtrain'])
     data_x = torch.from_numpy(data_x)
     n, x1, x2 = data_x.shape
@@ -49,8 +52,8 @@ def get_data(data):
 
     data_y = np.array(my_data['ytrain'])
 
-    pos_enc = PositionalEncoding1D(x1)
-    p_enc = pos_enc(data_x)
+    # pos_enc = PositionalEncoding1D(x1)
+    # p_enc = pos_enc(data_x)
     # print("PE shape: ", p_enc.shape) # (batchsize, x, ch dimension)
 
     # mean = np.mean(data_y)
@@ -61,8 +64,8 @@ def get_data(data):
             labels[i] = 'negative'
     # print(data_x.shape)
 
-    # data_x shape: (batch, 46, 21)
-    return data_x + p_enc, labels
+    # data_x shape: (batch, 51, 21)
+    return data_x, labels
 
 
 
@@ -72,13 +75,23 @@ def get_AMP_data(data_path):
 
     orig_data, labels = get_data(data_path)
 
-    # Leo: TODO - pad to 51, 21
 
-    data = torch.zeros((orig_data.shape[0], 51, orig_data.shape[2]))
+    # Some tricks to get the padding correct for the data...
+
+    # import pdb; pdb.set_trace()
+
+
+    data = F.one_hot(torch.ones((orig_data.shape[0], 50)).long() * 20, num_classes=21).double()
+
+
+    data[:, :orig_data.shape[1], :] *= (1 - (orig_data > 0).sum(-1)).unsqueeze(-1)
+
 
     data[:, :orig_data.shape[1], :] += orig_data
 
 
+    # Leo: TODO - pad to 50, 21
+    # import pdb; pdb.set_trace()
 
     labels = torch.tensor([x == 'positive' for x in labels]).long().unsqueeze(-1)
 

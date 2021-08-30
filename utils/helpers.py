@@ -1,7 +1,34 @@
 from oracles.models import *
 from torch.nn import functional as F
 import copy
+import torch
 from torch import nn
+import pandas as pd
+import os
+from collections import OrderedDict
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
+from Bio import SeqIO
+
+
+import json
+import random
+import torch
+import numpy as np
+
+def save_mols(mols, scores, folder):
+    mols = [mols[i] for i in range(mols.shape[0])]
+    data = {
+        "seq": mols,
+        'pred_prob': scores,
+    }
+    df = pd.DataFrame(data=data)
+    df.to_pickle(os.path.join(folder, 'queried_mols.pkl'))
+
+def save_config(config, folder):
+    with open(os.path.join(folder, 'config.json'), 'w') as fp:
+        json.dump(config, fp)
+
 
 def get_true_oracle_model(config):
     """
@@ -9,7 +36,7 @@ def get_true_oracle_model(config):
     """
 
     if config["true_oracle"]["model_name"] == 'RFC':
-        model = RFC()
+        model = RFC(n_estimators = config["true_oracle"]["config"]["n_estimators"])
     elif config["true_oracle"]["model_name"] == 'NN':
         model = NN()
     else:
@@ -17,6 +44,31 @@ def get_true_oracle_model(config):
 
 
     return model
+
+def seed(seed, deterministic_execution=False):
+    print('Seeding random, torch, numpy.')
+    random.seed(seed)
+    torch.manual_seed(seed)
+    torch.random.manual_seed(seed)
+    np.random.seed(seed)
+
+    if deterministic_execution:
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+    else:
+        print('Note that due to parallel processing results will be similar but not identical. '
+              'Use only one process and set --deterministic_execution to True if you want identical results '
+              '(only recommended for debugging).')
+
+
+# def add_mols_to_history(mols, query_history):
+#     """
+#         Args:
+#             - mols: list of numpy arrays of dim (50, 21)
+#             - query_history: list of numpy arrays of dim (50 , 21)
+#         Return:
+#             - True if mol is not in query_history
+#     """
 
     
 def get_proxy_oracle_model(config):
@@ -148,3 +200,60 @@ class FeatureExtractor(nn.Module):
             return self.activation_function(self.fc(inputs))
         else:
             return torch.zeros(0, ).to(device)
+
+
+class convertor:
+    def __init__(self):
+        self.AA_intg = OrderedDict([('A', 0), ('R', 1), ('N', 2), ('D', 3), ('C', 4), ('E', 5), ('Q', 6), ('G', 7),
+                                 ('H', 8), ('I', 9), ('L', 10), ('K', 11), ('M', 12), ('F', 13), ('P', 14), ('S', 15),
+                                 ('T', 16), ('W', 17), ('Y', 18), ('V', 19), ('X', 20)])
+
+        self.intg_AA = {v: k for k, v in self.AA_intg.items()}
+        # TODO unit-test to make sure padding 'X' does not cause interferece (could be important for future modifications in pipeline)
+        # TODO: making sure the character "X" is the default "uncommon Amino Acid" in blast
+
+
+    def AA_to_one_hot(self):
+        # TODO : moving the to_one_hot function in this class
+        pass
+
+
+    def one_hot_to_AA(self, one_hot):
+        """ input is the one hot encoded sequence"""
+        # tmp = torch.sum(one_hot, dim=(1))
+        # tmp = 20 * (1 - tmp)
+
+        intg = torch.argmax(one_hot, dim=-1)
+        # import pdb; pdb.set_trace()
+        # intg += tmp
+
+        AA_seq = [self.intg_AA[int(i)] for i in intg]
+
+        # my_seq = ''.join(i for i in AA_seq if i not in '>')
+        my_seq = ''.join(AA_seq)
+
+        return my_seq
+
+
+def make_fasta(seq, idx=1):
+    """
+        input seq is in string format
+        This function creates a fasta file for the given sequence
+    """
+    seq1 = SeqRecord(Seq(seq), id="seq{}".format(idx))
+    SeqIO.write(seq1, "data/seq.fasta", "fasta")
+
+
+def append_history_fasta(seq="data/seq.fasta" , history="data/history.fasta"):
+    """
+    inputs are the path to the sequence and history in the fasta format
+    """
+    with open(history, 'a+') as f:
+        with open(seq, 'r') as g:
+            new_seq = g.read()
+            f.write(new_seq)
+
+
+
+
+

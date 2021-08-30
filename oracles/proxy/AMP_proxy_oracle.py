@@ -11,10 +11,18 @@ class AMPProxyOracle(BaseOracle):
 
 
 	def query(self, model, x, flatten_input=True):
+
+		"""
+			Args:
+			  - (batch_size, ...)
+		
+			Returns:
+			  - (batch_size, )
+		"""
 		if flatten_input:
 			x = x.flatten(start_dim=-2, end_dim = -1)
 
-		return model.predict(x)
+		return model.predict(x) # Regressor 
 
 	def fit(self, model, flatten_input=True):
 		"""

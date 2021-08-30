@@ -5,8 +5,8 @@ import xgboost as xgb
 
 # Classifiers
 
-def RFC():
-	model = RandomForestClassifier(random_state=0, bootstrap= True, max_depth=50, n_estimators=200)
+def RFC(n_estimators=200):
+	model = RandomForestClassifier(n_estimators=n_estimators)
 	return model
 
 
@@ -24,7 +24,7 @@ def RFR(max_depth = 50, max_features = "auto", n_estimators = 100):
     return model
 
 
-def KNR(n_neighbors = 7):
+def KNR(n_neighbors = 5, metric="hamming"):
 	model = KNeighborsRegressor(n_neighbors=n_neighbors) # Temporarily hardcoded
 	return model
 

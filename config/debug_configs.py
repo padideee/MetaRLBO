@@ -222,9 +222,3 @@ debug_diversity = {
 	},
 	"log_interval": 1,
 }
-
-self.env = AMPEnv(self.true_oracle, self.true_oracle_model, lambd=self.config["env"]["lambda"],
-                          radius=self.config["env"]["radius"],
-                          div_metric_name=self.config["diversity"]["div_metric_name"],
-                          div_switch=self.config["diversity"][
-                              "div_switch"])  # The reward will not be needed in this env.

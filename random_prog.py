@@ -12,6 +12,7 @@ from storage.query_storage import QueryStorage
 from policies.policy import Policy
 from policies.gru_policy import CategoricalGRUPolicy
 from policies.random_policy import RandomPolicy
+from policies.DynaPPO_random_policy import DynaPPORandomPolicy
 
 
 from oracles.AMP_true_oracle import AMPTrueOracle
@@ -25,6 +26,7 @@ from utils.tb_logger import TBLogger
 from evaluation import get_test_oracle
 from data.process_data import seq_to_encoding
 from algo.diversity import pairwise_hamming_distance
+import random
 import time
 
 
@@ -100,8 +102,6 @@ class Program:
         self.proxy_query_oracle_models = [utl.get_proxy_oracle_model(self.config) for j in range(self.config["num_query_proxies"])]
         self.proxy_query_envs = [AMPEnv(self.proxy_query_oracles[j], self.proxy_query_oracle_models[j], lambd=self.config["env"]["lambda"], query_history = self.query_history) for j in range(self.config["num_query_proxies"])]
 
-        self.policy = RandomPolicy(input_size = self.env.observation_space.shape, output_size = 1, num_actions=self.env.action_space.n).to(device)
-
 
         self.test_oracle = get_test_oracle()
         self.iter_idx = 0
@@ -128,11 +128,7 @@ class Program:
 
             
             # Sample molecules to train proxy oracles
-            if self.iter_idx == 0:
-                random_policy = RandomPolicy(input_size = self.env.observation_space.shape, output_size = 1, num_actions=self.env.action_space.n).to(device)
-                sampled_mols = self.sample_policy(random_policy, self.env, self.config["num_initial_samples"] * 2) # Sample from true env. using random policy (num_starting_mols, dim of mol)
-            else:
-                sampled_mols = self.sample_policy(self.policy, self.env, self.config["num_query_per_iter"] * 2) # Sample from true env. using random policy (num_starting_mols, dim of mol)
+            sampled_mols = self.sample_policy(None, self.env, self.config["num_query_per_iter"] * 2) # Sample from true env. using random policy (num_starting_mols, dim of mol)
 
 
             # Do some filtering of the molecules here...
@@ -193,73 +189,37 @@ class Program:
             When policy_storage is None, the goal is to return a set of molecules to query.
             When policy_storage is not None, the goal is to return trajectories.
         """
-        state_dim = env.observation_space.shape 
-        return_mols = torch.zeros(num_samples, *state_dim)
-
-        curr_sample = 0
-        curr_queried = 0
-        while (policy_storage is None and curr_queried < num_samples) or (policy_storage is not None and curr_sample < num_samples):
-            """
-                Either policy_storage is None, meaning return queried molecules
-                Or policy_storage is not None, meaning fill up the storage
-            """
-
-            done = False
-            state = env.reset().clone() # Returns (51, 21)
-            hidden_state = None
-            curr_timestep = 0
-            curr_sample += 1
-            while not done:
-                
-                if self.config["policy"]["model_name"] == "GRU":
-                    if curr_timestep == 0:
-                        s = torch.zeros(state[0].shape)
-                    else:
-                        s = state[curr_timestep - 1]
-                    action, log_prob, hidden_state = policy.act(s, hidden_state) 
-                else:
-                    masks = None
-                    s = state.float().unsqueeze(0) # batch size is 1
-                    s = seq_to_encoding(s).flatten(-2, -1).to(device) # batch size is 1 and positional encoding
-                    
-                    value, action, log_prob, hidden_state = policy.act(s, hidden_state, masks=masks)
-
-                    action = action[0].detach() # batch size = 1
-                    log_prob = log_prob[0] # batch size = 1
+        if self.config["policy"]["model_name"] == "RANDOM":
+            # Sample actions and end when EOS token occurs
+            mols = []
+            for i in range(num_samples):
+                for _ in range (self.env.max_AMP_length):
+                    a = random.randint(0, self.env.num_actions - 1)
+                    rand_mol.append(a)
+                    if a == self.env.EOS_idx:
+                        break
+                rand_mol += (50 - len(rand_mol))*[self.env.EOS_idx]
+                rand_mol = torch.tensor(rand_mol)
+                rand_mol = torch.nn.functional.one_hot(rand_mol, num_classes=self.env.num_actions)
+                mols.append(rand_mol)
 
 
+        elif self.config["policy"]["model_name"] == "DynaPPO_RANDOM":
+            # Sample length first, then actions
+            mols = []
+            for i in range(num_samples):
+                rand_len = random.randint(1, self.env.max_AMP_length)
 
-                next_state, reward, pred_prob, done, info = env.step(action, query_reward = policy_storage is not None)
+                rand_mol = [random.randint(0, self.env.num_actions - 2) for i in range(rand_len)]
+                rand_mol += (50 - len(rand_mol))*[self.env.EOS_idx]
+                rand_mol = torch.tensor(rand_mol)
+                rand_mol = torch.nn.functional.one_hot(rand_mol, num_classes=self.env.num_actions)
+                mols.append(rand_mol)
+        else:
+            raise NotImplementedError
+        
 
-
-                if done:
-                    return_mols[curr_queried] = next_state.detach().clone() # Leo: The return mols is bugged if we're using the "true oracle" to perform the meta-update....
-                    curr_queried += 1
-
-
-                # 2 choices: Either we forcibly generate the molecules (cut off at 50 or we let it generate until then...)
-
-                if policy_storage is not None:
-                    policy_storage.insert(state=state.detach().clone(), 
-                                   next_state=next_state.detach().clone(),
-                                   action=action.detach().clone(), 
-                                   reward=reward.detach().clone(),
-                                   log_prob=log_prob.clone(),
-                                   done=torch.tensor(done).float().clone().detach())
-
-                state = next_state.clone()
-                curr_timestep += 1
-
-
-            if policy_storage is not None:
-                policy_storage.after_traj()
-
-        if policy_storage is not None:
-            policy_storage.compute_returns()
-            policy_storage.after_rollouts()
-
-            assert policy_storage.dones.sum() == num_samples
-
+        return_mols = torch.stack(mols, 0)
         return return_mols
 
 
@@ -272,7 +232,8 @@ class Program:
              - Let's select the ones that have the highest score according to the proxy oracles? -- Check...
         """
 
-        if self.config["selection_criteria"]["method"] == "RANDOM" and self.config["policy"]["model_name"] == "RANDOM":
+        if self.config["selection_criteria"]["method"] == "RANDOM":
+            print("Selection random")
             return mols[:self.config["num_query_per_iter"]], logs
         # Remove duplicate molecules... in current batch
         mols = np.unique(mols, axis = 0) 
@@ -300,39 +261,6 @@ class Program:
                 # In the case that the iter_idx is 0, then we can only randomly select them...
                 perm = torch.randperm(mols.shape[0])
                 idx = perm[:n_query]
-            elif self.config["selection_criteria"]["method"] == "PROXY_MEAN":
-                proxy_scores = []
-                for j in range(self.config["num_proxies"]):
-                    proxy_scores.append(torch.tensor(self.proxy_oracles[j].query(self.proxy_oracle_models[j], mols, flatten_input = self.flatten_proxy_oracle_input)))
-                proxy_scores = torch.stack(proxy_scores)
-                proxy_scores_mean = proxy_scores.mean(dim=0)
-                
-                _, sorted_idx = torch.sort(proxy_scores_mean)
-
-                sorted_idx = torch.flip(sorted_idx, dims=(0,)) # Largest to Smallest
-                
-                idx = sorted_idx[:n_query] # Select top scores
-            elif self.config["selection_criteria"]["method"] == "UCB":
-                proxy_scores = []
-                for j in range(self.config["num_proxies"]):
-                    proxy_scores.append(torch.tensor(self.proxy_oracles[j].query(self.proxy_oracle_models[j], mols, flatten_input = self.flatten_proxy_oracle_input)))
-                proxy_scores = torch.stack(proxy_scores)
-                proxy_scores_mean = proxy_scores.mean(dim=0)
-
-                
-                proxy_scores_std = proxy_scores.std(dim=0)
-
-                logs["select_molecules/proxy_model/mean/mean"] = proxy_scores_mean.mean()
-                logs["select_molecules/proxy_model/std/mean"] = proxy_scores_std.mean()
-                
-
-                scores = proxy_scores_mean + self.config["selection_criteria"]["config"]["beta"] * proxy_scores_std
-                _, sorted_idx = torch.sort(scores)
-
-                sorted_idx = torch.flip(sorted_idx, dims=(0,)) # Largest to Smallest
-                
-                idx = sorted_idx[:n_query] # Select top scores
-
             else:
                 raise NotImplementedError
 

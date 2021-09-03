@@ -33,6 +33,8 @@ def get_AMP_data(mode):
 
     filtered_seq = df.sequence.map(lambda x : 'C' not in x and len(x) >= 15 and len(x) <= 50)
     df = df[filtered_seq]
+
+    print(df.shape)
  
     df.sequence = df.sequence.map(seq_to_enc)
 

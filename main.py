@@ -47,7 +47,7 @@ def main():
     utl.seed(config["seed"])
 
 
-    if config["policy"]["model_name"] == "RANDOM":
+    if "RANDOM" in config["policy"]["model_name"]:
         prog = Program(config)
         prog.run()
     else:

@@ -272,7 +272,8 @@ class Program:
              - Let's select the ones that have the highest score according to the proxy oracles? -- Check...
         """
 
-
+        if self.config["selection_criteria"]["method"] == "RANDOM" and self.config["policy"]["model_name"] == "RANDOM":
+            return mols[:self.config["num_query_per_iter"]], logs
         # Remove duplicate molecules... in current batch
         mols = np.unique(mols, axis = 0) 
 

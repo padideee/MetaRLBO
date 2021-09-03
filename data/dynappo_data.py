@@ -22,14 +22,17 @@ def seq_to_enc(seq):
 
 def get_AMP_data(mode):
 
-    if mode == "val":
+    if mode == "test":
         df = pd.read_csv("data/210820_v0.24.1_rf_not-alibicani.csv")
         # df = pd.read_csv("210820_v0.24.1_rf_not-alibicani.csv")
-    elif mode == "test":
+    elif mode == "val":
         df = pd.read_csv("data/210820_v0.24.1_rf_alibicani.csv")
         # df = pd.read_csv("210820_v0.24.1_rf_alibicani.csv")
     else:
         raise NotImplementedError
+
+    filtered_seq = df.sequence.map(lambda x : 'C' not in x and len(x) >= 15 and len(x) <= 50)
+    df = df[filtered_seq]
  
     df.sequence = df.sequence.map(seq_to_enc)
 

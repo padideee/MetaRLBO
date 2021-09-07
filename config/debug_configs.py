@@ -103,6 +103,7 @@ debug_KNR = {
 			'beta': 4.0,
 		}
 	},
+	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
 	"log_interval": 1,
 }
 

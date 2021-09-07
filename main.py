@@ -34,7 +34,7 @@ def main():
 
 
     # standard
-    if config["task"] == 'AMP':
+    if config["task"] == 'AMP-v0':
         pass
     else:
         name = config["task"]

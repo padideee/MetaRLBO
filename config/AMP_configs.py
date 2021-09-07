@@ -35,7 +35,7 @@ amp_random_large = {
 	"selection_criteria": {
 		"method": "RANDOM",
 	},
-	"seed": 55,
+	"seed": 40,
 	"mode": "val",
 	"log_interval": 1,
 }
@@ -66,6 +66,48 @@ amp_random = {
 	"seed": 73,
 	"log_interval": 1,
 }
+
+amp_dynappo_random_large = {
+	"exp_label": "AMP-DynaPPO_RANDOM-Large",
+	"num_initial_samples": 250,
+	"num_query_per_iter": 250,
+	"policy": {
+		"model_name": "DynaPPO_RANDOM",
+	},
+	"selection_criteria": {
+		"method": "RANDOM",
+	},
+	"seed": 50,
+	"log_interval": 1,
+}
+
+amp_dynappo_random_med = {
+	"exp_label": "AMP-DynaPPO_RANDOM-Medium",
+	"num_initial_samples": 250,
+	"num_query_per_iter": 50,
+	"policy": {
+		"model_name": "DynaPPO_RANDOM",
+	},
+	"selection_criteria": {
+		"method": "RANDOM",
+	},
+	"seed": 70,
+	"log_interval": 1,
+}
+amp_dynappo_random = {
+	"exp_label": "AMP-DynaPPO_RANDOM-Medium",
+	"num_initial_samples": 250,
+	"num_query_per_iter": 10,
+	"policy": {
+		"model_name": "DynaPPO_RANDOM",
+	},
+	"selection_criteria": {
+		"method": "RANDOM",
+	},
+	"seed": 73,
+	"log_interval": 1,
+}
+
 
 
 

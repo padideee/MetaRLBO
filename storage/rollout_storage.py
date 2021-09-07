@@ -53,19 +53,25 @@ class RolloutStorage(BaseStorage):
 
         assert self.curr_timestep < self.num_steps + 1
 
-        self.states[self.curr_timestep][self.curr_sample].copy_(state.clone().detach())
-        self.next_states[self.curr_timestep][self.curr_sample].copy_(next_state.clone().detach())
-        self.actions[self.curr_timestep][self.curr_sample].copy_(action.clone().detach())
-        self.rewards[self.curr_timestep][self.curr_sample].copy_(reward.clone().detach())
-        self.log_probs[self.curr_timestep][self.curr_sample].copy_(log_prob.clone()) # Leo: Used to differentiate through
-        self.dones[self.curr_timestep][self.curr_sample].copy_(done.clone().detach())
+        batch_size = state.shape[0]
+
+        next_sample = min(self.curr_sample + batch_size, self.num_samples)
+        sample_diff = next_sample - self.curr_sample
+
+
+        self.states[self.curr_timestep][self.curr_sample:next_sample].copy_(state[:sample_diff].clone().detach())
+        self.next_states[self.curr_timestep][self.curr_sample:next_sample].copy_(next_state[:sample_diff].clone().detach())
+        self.actions[self.curr_timestep][self.curr_sample:next_sample].copy_(action[:sample_diff].clone().detach())
+        self.rewards[self.curr_timestep][self.curr_sample:next_sample].copy_(reward[:sample_diff].clone().detach())
+        self.log_probs[self.curr_timestep][self.curr_sample:next_sample].copy_(log_prob[:sample_diff].clone()) # Leo: Used to differentiate through
+        self.dones[self.curr_timestep][self.curr_sample:next_sample].copy_(done[:sample_diff].clone().detach())
 
         self.curr_timestep = self.curr_timestep + 1
 
 
-    def after_traj(self):
+    def after_traj(self, incr):
         self.curr_timestep = 0
-        self.curr_sample = (self.curr_sample + 1) % self.num_samples
+        self.curr_sample = (self.curr_sample + incr) % self.num_samples
 
     def compute_returns(self, gamma = 1.00):
         self.returns[self.num_steps] = self.rewards[self.num_steps]
@@ -73,10 +79,11 @@ class RolloutStorage(BaseStorage):
             self.returns[step] = self.rewards[step] + gamma * self.returns[step+1]
 
     def after_rollouts(self):
-
+        # Only allows one rollout (REINFORCE)
         self.masks[0] = 1
         for i in range(1, self.num_steps+1):
-            self.masks[i] = self.masks[i-1] - self.dones[i-1]
+            diff = (self.masks[i-1] - self.dones[i-1])
+            self.masks[i] = diff * (diff > 0)
 
 
 

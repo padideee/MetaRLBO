@@ -9,10 +9,10 @@ import utils.helpers as utl
 
 
 class AMPEnv(gym.Env):
-    def __init__(self, reward_oracle, reward_oracle_model, lambd = 0.1, radius = 2, max_AMP_length = 50, query_history = None,
+    def __init__(self, lambd = 0.1, radius = 2, max_AMP_length = 50, query_history = None,
                  div_metric_name="hamming", div_switch="ON"):
 
-
+        self.seed()
         # Actions in AMP design are the 20 amino acids
         # For non-finite horizon case: An extra action is added to
         # represent the "end of sequence" token
@@ -33,12 +33,12 @@ class AMPEnv(gym.Env):
 
         self.time_step = 0 # TODO: Need to update this outside of class
         
-        self.history = query_history if query_history is not None else []
+        self.query_history = None
         self.evaluate = {'seq': [], 'embed_seq': [], 'reward': [], 'pred_prob': []}
 
         self.max_AMP_length = max_AMP_length
-        self.reward_oracle = reward_oracle
-        self.reward_oracle_model = reward_oracle_model
+        self.reward_oracle = None
+        self.reward_oracle_model = None
         self.proxy_oracles = []
         self.modelbased = False
 
@@ -50,6 +50,15 @@ class AMPEnv(gym.Env):
 
         self.div_switch = div_switch
 
+        self.query_reward = None
+
+
+
+    def set_oracles(self, data):
+        self.reward_oracle = data["reward_oracle"]
+        self.reward_oracle_model = data["reward_oracle_model"]
+        self.query_history = data["query_history"]
+        self.query_reward = data["query_reward"]
 
 
     def update_proxy_oracles(self, oracle):
@@ -58,7 +67,7 @@ class AMPEnv(gym.Env):
     def update_opt_method(self, modelbased):
         self.modelbased = modelbased
 
-    def step(self, action, query_reward=False):
+    def step(self, action):
 
         """
             query_reward: True if the reward is to be queried... (TODO: Use true oracle)
@@ -84,8 +93,8 @@ class AMPEnv(gym.Env):
 
 
             # compute density of similar sequences in the history
-            if len(self.history) > 1:
-                dens = diversity(self.curr_state, self.history, div_switch=self.div_switch, radius=self.radius, div_metric_name=self.div_metric_name).get_density()
+            if len(self.query_history) > 1:
+                dens = diversity(self.curr_state, self.query_history, div_switch=self.div_switch, radius=self.radius, div_metric_name=self.div_metric_name).get_density()
             else:
                 dens = 0.0
                 convert = utl.convertor()
@@ -111,7 +120,7 @@ class AMPEnv(gym.Env):
                 # print("Avg. prediction: ", predictionAMP)
                 # Return avg. prediction based on proxy models
                 pred_prob = torch.tensor([[1 - predictionAMP, predictionAMP]])
-                if query_reward:
+                if self.query_reward:
                     reward = torch.tensor(predictionAMP)
                     reward -= self.lambd * dens
 
@@ -130,7 +139,7 @@ class AMPEnv(gym.Env):
                 # s = seq_to_encoding(self.curr_state.unsqueeze(0)) # Leo: TODO (this takes as input -- not the one hot encoding...)
                 s = self.curr_state.unsqueeze(0).flatten(-2, -1)
 
-                if query_reward:
+                if self.query_reward:
                     # try:
                     #     pred_prob = torch.tensor(self.reward_oracle.predict_proba(s))
                     #     reward = pred_prob[0][1] 
@@ -159,7 +168,7 @@ class AMPEnv(gym.Env):
         # Info must be a dictionary
         info = [{"action": action, "state": self.curr_state, "pred_prob": pred_prob, "queried": queried}]
 
-        return(self.curr_state, reward, pred_prob, done, info)
+        return(self.curr_state, reward, done, info)
 
     def reset(self):
         self.curr_state = torch.tensor(np.zeros(self.obs_shape))

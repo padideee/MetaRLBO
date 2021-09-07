@@ -2,7 +2,7 @@
 
 DEFAULT_CONFIG = {
 	"exp_label": "DEFAULT",
-	"task": "AMP",
+	"task": "AMP-v0",
 	"max_num_queries": 5000,
 	"query_storage_size": 100000,
 	"num_inner_updates": 1, # Number of inner loop updates per meta update
@@ -26,6 +26,7 @@ DEFAULT_CONFIG = {
 	},
 	"policy": {
 		"model_name": "MLP",
+		"num_steps": 50, # number of steps before updating... ensure this is at least as big as the length of the episode of the environment
 	},
 
 	"diversity": {
@@ -56,6 +57,7 @@ DEFAULT_CONFIG = {
 	"data_source": "DynaPPO", # Either: DynaPPO or Custom (Custom being data Padideh generated)
 	"mode": "test", # mode -- val (hyperparameter opt.), test (eval. )
 	"log_interval": 25,
+	"num_processes": 16,
 	"results_log_dir": "./logs",
 	"seed": 73,
 }

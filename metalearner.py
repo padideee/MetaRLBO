@@ -406,11 +406,8 @@ class MetaLearner:
                 st = seq_to_encoding(st).flatten(-2, -1).to(device)  
                 # if self.iter_idx != 0:
                 #     import pdb; pdb.set_trace()
-                try:
-                    value, action, log_prob, hidden_state = policy.act(st, hidden_state, masks=masks)
-                except:
-                    import pdb; pdb.set_trace()
-                action = action.detach()  
+                value, action, log_prob, hidden_state = policy.act(st, hidden_state, masks=masks)
+                action = action.detach().cpu()
 
                 next_state, reward, done, info = self.env.step(action) 
 

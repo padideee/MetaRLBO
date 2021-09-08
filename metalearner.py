@@ -126,12 +126,16 @@ class MetaLearner:
         self.iter_idx = 0
 
 
-    def run(self):
+        self.total_time_sampling = 0
 
+
+    def run(self):
+        start_time = time.time()
         self.true_oracle_model = self.true_oracle.fit(self.true_oracle_model,
                                                       flatten_input=self.flatten_true_oracle_input)
 
         # updated_params = [None for _ in range(self.config["num_proxies"])]
+
 
         for self.iter_idx in tqdm(range(self.config["num_meta_updates"] // self.config["num_meta_updates_per_iter"])):
 
@@ -152,9 +156,15 @@ class MetaLearner:
                     "num_initial_samples"] * 2)  # Sample from true env. using random policy (num_starting_mols, dim of mol)
 
             else:
+
+                st_time = time.time()
                 # Training
                 for mi in range(self.config["num_meta_updates_per_iter"]):
                     logs = self.meta_update(logs)
+
+                logs["timing/meta_updates"] = time.time() - st_time
+                st_time = time.time()
+
 
                 # Sample molecules for Querying:
                 # Fit proxy query oracles
@@ -162,14 +172,24 @@ class MetaLearner:
                     self.proxy_query_oracle_models[j] = self.proxy_query_oracles[j].fit(
                         self.proxy_query_oracle_models[j], flatten_input=self.flatten_proxy_oracle_input)
 
+                logs["timing/fitting_proxy_query_oracle"] = time.time() - st_time
+                st_time = time.time()
+
+
                 sampled_mols, logs = self.sample_query_mols(logs)
+
+                logs["timing/sample_query_mols"] = time.time() - st_time
+                st_time = time.time()
 
                 # Perform the querying stage
                 # This is a bug...
                 sampled_mols = torch.cat(sampled_mols, dim=0)
 
+            st_time = time.time()
             # Do some filtering of the molecules here...
             queried_mols, logs = self.select_molecules(sampled_mols, logs)
+            logs["timing/selecting_molecules"] = time.time() - st_time
+            logs["timing/total_time_sampling"] = self.total_time_sampling
 
             # Perform the querying
             if queried_mols is not None:
@@ -226,7 +246,8 @@ class MetaLearner:
 
                 # # # TODO adding to log
                 # # print('Iteration {}, test oracle accuracy: {}'.format(self.iter_idx, score))
-
+                logs["timing/time_running"] = time.time() - start_time
+                self.print_timing(logs)
                 self.log(logs)
 
                 utl.save_mols(mols=self.D_train.mols[:self.D_train.storage_filled].numpy(),
@@ -238,10 +259,14 @@ class MetaLearner:
         inner_opt = optim.SGD(self.policy.parameters(), lr=self.config["inner_lr"])
         self.meta_opt.zero_grad()
 
+
+        time_st = time.time()
         # Fit proxy oracles
         for j in range(self.config["num_proxies"]):
             self.proxy_oracle_models[j] = self.proxy_oracles[j].fit(self.proxy_oracle_models[j],
                                                                     flatten_input=self.flatten_proxy_oracle_input)
+        logs["timing/fitting_proxy_oracle"] = time.time() - time_st
+
 
         # Proxy(Task)-specific updates
         for j in range(self.config["num_proxies"]):
@@ -259,6 +284,7 @@ class MetaLearner:
                                                    device=device
                                                    )
 
+                time_st = time.time()
                 for k in range(self.config["num_inner_updates"]):
                     self.D_j = RolloutStorage(num_samples=self.config["num_samples_per_task_update"],
                                               state_dim=self.env.observation_space.shape,
@@ -282,7 +308,7 @@ class MetaLearner:
 
                     # Inner update
                     diffopt.step(inner_loss)
-
+                logs["timing/inner_loop_update"] = time.time() - time_st
                     # Sample mols for meta update
                 if self.config["outerloop_oracle"] == 'proxy':
 
@@ -308,7 +334,10 @@ class MetaLearner:
                 logs["meta/reinforce_loss"] = reinforce_loss
                 logs["meta/entropy_bonus"] = entropy_bonus
 
+
+                time_st = time.time()
                 meta_loss.backward()
+                logs["timing/meta_loss_backward"] = time.time() - time_st
 
         self.meta_opt.step()
         return logs
@@ -379,6 +408,8 @@ class MetaLearner:
             When policy_storage is not None, the goal is to store trajectories in policy_storage.
         """
 
+        time_st = time.time()
+
         # TODO: Include oracle, oracle_model, query_history into the env.step...
         state_dim = self.env.observation_space.shape
         return_mols = torch.zeros(num_samples, *state_dim)
@@ -386,6 +417,7 @@ class MetaLearner:
         curr_sample = 0
         # while (policy_storage is None and curr_queried < num_samples) or (
         #         policy_storage is not None and curr_sample < num_samples):
+
         data = {"reward_oracle": oracle,
                 "reward_oracle_model": oracle_model,
                 "query_history": self.query_history,
@@ -441,6 +473,7 @@ class MetaLearner:
                             return_mols[curr_sample] = next_state[i].clone()
                             curr_sample += 1
                             if curr_sample == num_samples:
+                                self.total_time_sampling += time.time() - time_st
                                 return return_mols # Return if sufficient number of molecules are found
 
                     next_state = utl.reset_env(self.env, self.config, done_indices, next_state)
@@ -460,6 +493,8 @@ class MetaLearner:
             policy_storage.after_rollouts()
 
             # assert policy_storage.dones.sum() == num_samples
+
+        self.total_time_sampling += time.time() - time_st
 
         return return_mols
 
@@ -568,3 +603,8 @@ class MetaLearner:
 
         for k, v in logs.items():
             self.logger.add(k, v, num_queried)
+
+    def print_timing(self, logs):
+        for k, v in logs.items():
+            if "timing" in k:
+                print(v, k)

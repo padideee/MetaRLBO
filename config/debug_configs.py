@@ -103,9 +103,45 @@ debug_KNR = {
 			'beta': 4.0,
 		}
 	},
+	"num_processes": 4,
 	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
 	"log_interval": 1,
 }
+
+
+debug_KNR_PAR = {
+	"exp_label": "DEBUG-KNR_PAR",
+	"num_proxies": 8,
+	"num_inner_updates": 2, 
+	"num_meta_proxy_samples": 16,
+	"num_initial_samples": 250,
+	"num_query_proxies": 16,
+	"num_samples_per_iter": 32, 
+	"num_samples_per_task_update": 16,
+	"num_query_per_iter": 250,
+	"num_meta_updates_per_iter": 1,
+	"inner_lr": 5.0,
+	"outer_lr": 0.5,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
+	},
+	"entropy_reg_coeff": 0.0,
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB",
+		"config": {
+			'beta': 4.0,
+		}
+	},
+	"diversity": {
+		"div_metric_name": "hamming",
+		"div_switch": "OFF" # switches the diversity bonus ON / OFF
+	},
+	"num_processes": 8,
+	"mode": "test", # mode -- val (hyperparameter opt.), test (eval. )
+	"log_interval": 1,
+}
+
 
 
 

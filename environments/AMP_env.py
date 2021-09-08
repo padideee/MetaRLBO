@@ -137,9 +137,11 @@ class AMPEnv(gym.Env):
                 # (returns prob. per classification class --> [Prob. Neg., Prob. Pos.])
 
                 # s = seq_to_encoding(self.curr_state.unsqueeze(0)) # Leo: TODO (this takes as input -- not the one hot encoding...)
-                s = self.curr_state.unsqueeze(0).flatten(-2, -1)
+                
 
                 if self.query_reward:
+                    s = self.curr_state.unsqueeze(0).flatten(-2, -1)
+                    
                     # try:
                     #     pred_prob = torch.tensor(self.reward_oracle.predict_proba(s))
                     #     reward = pred_prob[0][1] 

@@ -401,8 +401,8 @@ class MetaLearner:
         # Log the inner losses later (possibly instead of here)! 
 
 
-        self.step(episodes) # Performs meta-update
-
+        loss = self.step(episodes) # Performs meta-update
+        logs["outer_loop/loss"] = loss.detach()
 
 
         # self.meta_opt.step()

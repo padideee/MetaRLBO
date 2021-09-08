@@ -9,9 +9,9 @@ class RolloutStorage(BaseStorage):
                  num_samples,
                  state_dim,
                  action_dim, 
-                 hidden_dim,
                  num_steps,
-                 device
+                 device,
+                 hidden_dim=None
                  ):
         self.num_samples = num_samples
         self.state_dim = state_dim
@@ -26,13 +26,13 @@ class RolloutStorage(BaseStorage):
         self.actions = torch.zeros(num_steps+1, num_samples, action_dim).to(device)
         if hidden_dim is not None:
             self.hidden_states = torch.zeros(num_steps+1, num_samples, hidden_dim).to(device)
-        self.rewards = torch.zeros(num_steps+1, num_samples, 1).to(device)
-        self.log_probs = torch.zeros(num_steps+1, num_samples, 1).to(device)
-        self.dones = torch.zeros(num_steps+1, num_samples, 1).to(device)
-        self.masks = torch.zeros(num_steps+1, num_samples, 1).to(device) # 1 when action is performed, 0 when episode ends.
+        self.rewards = torch.zeros(num_steps+1, num_samples).to(device)
+        self.log_probs = torch.zeros(num_steps+1, num_samples).to(device)
+        self.dones = torch.zeros(num_steps+1, num_samples).to(device)
+        self.masks = torch.zeros(num_steps+1, num_samples).to(device) # 1 when action is performed, 0 when episode ends.
 
 
-        self.returns = torch.zeros(num_steps+1, num_samples, 1).to(device)
+        self.returns = torch.zeros(num_steps+1, num_samples).to(device)
 
 
 
@@ -87,24 +87,23 @@ class RolloutStorage(BaseStorage):
 
 
 
-    def compute_log_probs(self, policy):
+    def gae(self, values, tau=1.0, gamma = 1.0):
+        # Add an additional 0 at the end of values for
+        # the estimation at the end of the episode
         
-        # Leo: Can parallelise this...
-        for j in range(self.num_samples):
-            hidden_state = None
-            for i in range(self.num_steps+1):
+        values = values.squeeze(-1).detach()
+        # values = F.pad(values * self.masks.squeeze(-1), (0, 0, 0, 1)) # masks need to be changed if it's for meta-updating..
+        values = F.pad(values, (0, 0, 0, 1))
 
-            #     st = F.one_hot(self.states[i][j].long(), num_classes=21).float()[i-1]  # Leo: To check if this is correct...
-            #     value, self.log_probs[i][j], dist_entropy, hidden_state = policy.evaluate_actions(st.unsqueeze(0).unsqueeze(0), hidden_state, None, self.actions[i][j].int().item())
+        dones = F.pad(self.dones, (0, 0, 1, 0))
 
+        deltas = self.rewards + gamma * values[1:] * (1-dones[:-1]) - values[:-1]
+        advantages = torch.zeros_like(deltas).float()
+        gae = torch.zeros_like(deltas[0]).float()
+        for i in reversed(range(deltas.shape[0])):
+            gae = gae * gamma * tau * (1 - dones[i]) + deltas[i]
+            advantages[i] = gae
 
-
-                # value, action_log_probs, dist_entropy, rnn_hxs = policy.evaluate_actions(st.unsqueeze(0).unsqueeze(0), hidden_state, None, self.actions[i][j].int().item())
-
-
-                st = self.states[i][j].flatten()
-                value, action_log_probs, dist_entropy, hidden_state = policy.evaluate_actions(st.unsqueeze(0), hidden_state, self.masks[i][j].unsqueeze(0), self.actions[i][j].int().unsqueeze(0))
-
-                self.log_probs[i][j] = action_log_probs[0]
+        return advantages
 
 

@@ -36,7 +36,74 @@ debug_RANDOM = {
 
 
 
+debug_TRPO = {
+	"exp_label": "DEBUG-TRPO",
+	"num_proxies": 4,
+	"num_inner_updates": 1, 
+	"num_meta_proxy_samples": 8,
+	"num_initial_samples": 250,
+	"num_query_proxies": 8,
+	"num_samples_per_iter": 16, 
+	"num_samples_per_task_update": 16,
+	"num_query_per_iter": 20,
+	"inner_lr": 7.0,
+	"outer_lr": 0.7,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.7, # Proportion of data to sample to train proxy oracles
+	},
+	"entropy_reg_coeff": 0.0,
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB",
+		"config": {
+			'beta': 6.0,
+		}
+	},
+	"metalearner": {
+		"method": "TRPO",  # REINFORCE or TRPO
+		"tau": 1.0,
+		"gamma": 0.99,
+		"max_kl": 1e-2,
+		"cg_iters": 10,
+		"cg_damping": 1e-5,
+		"ls_max_steps": 15,
+		"ls_backtrack_ratio": 0.8,
+	},
+	"num_processes": 8,
+	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
+	"log_interval": 1,
+}
 
+debug_REINFORCE = {
+	"exp_label": "DEBUG-TRPO",
+	"num_proxies": 4,
+	"num_inner_updates": 1, 
+	"num_meta_proxy_samples": 8,
+	"num_initial_samples": 250,
+	"num_query_proxies": 8,
+	"num_samples_per_iter": 16, 
+	"num_samples_per_task_update": 16,
+	"num_query_per_iter": 10,
+	"inner_lr": 7.0,
+	"outer_lr": 0.7,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.7, # Proportion of data to sample to train proxy oracles
+	},
+	"entropy_reg_coeff": 0.0,
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB",
+		"config": {
+			'beta': 6.0,
+		}
+	},
+	"metalearner": {
+		"method": "REINFORCE",  # REINFORCE or TRPO
+	},
+	"num_processes": 8,
+	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
+	"log_interval": 1,
+}
 
 
 # Varying Proxy Oracle Models
@@ -84,30 +151,60 @@ debug_KNR = {
 	"exp_label": "DEBUG-KNR",
 	"num_proxies": 4,
 	"num_inner_updates": 1, 
-	"num_meta_proxy_samples": 2,
-	"num_initial_samples": 400,
+	"num_meta_proxy_samples": 8,
+	"num_initial_samples": 250,
 	"num_query_proxies": 8,
-	"num_samples_per_iter": 4, 
-	"num_samples_per_task_update": 8,
+	"num_samples_per_iter": 16, 
+	"num_samples_per_task_update": 16,
 	"num_query_per_iter": 10,
-	"inner_lr": 10.0,
-	"outer_lr": 1e0,
+	"inner_lr": 7.0,
+	"outer_lr": 0.7,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, # Proportion of data to sample to train proxy oracles
+		"p": 0.7, # Proportion of data to sample to train proxy oracles
 	},
 	"entropy_reg_coeff": 0.0,
 	"selection_criteria": { # Configs for selecting the samples
 		"method": "UCB",
 		"config": {
-			'beta': 4.0,
+			'beta': 6.0,
 		}
 	},
-	"num_processes": 4,
+	"num_processes": 8,
 	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
 	"log_interval": 1,
 }
 
+
+
+
+debug_RFR = {
+	"exp_label": "DEBUG-RFR",
+	"num_proxies": 4,
+	"num_inner_updates": 1, 
+	"num_meta_proxy_samples": 8,
+	"num_initial_samples": 100,
+	"num_query_proxies": 8,
+	"num_samples_per_iter": 16, 
+	"num_samples_per_task_update": 16,
+	"num_query_per_iter": 10,
+	"inner_lr": 7.0,
+	"outer_lr": 0.7,
+	"proxy_oracle": {
+		"model_name": "RFR",
+		"p": 0.7, # Proportion of data to sample to train proxy oracles
+	},
+	"entropy_reg_coeff": 0.0,
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB",
+		"config": {
+			'beta': 6.0,
+		}
+	},
+	"num_processes": 8,
+	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
+	"log_interval": 1,
+}
 
 debug_KNR_PAR = {
 	"exp_label": "DEBUG-KNR_PAR",

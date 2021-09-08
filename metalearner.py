@@ -26,6 +26,15 @@ from data.process_data import seq_to_encoding
 from algo.diversity import pairwise_hamming_distance
 import time
 
+from torch.distributions.kl import kl_divergence
+from torch.nn.utils.convert_parameters import (vector_to_parameters,
+                                               parameters_to_vector)
+
+from utils.optimization import conjugate_gradient
+from utils.torch_utils import (weighted_mean, detach_distribution, weighted_normalize)
+from algo.baseline import LinearFeatureBaseline
+
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
@@ -121,6 +130,8 @@ class MetaLearner:
         else:
             raise NotImplementedError
 
+        self.baseline = LinearFeatureBaseline(input_size = self.env.observation_space.shape[0] * self.env.observation_space.shape[1]).to(device) # TODO: FIX
+
         self.meta_opt = optim.SGD(self.policy.parameters(), lr=self.config["outer_lr"])
         self.test_oracle = get_test_oracle()
         self.iter_idx = 0
@@ -135,6 +146,7 @@ class MetaLearner:
                                                       flatten_input=self.flatten_true_oracle_input)
 
         # updated_params = [None for _ in range(self.config["num_proxies"])]
+
 
 
         for self.iter_idx in tqdm(range(self.config["num_meta_updates"] // self.config["num_meta_updates_per_iter"])):
@@ -254,6 +266,38 @@ class MetaLearner:
                               scores=self.D_train.scores[:self.D_train.storage_filled].numpy(),
                               folder=self.logger.full_output_folder)
 
+    def inner_loss(self, episodes, policy, params=None):
+        """Compute the inner loss for the one-step gradient update. The inner 
+        loss is REINFORCE with baseline [2], computed on advantages estimated 
+        with Generalized Advantage Estimation (GAE, [3]).
+        """
+        # values = self.baseline(episodes)
+        # advantages = episodes.gae(values, tau=self.tau)
+        # advantages = weighted_normalize(advantages, weights=episodes.mask)
+
+        # pi = self.policy(episodes.observations, params=params)
+        # log_probs = pi.log_prob(episodes.actions)
+        # if log_probs.dim() > 2:
+        #     log_probs = torch.sum(log_probs, dim=2)
+
+        # loss = -weighted_mean(log_probs * advantages, dim=0, weights=episodes.mask)
+
+
+        # New-ish -- to be deprecated
+
+        # Leo: Can parallelise this...
+        for j in range(episodes.num_samples):
+            hidden_state = None
+            for i in range(episodes.num_steps+1):
+                st = episodes.states[i][j].flatten()
+                value, action_log_probs, dist_entropy, hidden_state = policy.evaluate_actions(st.unsqueeze(0), hidden_state, episodes.masks[i][j].unsqueeze(0), episodes.actions[i][j].int().unsqueeze(0))
+                episodes.log_probs[i][j] = action_log_probs[0]
+
+        loss = rl_utl.reinforce_loss(episodes) + self.config[
+            "entropy_reg_coeff"] * rl_utl.entropy_bonus(episodes)
+
+        return loss
+
     def meta_update(self, logs):
 
         inner_opt = optim.SGD(self.policy.parameters(), lr=self.config["inner_lr"])
@@ -268,55 +312,58 @@ class MetaLearner:
         logs["timing/fitting_proxy_oracle"] = time.time() - time_st
 
 
-        # Proxy(Task)-specific updates
+
+        episodes = []
+        train_losses_s = []
+
+
+        # Proxy(Task)-specific updates -- Samples the trajectories...
         for j in range(self.config["num_proxies"]):
             with higher.innerloop_ctx(
                     self.policy, inner_opt, copy_initial_weights=False
             ) as (inner_policy, diffopt):
 
-                self.D_meta_query = RolloutStorage(num_samples=self.config["num_meta_proxy_samples"],
+                D_meta_query = RolloutStorage(num_samples=self.config["num_meta_proxy_samples"],
                                                    state_dim=self.env.observation_space.shape,
                                                    action_dim=1,  # Discrete value
-                                                   hidden_dim=self.config["policy"]["hidden_dim"] if "hidden_dim" in
-                                                                                                     self.config[
-                                                                                                         "policy"] else None,
                                                    num_steps=self.config["policy"]["num_steps"],
                                                    device=device
                                                    )
 
+
+                train_episodes = []
+                train_losses = []
                 time_st = time.time()
                 for k in range(self.config["num_inner_updates"]):
-                    self.D_j = RolloutStorage(num_samples=self.config["num_samples_per_task_update"],
+                    D_j = RolloutStorage(num_samples=self.config["num_samples_per_task_update"],
                                               state_dim=self.env.observation_space.shape,
                                               action_dim=1,  # Discrete value
-                                              hidden_dim=self.config["policy"]["hidden_dim"] if "hidden_dim" in
-                                                                                                self.config[
-                                                                                                    "policy"] else None,
                                               num_steps=self.config["policy"]["num_steps"],
                                               device=device
                                               )
 
                     self.sample_policy(inner_policy, self.proxy_oracles[j], self.proxy_oracle_models[j], self.config["num_samples_per_task_update"],
-                                       policy_storage=self.D_j)  # Sample from policy[j]
+                                       policy_storage=D_j)  # Sample from policy[j]
 
-                    self.D_j.compute_log_probs(inner_policy)
-                    inner_loss = rl_utl.reinforce_loss(self.D_j) + self.config[
-                        "entropy_reg_coeff"] * rl_utl.entropy_bonus(self.D_j)
+                    inner_loss = self.adapt(D_j, inner_policy, diffopt)
 
                     logs[f"inner_loop/proxy/{j}/loop/{k}/loss/"] = inner_loss.item()
-                    logs[f"inner_loop/policy/{j}/loop/{k}/action_logprob/"] = self.D_j.log_probs.mean().item()
+                    logs[f"inner_loop/policy/{j}/loop/{k}/action_logprob/"] = D_j.log_probs.mean().item()
 
-                    # Inner update
-                    diffopt.step(inner_loss)
+                    train_episodes.append(D_j)
+                    train_losses.append(inner_loss.detach())
+
                 logs["timing/inner_loop_update"] = time.time() - time_st
-                    # Sample mols for meta update
+                
+
+                # Sample mols for meta update
                 if self.config["outerloop_oracle"] == 'proxy':
 
                     self.sample_policy(inner_policy, self.proxy_oracles[j], self.proxy_oracle_models[j], self.config["num_meta_proxy_samples"],
-                                       policy_storage=self.D_meta_query)
+                                       policy_storage=D_meta_query)
                 elif self.config["outerloop_oracle"] == 'true':
                     queried_mols = self.sample_policy(inner_policy, true_oracle, true_oracle_model, self.config["num_meta_proxy_samples"],
-                                                      policy_storage=self.D_meta_query).detach()
+                                                      policy_storage=D_meta_query).detach()
                     queried_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, queried_mols,
                                                                               flatten_input=self.flatten_true_oracle_input))
 
@@ -328,18 +375,37 @@ class MetaLearner:
                     raise NotImplementedError
 
 
-                reinforce_loss = rl_utl.reinforce_loss(self.D_meta_query)
-                entropy_bonus = self.config["entropy_reg_coeff"] * rl_utl.entropy_bonus(self.D_meta_query)
-                meta_loss = reinforce_loss + entropy_bonus
-                logs["meta/reinforce_loss"] = reinforce_loss
-                logs["meta/entropy_bonus"] = entropy_bonus
 
 
-                time_st = time.time()
-                meta_loss.backward()
-                logs["timing/meta_loss_backward"] = time.time() - time_st
+                # Currently reinforce... but we should change this to TRPO later!
+                
 
-        self.meta_opt.step()
+                # reinforce_loss = rl_utl.reinforce_loss(D_meta_query)
+                # entropy_bonus = self.config["entropy_reg_coeff"] * rl_utl.entropy_bonus(D_meta_query)
+                # meta_loss = reinforce_loss + entropy_bonus
+                # logs["meta/reinforce_loss"] = reinforce_loss
+                # logs["meta/entropy_bonus"] = entropy_bonus
+
+
+                # time_st = time.time()
+                # meta_loss.backward()
+                # logs["timing/meta_loss_backward"] = time.time() - time_st
+
+
+                # Save the episodes...
+
+                episodes.append((train_episodes, D_meta_query))
+                train_losses_s.append(train_losses)
+
+
+        # Log the inner losses later (possibly instead of here)! 
+
+
+        self.step(episodes) # Performs meta-update
+
+
+
+        # self.meta_opt.step()
         return logs
 
     def sample_query_mols(self, logs):
@@ -351,23 +417,17 @@ class MetaLearner:
                     self.policy, inner_opt, copy_initial_weights=False
             ) as (inner_policy, diffopt):
 
-                self.D_meta_query = RolloutStorage(num_samples=self.config["num_meta_proxy_samples"],
+                D_meta_query = RolloutStorage(num_samples=self.config["num_meta_proxy_samples"],
                                                    state_dim=self.env.observation_space.shape,
                                                    action_dim=1,  # Discrete value
-                                                   hidden_dim=self.config["policy"]["hidden_dim"] if "hidden_dim" in
-                                                                                                     self.config[
-                                                                                                         "policy"] else None,
                                                    num_steps=self.config["policy"]["num_steps"],
                                                    device=device
                                                    )
 
                 for k in range(self.config["num_inner_updates"]):
-                    self.D_j = RolloutStorage(num_samples=self.config["num_samples_per_task_update"],
+                    D_j = RolloutStorage(num_samples=self.config["num_samples_per_task_update"],
                                               state_dim=self.env.observation_space.shape,
                                               action_dim=1,  # Discrete value
-                                              hidden_dim=self.config["policy"]["hidden_dim"] if "hidden_dim" in
-                                                                                                self.config[
-                                                                                                    "policy"] else None,
                                               num_steps=self.config["policy"]["num_steps"],
                                               device=device
                                               )
@@ -376,17 +436,10 @@ class MetaLearner:
                                         oracle=self.proxy_query_oracles[j],
                                         oracle_model=self.proxy_query_oracle_models[j],
                                         num_samples=self.config["num_samples_per_task_update"],
-                                        policy_storage=self.D_j)  # Sample from policy[j]
+                                        policy_storage=D_j)  # Sample from policy[j]
 
-                    self.D_j.compute_log_probs(inner_policy)
-                    inner_loss = rl_utl.reinforce_loss(self.D_j) + self.config[
-                        "entropy_reg_coeff"] * rl_utl.entropy_bonus(self.D_j)
 
-                    logs[f"query/inner_loop/proxy/{j}/loop/{k}/loss/"] = inner_loss.item()
-                    logs[f"query/inner_loop/policy/{j}/loop/{k}/action_logprob/"] = self.D_j.log_probs.mean().item()
-
-                    # Inner update
-                    diffopt.step(inner_loss)
+                    inner_loss = self.adapt(D_j, inner_policy, diffopt)
 
                     # Sample mols (and query) for training the proxy oracles later
                 sampled_mols.append(self.sample_policy(inner_policy, self.proxy_query_oracles[j], self.proxy_query_oracle_models[j], self.config[
@@ -410,14 +463,10 @@ class MetaLearner:
 
         time_st = time.time()
 
-        # TODO: Include oracle, oracle_model, query_history into the env.step...
         state_dim = self.env.observation_space.shape
         return_mols = torch.zeros(num_samples, *state_dim)
 
         curr_sample = 0
-        # while (policy_storage is None and curr_queried < num_samples) or (
-        #         policy_storage is not None and curr_sample < num_samples):
-
         data = {"reward_oracle": oracle,
                 "reward_oracle_model": oracle_model,
                 "query_history": self.query_history,
@@ -436,30 +485,22 @@ class MetaLearner:
                 masks = None
                 st = state
                 st = seq_to_encoding(st).flatten(-2, -1).to(device)  
-                # if self.iter_idx != 0:
-                #     import pdb; pdb.set_trace()
                 value, action, log_prob, hidden_state = policy.act(st, hidden_state, masks=masks)
                 action = action.detach().cpu()
 
                 next_state, reward, done, info = self.env.step(action) 
 
 
-                done = torch.tensor(done).float().unsqueeze(-1)
+                done = torch.tensor(done).float()
                 next_state = torch.tensor(next_state).float()
-                reward = torch.tensor(reward).unsqueeze(-1)
-                # if done: # TODO: setup the done...
-                #     return_mols[
-                #         curr_queried] = next_state.detach().clone()  # Leo: The return mols is bugged if we're using the "true oracle" to perform the meta-update....
-                #     curr_queried += 1
-
-                # 2 choices: Either we forcibly generate the molecules (cut off at 50 or we let it generate until then...)
+                reward = torch.tensor(reward)
 
                 if policy_storage is not None:
                     policy_storage.insert(state=state.detach().clone(),
                                           next_state=next_state.detach().clone(),
                                           action=action.detach().clone(),
                                           reward=reward.detach().clone(),
-                                          log_prob=log_prob.clone(),
+                                          log_prob=log_prob.clone().squeeze(-1),
                                           done=done.detach().clone())
 
 
@@ -573,6 +614,221 @@ class MetaLearner:
 
         else:
             return None, logs
+
+
+
+
+
+    # Based off of CAVIA public code: 
+
+
+
+    def adapt(self, episodes, policy, diffopt, first_order=False, params=None, lr=None):
+        """Adapt the parameters of the policy network to a new task, from 
+        sampled trajectories `episodes`, with a one-step gradient update [1].
+        """
+
+
+        states = seq_to_encoding(episodes.states.flatten(0, 1)).view(episodes.states.shape).to(device)  
+
+        # Fit the baseline to the training episodes
+        self.baseline.fit(states, episodes.masks, episodes.returns)
+
+        # Get the loss on the training episodes
+        loss = self.inner_loss(episodes, policy)
+
+        # Inner update
+        diffopt.step(loss)
+
+        return loss
+
+    # def sample(self, tasks, first_order=False):
+    #     """Sample trajectories (before and after the update of the parameters) 
+    #     for all the tasks `tasks`.
+    #     """
+    #     episodes = []
+    #     losses = []
+    #     for task in tasks:
+    #         self.sampler.reset_task(task)
+    #         self.policy.reset_context()
+    #         train_episodes = self.sampler.sample(self.policy, gamma=self.gamma)
+    #         # inner loop (for CAVIA, this only updates the context parameters)
+    #         params, loss = self.adapt(train_episodes, first_order=first_order)
+    #         # rollouts after inner loop update
+    #         valid_episodes = self.sampler.sample(self.policy, params=params, gamma=self.gamma)
+    #         episodes.append((train_episodes, valid_episodes))
+    #         losses.append(loss.item())
+
+    #     return episodes, losses
+
+    def kl_divergence(self, episodes, old_pis=None):
+        inner_opt = optim.SGD(self.policy.parameters(), lr=self.config["inner_lr"])
+        kls = []
+        if old_pis is None:
+            old_pis = [None] * len(episodes)
+
+        for (train_episodes_s, valid_episodes), old_pi in zip(episodes, old_pis):
+
+            with higher.innerloop_ctx(
+                    self.policy, inner_opt, copy_initial_weights=False
+            ) as (inner_policy, diffopt):
+
+                for train_episodes in train_episodes_s:
+                    self.adapt(train_episodes, inner_policy, diffopt)
+
+                # this is the inner-loop update
+                st = seq_to_encoding(valid_episodes.states.flatten(0, 1)).flatten(-2, -1).view(valid_episodes.states.shape[0], valid_episodes.states.shape[1], -1).to(device)  
+                _, _, _, _, pi = inner_policy.act(st, None, None, return_dist=True)
+
+                if old_pi is None:
+                    old_pi = detach_distribution(pi)
+
+                kl = weighted_mean(kl_divergence(pi, old_pi), dim=0, weights=valid_episodes.masks)
+                kls.append(kl)
+
+        return torch.mean(torch.stack(kls, dim=0))
+
+    def hessian_vector_product(self, episodes, damping=1e-2):
+        """Hessian-vector product, based on the Perlmutter method."""
+
+        def _product(vector):
+            kl = self.kl_divergence(episodes)
+            grads = torch.autograd.grad(kl, self.policy.parameters(), create_graph=True)
+            flat_grad_kl = parameters_to_vector(grads)
+
+            grad_kl_v = torch.dot(flat_grad_kl, vector)
+            grad2s = torch.autograd.grad(grad_kl_v, self.policy.parameters())
+            flat_grad2_kl = parameters_to_vector(grad2s)
+
+            return flat_grad2_kl + damping * vector
+
+        return _product
+
+    def surrogate_loss(self, episodes, old_pis=None):
+        inner_opt = optim.SGD(self.policy.parameters(), lr=self.config["inner_lr"])
+
+        losses, kls, pis = [], [], []
+
+        if old_pis is None:
+            old_pis = [None] * len(episodes)
+
+        for (train_episodes_s, valid_episodes), old_pi in zip(episodes, old_pis):
+
+            with higher.innerloop_ctx(
+                    self.policy, inner_opt, copy_initial_weights=False
+            ) as (inner_policy, diffopt):
+
+                for train_episodes in train_episodes_s:
+                    self.adapt(train_episodes, inner_policy, diffopt)
+
+                with torch.set_grad_enabled(old_pi is None):
+
+                    # get action values after inner-loop update
+
+                    st = seq_to_encoding(valid_episodes.states.flatten(0, 1)).flatten(-2, -1).view(valid_episodes.states.shape[0], valid_episodes.states.shape[1], -1).to(device)  
+                    _, _, _, _, pi = inner_policy.act(st, None, None, return_dist=True) # Fix the policy..., so it returns "pi"
+                    pis.append(detach_distribution(pi))
+
+                    if old_pi is None:
+                        old_pi = detach_distribution(pi)
+
+                    st = st.view(valid_episodes.states.shape)
+                    values = self.baseline(states=st, returns=valid_episodes.returns, masks=valid_episodes.masks) # To fix this too...
+                    advantages = valid_episodes.gae(values, tau=self.config["metalearner"]["tau"], gamma=self.config["metalearner"]["gamma"])
+                    advantages = weighted_normalize(advantages, weights=valid_episodes.masks) # masks -> mask
+
+                    log_ratio = (pi.log_prob(valid_episodes.actions.squeeze(-1))
+                                 - old_pi.log_prob(valid_episodes.actions.squeeze(-1)))
+                    # if log_ratio.dim() > 2:
+                    #     log_ratio = torch.sum(log_ratio, dim=2)
+                    ratio = torch.exp(log_ratio)
+
+
+                    loss = -weighted_mean(ratio * advantages, dim=0, weights=valid_episodes.masks)
+                    losses.append(loss)
+
+                    kl = weighted_mean(kl_divergence(pi, old_pi), dim=0, weights=valid_episodes.masks)
+                    kls.append(kl)
+
+        return torch.mean(torch.stack(losses, dim=0)), torch.mean(torch.stack(kls, dim=0)), pis
+
+    def step(self, episodes):
+        """Meta-optimization step (ie. update of the initial parameters)
+        """
+
+        if self.config["metalearner"]["method"] == "REINFORCE":
+            self.reinforce_step(episodes)
+        elif self.config["metalearner"]["method"] == "TRPO":
+            return self.trpo_step(episodes)
+        else:
+            raise NotImplementedError
+
+    def reinforce_step(self, episodes):
+
+        meta_losses = []
+        for (_, valid_episode) in episodes:
+            
+            reinforce_loss = rl_utl.reinforce_loss(valid_episode)
+            entropy_bonus = self.config["entropy_reg_coeff"] * rl_utl.entropy_bonus(valid_episode)
+            meta_loss = reinforce_loss + entropy_bonus
+
+            meta_losses.append(meta_loss)
+
+        
+        loss = sum(meta_losses)
+
+        loss.backward()
+        
+        return loss
+
+    def trpo_step(self, episodes, max_kl=1e-3, cg_iters=10, cg_damping=1e-2,
+             ls_max_steps=10, ls_backtrack_ratio=0.5):
+        """Meta-optimization step (ie. update of the initial parameters), based 
+        on Trust Region Policy Optimization (TRPO, [4]).
+        """
+        old_loss, _, old_pis = self.surrogate_loss(episodes)
+        # this part will take higher order gradients through the inner loop:
+        grads = torch.autograd.grad(old_loss, self.policy.parameters())
+        grads = parameters_to_vector(grads)
+
+        # Compute the step direction with Conjugate Gradient
+        hessian_vector_product = self.hessian_vector_product(episodes, damping=cg_damping)
+        stepdir = conjugate_gradient(hessian_vector_product, grads, cg_iters=cg_iters)
+
+        # Compute the Lagrange multiplier
+        shs = 0.5 * torch.dot(stepdir, hessian_vector_product(stepdir))
+        lagrange_multiplier = torch.sqrt(shs / max_kl)
+
+        step = stepdir / lagrange_multiplier
+
+        # Save the old parameters
+        old_params = parameters_to_vector(self.policy.parameters())
+
+        # Line search
+        step_size = 1.0
+        for _ in range(ls_max_steps):
+            vector_to_parameters(old_params - step_size * step, self.policy.parameters())
+            loss, kl, _ = self.surrogate_loss(episodes, old_pis=old_pis)
+            improve = loss - old_loss
+            if (improve.item() < 0.0) and (kl.item() < max_kl):
+                break
+            step_size *= ls_backtrack_ratio
+        else:
+            print('no update?')
+            vector_to_parameters(old_params, self.policy.parameters())
+
+        return loss
+
+
+
+
+    #  ============ LOGGING BELOW
+
+
+
+
+
+
 
     def log(self, logs):
         """

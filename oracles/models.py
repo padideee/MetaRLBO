@@ -17,7 +17,7 @@ def NN():
 
 # Regressors
 
-def RFR(max_depth = 50, max_features = "auto", n_estimators = 100):
+def RFR(max_depth = 50, max_features = "log2", n_estimators = 100):
     model = RandomForestRegressor(max_depth = max_depth,
                                   max_features = max_features,
                                   n_estimators = n_estimators)

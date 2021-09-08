@@ -46,6 +46,9 @@ DEFAULT_CONFIG = {
 			"n_estimators": 128,
 		}
 	},
+	"metalearner": {
+		"method": "REINFORCE",  # REINFORCE or TRPO
+	},
 	"logging": {
 		"top-k": 5, # k for top-k  (per proxy) --- This needs to be lower than "num_samples_per_iter"
 	},

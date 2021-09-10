@@ -165,7 +165,7 @@ class MetaLearner:
                 random_policy = RandomPolicy(input_size=self.env.observation_space.shape, output_size=1,
                                              num_actions=self.env.action_space.n).to(device)
                 sampled_mols = self.sample_policy(random_policy, oracle=self.true_oracle, oracle_model=self.true_oracle_model, num_samples = self.config[
-                    "num_initial_samples"] * 2)  # Sample from true env. using random policy (num_starting_mols, dim of mol)
+                    "num_initial_samples"] * 2, density_penalty = False)  # Sample from true env. using random policy (num_starting_mols, dim of mol)
 
             else:
 
@@ -286,12 +286,13 @@ class MetaLearner:
         # New-ish -- to be deprecated
 
         # Leo: Can parallelise this...
-        for j in range(episodes.num_samples):
+        for j in range(episodes.num_samples): # Leo: TODO -- Flatten
             hidden_state = None
             for i in range(episodes.num_steps+1):
                 st = episodes.states[i][j].flatten()
                 value, action_log_probs, dist_entropy, hidden_state = policy.evaluate_actions(st.unsqueeze(0), hidden_state, episodes.masks[i][j].unsqueeze(0), episodes.actions[i][j].int().unsqueeze(0))
                 episodes.log_probs[i][j] = action_log_probs[0]
+
 
         loss = rl_utl.reinforce_loss(episodes) + self.config[
             "entropy_reg_coeff"] * rl_utl.entropy_bonus(episodes)
@@ -300,8 +301,9 @@ class MetaLearner:
 
     def meta_update(self, logs):
 
-        inner_opt = optim.SGD(self.policy.parameters(), lr=self.config["inner_lr"])
+
         self.meta_opt.zero_grad()
+        inner_opt = optim.SGD(self.policy.parameters(), lr=self.config["inner_lr"])
 
 
         time_st = time.time()
@@ -343,7 +345,7 @@ class MetaLearner:
                                               )
 
                     self.sample_policy(inner_policy, self.proxy_oracles[j], self.proxy_oracle_models[j], self.config["num_samples_per_task_update"],
-                                       policy_storage=D_j)  # Sample from policy[j]
+                                       policy_storage=D_j, density_penalty = True)  # Sample from policy[j]
 
                     inner_loss = self.adapt(D_j, inner_policy, diffopt)
 
@@ -357,20 +359,22 @@ class MetaLearner:
                 
 
                 # Sample mols for meta update
-                if self.config["outerloop_oracle"] == 'proxy':
+                if self.config["outerloop"]["oracle"] == 'proxy':
 
                     self.sample_policy(inner_policy, self.proxy_oracles[j], self.proxy_oracle_models[j], self.config["num_meta_proxy_samples"],
-                                       policy_storage=D_meta_query)
-                elif self.config["outerloop_oracle"] == 'true':
-                    queried_mols = self.sample_policy(inner_policy, true_oracle, true_oracle_model, self.config["num_meta_proxy_samples"],
-                                                      policy_storage=D_meta_query).detach()
-                    queried_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, queried_mols,
-                                                                              flatten_input=self.flatten_true_oracle_input))
+                                       policy_storage=D_meta_query, density_penalty = self.config["outerloop"]["density_penalty"])
+                elif self.config["outerloop"]["oracle"] == 'true':
+                    self.sample_policy(inner_policy, self.true_oracle, self.true_oracle_model, self.config["num_meta_proxy_samples"],
+                                                      policy_storage=D_meta_query, density_penalty = self.config["outerloop"]["density_penalty"])
+                    # queried_mols = self.sample_policy(inner_policy, self.true_oracle, self.true_oracle_model, self.config["num_meta_proxy_samples"],
+                    #                                   policy_storage=D_meta_query).detach()
+                    # queried_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, queried_mols,
+                    #                                                           flatten_input=self.flatten_true_oracle_input))
 
-                    self.D_train.insert(queried_mols, queried_mols_scores)
+                    # self.D_train.insert(queried_mols, queried_mols_scores)
 
-                    # Sync query_history with D_train
-                    self.query_history += list(self.D_train.mols[len(self.query_history):self.D_train.storage_filled])
+                    # # Sync query_history with D_train
+                    # self.query_history += list(self.D_train.mols[len(self.query_history):self.D_train.storage_filled])
                 else:
                     raise NotImplementedError
 
@@ -402,7 +406,7 @@ class MetaLearner:
 
 
         loss = self.step(episodes) # Performs meta-update
-        logs["outer_loop/loss"] = loss.detach()
+        logs["meta/loss"] = loss
 
 
         # self.meta_opt.step()
@@ -417,13 +421,6 @@ class MetaLearner:
                     self.policy, inner_opt, copy_initial_weights=False
             ) as (inner_policy, diffopt):
 
-                D_meta_query = RolloutStorage(num_samples=self.config["num_meta_proxy_samples"],
-                                                   state_dim=self.env.observation_space.shape,
-                                                   action_dim=1,  # Discrete value
-                                                   num_steps=self.config["policy"]["num_steps"],
-                                                   device=device
-                                                   )
-
                 for k in range(self.config["num_inner_updates"]):
                     D_j = RolloutStorage(num_samples=self.config["num_samples_per_task_update"],
                                               state_dim=self.env.observation_space.shape,
@@ -436,7 +433,8 @@ class MetaLearner:
                                         oracle=self.proxy_query_oracles[j],
                                         oracle_model=self.proxy_query_oracle_models[j],
                                         num_samples=self.config["num_samples_per_task_update"],
-                                        policy_storage=D_j)  # Sample from policy[j]
+                                        policy_storage=D_j,
+                                        density_penalty = True)  # Sample from policy[j]
 
 
                     inner_loss = self.adapt(D_j, inner_policy, diffopt)
@@ -447,7 +445,7 @@ class MetaLearner:
 
         return sampled_mols, logs
 
-    def sample_policy(self, policy, oracle, oracle_model, num_samples, policy_storage=None):
+    def sample_policy(self, policy, oracle, oracle_model, num_samples, policy_storage=None, density_penalty=False):
         """
             Args:
              - policy
@@ -470,7 +468,8 @@ class MetaLearner:
         data = {"reward_oracle": oracle,
                 "reward_oracle_model": oracle_model,
                 "query_history": self.query_history,
-                "query_reward": policy_storage is not None}
+                "query_reward": policy_storage is not None,
+                "density_penalty": density_penalty}
         self.env.set_oracles(data)
         for meta_update in range((num_samples - 1) // self.config["num_processes"] + 1):
             """
@@ -757,29 +756,60 @@ class MetaLearner:
         """
 
         if self.config["metalearner"]["method"] == "REINFORCE":
-            self.reinforce_step(episodes)
+            return self.reinforce_step(episodes)
         elif self.config["metalearner"]["method"] == "TRPO":
             return self.trpo_step(episodes)
         else:
             raise NotImplementedError
 
     def reinforce_step(self, episodes):
+        inner_opt = optim.SGD(self.policy.parameters(), lr=self.config["inner_lr"])
 
+        self.meta_opt.zero_grad()
         meta_losses = []
-        for (_, valid_episode) in episodes:
-            
-            reinforce_loss = rl_utl.reinforce_loss(valid_episode)
-            entropy_bonus = self.config["entropy_reg_coeff"] * rl_utl.entropy_bonus(valid_episode)
-            meta_loss = reinforce_loss + entropy_bonus
-
-            meta_losses.append(meta_loss)
-
         
+        for (train_episodes_s, valid_episodes) in episodes:
+
+            with higher.innerloop_ctx(
+                    self.policy, inner_opt, copy_initial_weights=False
+            ) as (inner_policy, diffopt):
+
+                for train_episodes in train_episodes_s:
+                    self.adapt(train_episodes, inner_policy, diffopt)
+
+                # get action values after inner-loop update
+                st = seq_to_encoding(valid_episodes.states.flatten(0, 1)).flatten(-2, -1).view(valid_episodes.states.shape[0], valid_episodes.states.shape[1], -1).to(device)  
+                _, _, _, _, pi = inner_policy.act(st, None, None, return_dist=True) # Fix the policy..., so it returns "pi"
+
+                log_prob = pi.log_prob(valid_episodes.actions.squeeze(-1))
+
+
+                loss = -weighted_mean(log_prob * valid_episodes.returns, dim=0, weights=valid_episodes.masks)
+
+                if loss < 0:
+                    import pdb; pdb.set_trace()
+                meta_losses.append(loss)
+
+
+        # for (_, valid_episode) in episodes:
+            
+        #     reinforce_loss = rl_utl.reinforce_loss(valid_episode)
+        #     entropy_bonus = self.config["entropy_reg_coeff"] * rl_utl.entropy_bonus(valid_episode)
+        #     meta_loss = reinforce_loss + entropy_bonus
+
+        #     meta_losses.append(meta_loss)
+
+        # loss = sum(meta_losses)/len(meta_losses)
         loss = sum(meta_losses)
+        if loss < 0:
+            import pdb;  pdb.set_trace()
+
+        loss_item = loss.item()
 
         loss.backward()
+        self.meta_opt.step()
         
-        return loss
+        return loss_item 
 
     def trpo_step(self, episodes, max_kl=1e-3, cg_iters=10, cg_damping=1e-2,
              ls_max_steps=10, ls_backtrack_ratio=0.5):
@@ -805,7 +835,7 @@ class MetaLearner:
         old_params = parameters_to_vector(self.policy.parameters())
 
         # Line search
-        step_size = 1.0
+        step_size = 10.0 # Leo: Originally 1.0...
         for _ in range(ls_max_steps):
             vector_to_parameters(old_params - step_size * step, self.policy.parameters())
             loss, kl, _ = self.surrogate_loss(episodes, old_pis=old_pis)
@@ -834,7 +864,7 @@ class MetaLearner:
         """
             Tentatively Tensorboard, but perhaps we want WANDB
         """
-        num_queried = (self.iter_idx + 1) * self.config["num_query_per_iter"]
+        num_queried = self.config["num_initial_samples"] + self.iter_idx * self.config["num_query_per_iter"]
 
         # log the average weights and gradients of all models (where applicable)
         for [model, name] in [

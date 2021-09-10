@@ -18,6 +18,10 @@ from utils.helpers import merge_dicts
 from random_prog import Program
 import utils.helpers as utl
 
+import argparse
+
+parser = argparse.ArgumentParser(description='Process some configs.')
+parser.add_argument('--seed', type=int, default=None)
 
 def main():
     if len(sys.argv) >= 2: config_name = sys.argv[1]
@@ -31,7 +35,13 @@ def main():
     else:
         amp_config = getattr(AMP_configs, config_name)
         config = merge_dicts(DEFAULT_CONFIG, amp_config)
-
+    
+    args, rest_args = parser.parse_known_args()
+    
+    if args.seed is not None:
+        print("OVERRIDING SEED")
+        config["seed"] = args.seed # Override the seed
+        config["exp_label"] = config["exp_label"] + "_seed-" + str(args.seed)
 
     # standard
     if config["task"] == 'AMP-v0':

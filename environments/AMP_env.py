@@ -59,6 +59,7 @@ class AMPEnv(gym.Env):
         self.reward_oracle_model = data["reward_oracle_model"]
         self.query_history = data["query_history"]
         self.query_reward = data["query_reward"]
+        self.density_penalty = data["density_penalty"]
 
 
     def update_proxy_oracles(self, oracle):
@@ -152,7 +153,8 @@ class AMPEnv(gym.Env):
                     pred_prob = self.reward_oracle.query(self.reward_oracle_model, self.curr_state.unsqueeze(0), flatten_input=True)
 
                     reward = torch.tensor(pred_prob[0])
-                    reward -= self.lambd * dens
+                    if self.density_penalty:
+                        reward -= self.lambd * dens
 
                    
                     # with open('logs/log.txt', 'a+') as f:

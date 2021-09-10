@@ -18,7 +18,11 @@ DEFAULT_CONFIG = {
 	"num_meta_updates_per_iter": 1,
 	"inner_lr": 1e-1,
 	"outer_lr": 1e-2,
-	"outerloop_oracle": "proxy",  # Options: proxy, true
+	# "outerloop_oracle": "proxy",  # Options: proxy, true
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": False,
+	},
 	"proxy_oracle": {
 		"model_name": "KNR", 
 		"p": 0.8, # Proportion of data to sample to train proxy oracles
@@ -37,7 +41,7 @@ DEFAULT_CONFIG = {
 	"selection_criteria": { # Configs for selecting the samples
 		"method": "UCB", 
 		"config": {
-			'beta': 1.0,
+			'beta': 4.0,
 		}
 	},
 	"true_oracle": {

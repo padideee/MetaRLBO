@@ -76,7 +76,7 @@ class RolloutStorage(BaseStorage):
     def compute_returns(self, gamma = 1.00):
         self.returns[self.num_steps] = self.rewards[self.num_steps]
         for step in reversed(range(self.num_steps)):
-            self.returns[step] = self.rewards[step] + gamma * self.returns[step+1]
+            self.returns[step] = self.rewards[step] + gamma * self.returns[step+1] * (1 - self.dones[step])
 
     def after_rollouts(self):
         # Only allows one rollout (REINFORCE)

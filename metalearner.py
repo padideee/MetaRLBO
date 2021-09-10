@@ -133,7 +133,7 @@ class MetaLearner:
         self.baseline = LinearFeatureBaseline(input_size = self.env.observation_space.shape[0] * self.env.observation_space.shape[1]).to(device) # TODO: FIX
 
         self.meta_opt = optim.SGD(self.policy.parameters(), lr=self.config["outer_lr"])
-        self.test_oracle = get_test_oracle()
+        # self.test_oracle = get_test_oracle()
         self.iter_idx = 0
 
 
@@ -786,8 +786,6 @@ class MetaLearner:
 
                 loss = -weighted_mean(log_prob * valid_episodes.returns, dim=0, weights=valid_episodes.masks)
 
-                if loss < 0:
-                    import pdb; pdb.set_trace()
                 meta_losses.append(loss)
 
 
@@ -801,8 +799,6 @@ class MetaLearner:
 
         # loss = sum(meta_losses)/len(meta_losses)
         loss = sum(meta_losses)
-        if loss < 0:
-            import pdb;  pdb.set_trace()
 
         loss_item = loss.item()
 

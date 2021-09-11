@@ -281,6 +281,41 @@ debug_KNR = {
 	"log_interval": 1,
 }
 
+debug_GPR = {
+	"exp_label": "DEBUG-GPR",
+	"num_proxies": 2,
+	"num_inner_updates": 1, 
+	"num_meta_proxy_samples": 2,
+	"num_initial_samples": 250,
+	"num_query_proxies": 8,
+	"num_samples_per_iter": 8, 
+	"num_samples_per_task_update": 8,
+	"num_query_per_iter": 20,
+	"inner_lr": 20.0,
+	"outer_lr": 2.0,
+	"proxy_oracle": {
+		"model_name": "GPR",
+		"p": 0.8, # Proportion of data to sample to train proxy oracles
+		"config": {
+			"kernel": "RBF",
+		},
+	},
+	"entropy_reg_coeff": 0.0,
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB",
+		"config": {
+			'beta': 6.0,
+		}
+	},
+	"metalearner": {
+		"method": "REINFORCE",  # REINFORCE or TRPO
+	},
+	"num_processes": 4,
+	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
+	"log_interval": 1,
+}
+
+
 
 
 

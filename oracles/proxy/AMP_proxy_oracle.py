@@ -10,7 +10,7 @@ class AMPProxyOracle(BaseOracle):
 		self.p = p
 
 
-	def query(self, model, x, flatten_input=True):
+	def query(self, model, x, flatten_input=True, **kwargs):
 
 		"""
 			Args:
@@ -22,7 +22,7 @@ class AMPProxyOracle(BaseOracle):
 		if flatten_input:
 			x = x.flatten(start_dim=-2, end_dim = -1)
 
-		return model.predict(x) # Regressor 
+		return model.predict(x, **kwargs) # Regressor 
 
 	def fit(self, model, flatten_input=True):
 		"""

@@ -268,8 +268,8 @@ class MetaLearner:
 
     def inner_loss(self, episodes, policy, params=None):
         """Compute the inner loss for the one-step gradient update. The inner 
-        loss is REINFORCE with baseline [2], computed on advantages estimated 
-        with Generalized Advantage Estimation (GAE, [3]).
+        loss is REINFORCE (possibly with baseline [2], computed on advantages estimated 
+        with Generalized Advantage Estimation (GAE, [3])).
         """
         # values = self.baseline(episodes)
         # advantages = episodes.gae(values, tau=self.tau)
@@ -585,14 +585,32 @@ class MetaLearner:
 
                 idx = sorted_idx[:n_query]  # Select top scores
             elif self.config["selection_criteria"]["method"] == "UCB":
-                proxy_scores = []
-                for j in range(self.config["num_proxies"]):
-                    proxy_scores.append(torch.tensor(self.proxy_oracles[j].query(self.proxy_oracle_models[j], mols,
-                                                                                 flatten_input=self.flatten_proxy_oracle_input)))
-                proxy_scores = torch.stack(proxy_scores)
-                proxy_scores_mean = proxy_scores.mean(dim=0)
+                
 
-                proxy_scores_std = proxy_scores.std(dim=0)
+                if self.config["proxy_oracle"]["model_name"] == "GPR":
+                    print("SPECIAL selection for GPR")
+                    proxy_means = []
+                    proxy_stds = []
+                    for j in range(self.config["num_proxies"]):
+                        mean_score, std_score = self.proxy_oracles[j].query(self.proxy_oracle_models[j], mols,
+                                                                                     flatten_input=self.flatten_proxy_oracle_input,
+                                                                                     return_std=True)
+                        proxy_means.append(torch.tensor(mean_score))
+                        proxy_stds.append(torch.tensor(std_score))
+                    proxy_means = torch.stack(proxy_means)
+                    proxy_stds = torch.stack(proxy_stds)
+                    proxy_scores_mean = proxy_means.mean(dim=0)
+                    proxy_scores_std = proxy_stds.mean(dim = 0)
+
+                else:
+                    proxy_scores = []
+                    for j in range(self.config["num_proxies"]):
+                        proxy_scores.append(torch.tensor(self.proxy_oracles[j].query(self.proxy_oracle_models[j], mols,
+                                                                                     flatten_input=self.flatten_proxy_oracle_input)))
+                    proxy_scores = torch.stack(proxy_scores)
+                    proxy_scores_mean = proxy_scores.mean(dim=0)
+
+                    proxy_scores_std = proxy_scores.std(dim=0)
 
                 logs["select_molecules/proxy_model/mean/mean"] = proxy_scores_mean.mean()
                 logs["select_molecules/proxy_model/std/mean"] = proxy_scores_std.mean()

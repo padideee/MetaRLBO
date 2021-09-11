@@ -112,6 +112,8 @@ def get_proxy_oracle_model(config):
         model = XGBoost()
     elif config["proxy_oracle"]["model_name"] == 'XGB':
         model = XGB()
+    elif config["proxy_oracle"]["model_name"] == 'GPR':
+        model = GPR()
     else:
         raise NotImplementedError
 

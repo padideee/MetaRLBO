@@ -48,7 +48,6 @@ class RolloutStorage(BaseStorage):
                next_state, 
                action, 
                reward, 
-               log_prob, 
                done):
 
         assert self.curr_timestep < self.num_steps + 1
@@ -63,7 +62,7 @@ class RolloutStorage(BaseStorage):
         self.next_states[self.curr_timestep][self.curr_sample:next_sample].copy_(next_state[:sample_diff].clone().detach())
         self.actions[self.curr_timestep][self.curr_sample:next_sample].copy_(action[:sample_diff].clone().detach())
         self.rewards[self.curr_timestep][self.curr_sample:next_sample].copy_(reward[:sample_diff].clone().detach())
-        self.log_probs[self.curr_timestep][self.curr_sample:next_sample].copy_(log_prob[:sample_diff].clone()) # Leo: Used to differentiate through
+        # self.log_probs[self.curr_timestep][self.curr_sample:next_sample].copy_(log_prob[:sample_diff].clone()) # Leo: Used to differentiate through
         self.dones[self.curr_timestep][self.curr_sample:next_sample].copy_(done[:sample_diff].clone().detach())
 
         self.curr_timestep = self.curr_timestep + 1

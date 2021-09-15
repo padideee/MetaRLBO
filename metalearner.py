@@ -501,7 +501,6 @@ class MetaLearner:
                                           next_state=next_state.detach().clone(),
                                           action=action.detach().clone(),
                                           reward=reward.detach().clone(),
-                                          log_prob=log_prob.clone().squeeze(-1),
                                           done=done.detach().clone())
 
 

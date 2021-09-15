@@ -591,6 +591,46 @@ amp_knr_016 = {
 }
 
 
+amp_knr_017 = { 
+	"exp_label": "AMP-KNR-017",
+	"num_proxies": 4, 
+	"num_inner_updates": 1,
+	"num_meta_proxy_samples": 4, # 
+	"num_query_proxies": 4,
+	"num_initial_samples": 250,
+	"num_samples_per_iter": 16,
+	"num_samples_per_task_update": 16,
+	"num_query_per_iter": 20,
+	"inner_lr": 5.0,
+	"outer_lr": 0.5,
+	"num_meta_updates_per_iter": 1, 
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, 
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 4.0,
+		},
+		"diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+
+
 # ======================= Proxy Oracles: Bayesian Regression
 
 
@@ -834,7 +874,7 @@ amp_knr_med_001 = {
 	"num_query_proxies": 32,
 	"num_samples_per_iter": 16,
 	"num_samples_per_task_update": 16,
-	"num_query_per_iter": 50,
+	"num_query_per_iter": 100,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
 	"num_meta_updates_per_iter": 5,
@@ -865,7 +905,7 @@ amp_knr_med_002 = {
 	"num_query_proxies": 32,
 	"num_samples_per_iter": 16,
 	"num_samples_per_task_update": 16,
-	"num_query_per_iter": 50,
+	"num_query_per_iter": 100,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
 	"num_meta_updates_per_iter": 10,
@@ -897,7 +937,7 @@ amp_knr_med_003 = {
 	"num_query_proxies": 32,
 	"num_samples_per_iter": 16,
 	"num_samples_per_task_update": 16,
-	"num_query_per_iter": 50,
+	"num_query_per_iter": 100,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
 	"num_meta_updates_per_iter": 20,
@@ -928,7 +968,7 @@ amp_knr_med_004 = {
 	"num_query_proxies": 32,
 	"num_samples_per_iter": 16,
 	"num_samples_per_task_update": 16,
-	"num_query_per_iter": 50,
+	"num_query_per_iter": 100,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
 	"num_meta_updates_per_iter": 30,
@@ -960,7 +1000,7 @@ amp_knr_med_005 = {
 	"num_query_proxies": 32,
 	"num_samples_per_iter": 16,
 	"num_samples_per_task_update": 16,
-	"num_query_per_iter": 50,
+	"num_query_per_iter": 100,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
 	"num_meta_updates_per_iter": 50,

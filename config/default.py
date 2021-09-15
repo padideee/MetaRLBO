@@ -42,7 +42,8 @@ DEFAULT_CONFIG = {
 		"method": "UCB", 
 		"config": {
 			'beta': 4.0,
-		}
+		},
+		"diversity_threshold": 20, # Diversity threshold when greedily selecting molecules...
 	},
 	"true_oracle": {
 		"model_name": "RFC",

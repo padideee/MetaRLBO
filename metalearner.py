@@ -34,6 +34,8 @@ from utils.optimization import conjugate_gradient
 from utils.torch_utils import (weighted_mean, detach_distribution, weighted_normalize)
 from algo.baseline import LinearFeatureBaseline
 
+from utils import filtering
+
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -557,7 +559,8 @@ class MetaLearner:
                 valid_idx.append(i)
             else:
                 print("Already queried...")
-        mols = mols[valid_idx]
+
+        mols = mols[valid_idx] # Filter out the duplicates
 
         if mols.shape[0] > 0:
             mols = torch.tensor(mols)
@@ -567,68 +570,15 @@ class MetaLearner:
             else:
                 n_query = min(self.config["num_query_per_iter"], mols.shape[0])
 
-            if self.config["selection_criteria"]["method"] == "RANDOM" or self.iter_idx == 0:
-                # In the case that the iter_idx is 0, then we can only randomly select them...
-                perm = torch.randperm(mols.shape[0])
-                idx = perm[:n_query]
-            elif self.config["selection_criteria"]["method"] == "PROXY_MEAN":
-                proxy_scores = []
-                for j in range(self.config["num_proxies"]):
-                    proxy_scores.append(torch.tensor(self.proxy_oracles[j].query(self.proxy_oracle_models[j], mols,
-                                                                                 flatten_input=self.flatten_proxy_oracle_input)))
-                proxy_scores = torch.stack(proxy_scores)
-                proxy_scores_mean = proxy_scores.mean(dim=0)
+            logs, scores = filtering.get_scores(self.config, mols, self.proxy_oracles, self.proxy_oracle_models, self.flatten_proxy_oracle_input, logs, iter_idx = self.iter_idx)
 
-                _, sorted_idx = torch.sort(proxy_scores_mean)
+            _, sorted_idx = torch.sort(scores, descending = True)
 
-                sorted_idx = torch.flip(sorted_idx, dims=(0,))  # Largest to Smallest
-
-                idx = sorted_idx[:n_query]  # Select top scores
-            elif self.config["selection_criteria"]["method"] == "UCB":
-                
-
-                if self.config["proxy_oracle"]["model_name"] == "GPR":
-                    print("SPECIAL selection for GPR")
-                    proxy_means = []
-                    proxy_stds = []
-                    for j in range(self.config["num_proxies"]):
-                        mean_score, std_score = self.proxy_oracles[j].query(self.proxy_oracle_models[j], mols,
-                                                                                     flatten_input=self.flatten_proxy_oracle_input,
-                                                                                     return_std=True)
-                        proxy_means.append(torch.tensor(mean_score))
-                        proxy_stds.append(torch.tensor(std_score))
-                    proxy_means = torch.stack(proxy_means)
-                    proxy_stds = torch.stack(proxy_stds)
-                    proxy_scores_mean = proxy_means.mean(dim=0)
-                    proxy_scores_std = proxy_stds.mean(dim = 0)
-
-                else:
-                    proxy_scores = []
-                    for j in range(self.config["num_proxies"]):
-                        proxy_scores.append(torch.tensor(self.proxy_oracles[j].query(self.proxy_oracle_models[j], mols,
-                                                                                     flatten_input=self.flatten_proxy_oracle_input)))
-                    proxy_scores = torch.stack(proxy_scores)
-                    proxy_scores_mean = proxy_scores.mean(dim=0)
-
-                    proxy_scores_std = proxy_scores.std(dim=0)
-
-                logs["select_molecules/proxy_model/mean/mean"] = proxy_scores_mean.mean()
-                logs["select_molecules/proxy_model/std/mean"] = proxy_scores_std.mean()
-
-                scores = proxy_scores_mean + self.config["selection_criteria"]["config"]["beta"] * proxy_scores_std
-                _, sorted_idx = torch.sort(scores)
-
-                sorted_idx = torch.flip(sorted_idx, dims=(0,))  # Largest to Smallest
-
-                idx = sorted_idx[:n_query]  # Select top scores
-
-            else:
-                raise NotImplementedError
-
-            selected_mols = mols.clone()[idx]
+            idx = sorted_idx[:n_query]  # Select top scores
+            sorted_mols = mols.clone()[sorted_idx]
+            selected_mols = filtering.select(self.config, sorted_mols, n_query)
 
             return selected_mols, logs
-
         else:
             return None, logs
 

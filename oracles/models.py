@@ -54,15 +54,15 @@ def XGB():
     return model
 
 
-def GPR(kernel_type = "RBF"):
-    if kernel_type == "RBF":
-        kernel = RBF()
-    elif kernel_type == "RationalQuadratic":
-        kernel = RationalQuadratic()
-    elif kernel_type == "Matern":
-        kernel = Matern()
+def GPR(kernel = "RBF"):
+    if kernel == "RBF":
+        kernel_model = RBF()
+    elif kernel == "RationalQuadratic":
+        kernel_model = RationalQuadratic()
+    elif kernel == "Matern":
+        kernel_model = Matern()
     else:
         raise NotImplementedError
-    model = GaussianProcessRegressor(kernel=kernel)
+    model = GaussianProcessRegressor(kernel=kernel_model)
 
     return model

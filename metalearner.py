@@ -574,7 +574,6 @@ class MetaLearner:
 
             _, sorted_idx = torch.sort(scores, descending = True)
 
-            idx = sorted_idx[:n_query]  # Select top scores
             sorted_mols = mols.clone()[sorted_idx]
             selected_mols = filtering.select(self.config, sorted_mols, n_query)
 

@@ -412,76 +412,44 @@ debug_RFR = {
 	"log_interval": 1,
 }
 
-debug_KNR_PAR = {
-	"exp_label": "DEBUG-KNR_PAR",
-	"num_proxies": 8,
-	"num_inner_updates": 2, 
-	"num_meta_proxy_samples": 16,
-	"num_initial_samples": 250,
-	"num_query_proxies": 16,
-	"num_samples_per_iter": 32, 
-	"num_samples_per_task_update": 16,
-	"num_query_per_iter": 250,
-	"num_meta_updates_per_iter": 1,
-	"inner_lr": 5.0,
-	"outer_lr": 0.5,
-	"proxy_oracle": {
-		"model_name": "KNR",
-		"p": 0.8, # Proportion of data to sample to train proxy oracles
-	},
-	"entropy_reg_coeff": 0.0,
-	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB",
-		"config": {
-			'beta': 4.0,
-		}
-	},
-	"diversity": {
-		"div_metric_name": "hamming",
-		"div_switch": "OFF" # switches the diversity bonus ON / OFF
-	},
-	"num_processes": 8,
-	"mode": "test", # mode -- val (hyperparameter opt.), test (eval. )
-	"log_interval": 1,
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-debug_KNR_OL = {
+debug_KNR = {
 	"exp_label": "DEBUG-KNR",
 	"num_proxies": 2, 
-	"num_inner_updates": 1, 
-	"num_meta_proxy_samples": 4,
-	"num_initial_samples": 20,
-	"num_samples_per_iter": 4, 
-	"num_samples_per_task_update": 4, 
-	"inner_lr": 1e0,
-	"outer_lr": 1e-1,
-	"outerloop_oracle": "true",
+	"num_inner_updates": 1,
+	"num_meta_proxy_samples": 4, 
+	"num_query_proxies": 4,
+	"num_initial_samples": 250,
+	"num_samples_per_iter": 16,
+	"num_samples_per_task_update": 8,
+	"num_query_per_iter": 20,
+	"inner_lr": 5.0,
+	"outer_lr": 0.5,
+	"num_meta_updates_per_iter": 10, 
+	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, # Proportion of data to sample to train proxy oracles
+		"p": 0.8, 
 	},
-	"logging": {
-		"top-k": 4, # k for top-k
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
 	},
-	"env": {
-		"lambda": 0.1, # Diversity hyperparameter -- higher is more penalty for more similar mols.
-		"radius": 2,
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 4.0,
+		},
+		"diversity_threshold": 0, # Diversity threshold when greedily selecting molecules...
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
 	},
 	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
+	"seed": 73,
 }
-
 
 
 

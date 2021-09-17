@@ -629,6 +629,196 @@ amp_knr_017 = {
 	"seed": 73,
 }
 
+amp_knr_018 = { 
+	"exp_label": "AMP-KNR-018",
+	"num_proxies": 4, 
+	"num_inner_updates": 1,
+	"num_meta_proxy_samples": 4, # 
+	"num_query_proxies": 4,
+	"num_initial_samples": 250,
+	"num_samples_per_iter": 16,
+	"num_samples_per_task_update": 16,
+	"num_query_per_iter": 20,
+	"inner_lr": 5.0,
+	"outer_lr": 0.5,
+	"num_meta_updates_per_iter": 1, 
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, 
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 8.0,
+		},
+		"diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+amp_knr_019 = { 
+	"exp_label": "AMP-KNR-019",
+	"num_proxies": 4, 
+	"num_inner_updates": 1,
+	"num_meta_proxy_samples": 4, # 
+	"num_query_proxies": 4,
+	"num_initial_samples": 250,
+	"num_samples_per_iter": 8,
+	"num_samples_per_task_update": 16,
+	"num_query_per_iter": 20,
+	"inner_lr": 5.0,
+	"outer_lr": 0.5,
+	"num_meta_updates_per_iter": 1, 
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, 
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 4.0,
+		},
+		"diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+amp_knr_020 = { 
+	"exp_label": "AMP-KNR-020",
+	"num_proxies": 4, 
+	"num_inner_updates": 1,
+	"num_meta_proxy_samples": 4, # 
+	"num_query_proxies": 4,
+	"num_initial_samples": 250,
+	"num_samples_per_iter": 16,
+	"num_samples_per_task_update": 16,
+	"num_query_per_iter": 20,
+	"inner_lr": 5.0,
+	"outer_lr": 0.5,
+	"num_meta_updates_per_iter": 3, 
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, 
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 4.0,
+		},
+		"diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+amp_knr_021 = { 
+	"exp_label": "AMP-KNR-021",
+	"num_proxies": 4, 
+	"num_inner_updates": 1,
+	"num_meta_proxy_samples": 4, # 
+	"num_query_proxies": 4,
+	"num_initial_samples": 250,
+	"num_samples_per_iter": 16,
+	"num_samples_per_task_update": 16,
+	"num_query_per_iter": 20,
+	"inner_lr": 5.0,
+	"outer_lr": 0.5,
+	"num_meta_updates_per_iter": 1, 
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, 
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 4.0,
+		},
+		"diversity_threshold": 10, # Diversity threshold when greedily selecting molecules...
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+amp_knr_022 = { 
+	"exp_label": "AMP-KNR-022",
+	"num_proxies": 2, 
+	"num_inner_updates": 1,
+	"num_meta_proxy_samples": 4, # 
+	"num_query_proxies": 4,
+	"num_initial_samples": 250,
+	"num_samples_per_iter": 16,
+	"num_samples_per_task_update": 16,
+	"num_query_per_iter": 20,
+	"inner_lr": 5.0,
+	"outer_lr": 0.5,
+	"num_meta_updates_per_iter": 1, 
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, 
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 4.0,
+		},
+		"diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
 
 
 # ======================= Proxy Oracles: Bayesian Regression
@@ -898,12 +1088,126 @@ amp_knr_med_001 = {
 
 amp_knr_med_002 = { 
 	"exp_label": "AMP-KNR-Medium-002",
-	"num_proxies": 8,
+	"num_proxies": 4,
 	"num_inner_updates": 1,
 	"num_meta_proxy_samples": 4,
 	"num_initial_samples": 250,
-	"num_query_proxies": 32,
-	"num_samples_per_iter": 16,
+	"num_query_proxies": 4,
+	"num_samples_per_iter": 75,
+	"num_samples_per_task_update": 16,
+	"num_query_per_iter": 100,
+	"inner_lr": 5.0,
+	"outer_lr": 0.5,
+	"num_meta_updates_per_iter": 5,
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, 
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 4.0,
+		},
+		"diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+amp_knr_med_003 = { 
+	"exp_label": "AMP-KNR-Medium-003",
+	"num_proxies": 4,
+	"num_inner_updates": 1,
+	"num_meta_proxy_samples": 4,
+	"num_initial_samples": 250,
+	"num_query_proxies": 4,
+	"num_samples_per_iter": 75,
+	"num_samples_per_task_update": 16,
+	"num_query_per_iter": 100,
+	"inner_lr": 5.0,
+	"outer_lr": 0.5,
+	"num_meta_updates_per_iter": 5,
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, 
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 4.0,
+		},
+		"diversity_threshold": 10, # Diversity threshold when greedily selecting molecules...
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+amp_knr_med_004 = { 
+	"exp_label": "AMP-KNR-Medium-004",
+	"num_proxies": 4,
+	"num_inner_updates": 1,
+	"num_meta_proxy_samples": 4,
+	"num_initial_samples": 250,
+	"num_query_proxies": 8,
+	"num_samples_per_iter": 37,
+	"num_samples_per_task_update": 16,
+	"num_query_per_iter": 100,
+	"inner_lr": 5.0,
+	"outer_lr": 0.5,
+	"num_meta_updates_per_iter": 5,
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, 
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 4.0,
+		},
+		"diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+amp_knr_med_005 = { 
+	"exp_label": "AMP-KNR-Medium-005",
+	"num_proxies": 4,
+	"num_inner_updates": 1,
+	"num_meta_proxy_samples": 4,
+	"num_initial_samples": 250,
+	"num_query_proxies": 4,
+	"num_samples_per_iter": 75,
 	"num_samples_per_task_update": 16,
 	"num_query_per_iter": 100,
 	"inner_lr": 5.0,
@@ -918,37 +1222,12 @@ amp_knr_med_002 = {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
-
-	"true_oracle": {
-		"model_name": "RFC",
-	},
-	"log_interval": 1,
-	"results_log_dir": "./logs",
-	"seed": 73,
-}
-
-
-amp_knr_med_003 = { 
-	"exp_label": "AMP-KNR-Medium-003",
-	"num_proxies": 8,
-	"num_inner_updates": 1,
-	"num_meta_proxy_samples": 4,
-	"num_initial_samples": 250,
-	"num_query_proxies": 32,
-	"num_samples_per_iter": 16,
-	"num_samples_per_task_update": 16,
-	"num_query_per_iter": 100,
-	"inner_lr": 5.0,
-	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 20,
-	"entropy_reg_coeff": 0.0,
-	"proxy_oracle": {
-		"model_name": "KNR",
-		"p": 0.8, 
-	},
-	"outerloop": {
-		"oracle": "proxy",
-		"density_penalty": True,
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 4.0,
+		},
+		"diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
 	},
 
 	"true_oracle": {
@@ -958,75 +1237,6 @@ amp_knr_med_003 = {
 	"results_log_dir": "./logs",
 	"seed": 73,
 }
-
-amp_knr_med_004 = { 
-	"exp_label": "AMP-KNR-Medium-004",
-	"num_proxies": 8,
-	"num_inner_updates": 1,
-	"num_meta_proxy_samples": 4,
-	"num_initial_samples": 250,
-	"num_query_proxies": 32,
-	"num_samples_per_iter": 16,
-	"num_samples_per_task_update": 16,
-	"num_query_per_iter": 100,
-	"inner_lr": 5.0,
-	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 30,
-	"entropy_reg_coeff": 0.0,
-	"proxy_oracle": {
-		"model_name": "KNR",
-		"p": 0.8, 
-	},
-	"outerloop": {
-		"oracle": "proxy",
-		"density_penalty": True,
-	},
-
-	"true_oracle": {
-		"model_name": "RFC",
-	},
-	"log_interval": 1,
-	"results_log_dir": "./logs",
-	"seed": 73,
-}
-
-
-amp_knr_med_005 = { 
-	"exp_label": "AMP-KNR-Medium-005",
-	"num_proxies": 8,
-	"num_inner_updates": 1,
-	"num_meta_proxy_samples": 4,
-	"num_initial_samples": 250,
-	"num_query_proxies": 32,
-	"num_samples_per_iter": 16,
-	"num_samples_per_task_update": 16,
-	"num_query_per_iter": 100,
-	"inner_lr": 5.0,
-	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 50,
-	"entropy_reg_coeff": 0.0,
-	"proxy_oracle": {
-		"model_name": "KNR",
-		"p": 0.8, 
-	},
-	"outerloop": {
-		"oracle": "proxy",
-		"density_penalty": True,
-	},
-
-	"true_oracle": {
-		"model_name": "RFC",
-	},
-	"log_interval": 1,
-	"results_log_dir": "./logs",
-	"seed": 73,
-}
-
-
-
-
-
-
 
 
 

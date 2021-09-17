@@ -36,7 +36,6 @@ amp_random_large = {
 		"method": "RANDOM",
 	},
 	"seed": 40,
-	"mode": "val",
 	"log_interval": 1,
 }
 

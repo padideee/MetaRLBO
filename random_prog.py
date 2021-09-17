@@ -85,22 +85,11 @@ class Program:
 
         # -- END ---
         
-        self.env = AMPEnv(self.true_oracle, self.true_oracle_model, lambd=self.config["env"]["lambda"], radius = self.config["env"]["radius"]) # The reward will not be needed in this env.
+        self.env = AMPEnv(lambd=self.config["env"]["lambda"], radius = self.config["env"]["radius"]) # The reward will not be needed in this env.
 
         self.D_train = QueryStorage(storage_size=self.config["query_storage_size"], state_dim = self.env.observation_space.shape)
-
-
         self.query_history = []
-        # Proxy -- used for training
-        self.proxy_oracles = [AMPProxyOracle(training_storage=self.D_train, p=self.config["proxy_oracle"]["p"]) for j in range(self.config["num_proxies"])]
-        self.proxy_oracle_models = [utl.get_proxy_oracle_model(self.config) for j in range(self.config["num_proxies"])]
-        self.proxy_envs = [AMPEnv(self.proxy_oracles[j], self.proxy_oracle_models[j], lambd=self.config["env"]["lambda"], query_history = self.query_history) for j in range(self.config["num_proxies"])]
 
-
-        # Proxy -- used for generating molecules for querying
-        self.proxy_query_oracles = [AMPProxyOracle(training_storage=self.D_train, p=self.config["proxy_oracle"]["p"]) for j in range(self.config["num_query_proxies"])]
-        self.proxy_query_oracle_models = [utl.get_proxy_oracle_model(self.config) for j in range(self.config["num_query_proxies"])]
-        self.proxy_query_envs = [AMPEnv(self.proxy_query_oracles[j], self.proxy_query_oracle_models[j], lambd=self.config["env"]["lambda"], query_history = self.query_history) for j in range(self.config["num_query_proxies"])]
 
 
         self.test_oracle = get_test_oracle()
@@ -193,6 +182,7 @@ class Program:
             # Sample actions and end when EOS token occurs
             mols = []
             for i in range(num_samples):
+                rand_mol = []
                 for _ in range (self.env.max_AMP_length):
                     a = random.randint(0, self.env.num_actions - 1)
                     rand_mol.append(a)

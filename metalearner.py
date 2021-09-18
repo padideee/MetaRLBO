@@ -443,7 +443,7 @@ class MetaLearner:
 
                     # Sample mols (and query) for training the proxy oracles later
                 sampled_mols.append(self.sample_policy(inner_policy, self.proxy_query_oracles[j], self.proxy_query_oracle_models[j], self.config[
-                    "num_samples_per_iter"]).detach())  # Sample from policies -- preferably make this parallelised in the future
+                    "num_samples_per_proxy"]).detach())  # Sample from policies -- preferably make this parallelised in the future
 
         return sampled_mols, logs
 

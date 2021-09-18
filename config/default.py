@@ -53,7 +53,7 @@ DEFAULT_CONFIG = {
 		"method": "REINFORCE",  # REINFORCE or TRPO
 	},
 	"logging": { # Deprecated (Ignore)
-		"top-k": 5, # k for top-k  (per proxy) --- This needs to be lower than "num_samples_per_iter"
+		"top-k": 5, # k for top-k  (per proxy) --- This needs to be lower than "num_samples_per_proxy"
 	},
 	"env": { # See DynaPPO paper for these configs
 		"lambda": 0.1, # Diversity hyperparameter -- higher is more penalty for more similar mols.

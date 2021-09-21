@@ -5,6 +5,7 @@ from io import StringIO
 from Bio.Blast import NCBIXML
 import utils.helpers as utl
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def hamming_distance(history, seq):
     """
@@ -114,9 +115,10 @@ class diversity():
 
     def density_hamming(self):
         if self.div_switch == "ON":
-
+            self.history = self.history.to(device)
             if self.batch_query:
                 # Hamming Distance is equiv. to XOR, but in our case, it's XOR/2 since we're one hot encoding characters.
+               
                 sums = batch_hamming_distance(self.history, self.seq)
 
                 batch_size = sums.shape[0]
@@ -125,7 +127,7 @@ class diversity():
                 for i in range(batch_size):
                     penalty_sums = sums[i][(sums[i] < self.radius)]
                     ret.append(((self.radius - penalty_sums) / self.radius).sum())
-                return torch.tensor(ret)
+                return torch.stack(ret)
             else:
                 # Hamming Distance is equiv. to XOR, but in our case, it's XOR/2 since we're one hot encoding characters.
                 sums = hamming_distance(self.history, self.seq)

@@ -534,9 +534,9 @@ class MetaLearner:
                                 radius=self.config["env"]["radius"], 
                                 div_metric_name=self.config["diversity"]["div_metric_name"]).get_density()            
 
-            query_scores = oracle.query(oracle_model, query_states, flatten_input=self.flatten_proxy_oracle_input)
+            query_scores = oracle.query(oracle_model, query_states.cpu(), flatten_input=self.flatten_proxy_oracle_input)
 
-            policy_storage.rewards[bool_idx] = torch.tensor(query_scores) - self.config["env"]["lambda"] * dens # TODO: Set the rewards to include the density penalties...
+            policy_storage.rewards[bool_idx] = torch.tensor(query_scores).to(device) - self.config["env"]["lambda"] * dens.to(device) # TODO: Set the rewards to include the density penalties...
             
 
         if policy_storage is not None:

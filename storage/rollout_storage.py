@@ -6,14 +6,14 @@ from torch.nn import functional as F
 class RolloutStorage(BaseStorage):
 
     def __init__(self, 
-                 num_samples,
+                 num_processes,
                  state_dim,
                  action_dim, 
                  num_steps,
                  device,
                  hidden_dim=None
                  ):
-        self.num_samples = num_samples
+        self.num_processes = num_processes
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.hidden_dim = hidden_dim
@@ -21,26 +21,23 @@ class RolloutStorage(BaseStorage):
         self.device = device
 
 
-        self.states = torch.zeros(num_steps+1, num_samples, *state_dim).to(device) # minor issue: state_dim = (num_steps, action_dim) -- storing unnecessary info.
-        self.next_states = torch.zeros(num_steps+1, num_samples, *state_dim).to(device)
-        self.actions = torch.zeros(num_steps+1, num_samples, action_dim).to(device)
+        self.states = torch.zeros(num_steps+1, num_processes, *state_dim).to(device) # minor issue: state_dim = (num_steps, action_dim) -- storing unnecessary info.
+        self.next_states = torch.zeros(num_steps+1, num_processes, *state_dim).to(device)
+        self.actions = torch.zeros(num_steps+1, num_processes, action_dim).to(device)
         if hidden_dim is not None:
-            self.hidden_states = torch.zeros(num_steps+1, num_samples, hidden_dim).to(device)
-        self.rewards = torch.zeros(num_steps+1, num_samples).to(device)
-        self.log_probs = torch.zeros(num_steps+1, num_samples).to(device)
-        self.dones = torch.zeros(num_steps+1, num_samples).to(device)
-        self.masks = torch.zeros(num_steps+1, num_samples).to(device) # 1 when action is performed, 0 when episode ends.
+            self.hidden_states = torch.zeros(num_steps+1, num_processes, hidden_dim).to(device)
+        self.rewards = torch.zeros(num_steps+1, num_processes).to(device)
+        self.log_probs = torch.zeros(num_steps+1, num_processes).to(device)
+        self.dones = torch.zeros(num_steps+1, num_processes).to(device)
+        self.masks = torch.zeros(num_steps+1, num_processes).to(device) # 1 when action is performed, 0 when episode ends.
 
 
-        self.returns = torch.zeros(num_steps+1, num_samples).to(device)
+        self.returns = torch.zeros(num_steps+1, num_processes).to(device)
 
 
 
         self.curr_timestep = 0
         self.curr_sample = 0
-
-    # def insert(self, ...):
-    #     raise NotImplementedError()
 
 
     def insert(self, 
@@ -54,23 +51,15 @@ class RolloutStorage(BaseStorage):
 
         batch_size = state.shape[0]
 
-        next_sample = min(self.curr_sample + batch_size, self.num_samples)
-        sample_diff = next_sample - self.curr_sample
-
-
-        self.states[self.curr_timestep][self.curr_sample:next_sample].copy_(state[:sample_diff].clone().detach())
-        self.next_states[self.curr_timestep][self.curr_sample:next_sample].copy_(next_state[:sample_diff].clone().detach())
-        self.actions[self.curr_timestep][self.curr_sample:next_sample].copy_(action[:sample_diff].clone().detach())
-        self.rewards[self.curr_timestep][self.curr_sample:next_sample].copy_(reward[:sample_diff].clone().detach())
+        self.states[self.curr_timestep].copy_(state.clone().detach())
+        self.next_states[self.curr_timestep].copy_(next_state.clone().detach())
+        self.actions[self.curr_timestep].copy_(action.clone().detach())
+        self.rewards[self.curr_timestep].copy_(reward.clone().detach())
         # self.log_probs[self.curr_timestep][self.curr_sample:next_sample].copy_(log_prob[:sample_diff].clone()) # Leo: Used to differentiate through
-        self.dones[self.curr_timestep][self.curr_sample:next_sample].copy_(done[:sample_diff].clone().detach())
+        self.dones[self.curr_timestep].copy_(done.clone().detach())
 
         self.curr_timestep = self.curr_timestep + 1
 
-
-    def after_traj(self, incr):
-        self.curr_timestep = 0
-        self.curr_sample = (self.curr_sample + incr) % self.num_samples
 
     def compute_returns(self, gamma = 1.00):
         self.returns[self.num_steps] = self.rewards[self.num_steps]
@@ -78,11 +67,13 @@ class RolloutStorage(BaseStorage):
             self.returns[step] = self.rewards[step] + gamma * self.returns[step+1] * (1 - self.dones[step])
 
     def after_rollouts(self):
-        # Only allows one rollout (REINFORCE)
-        self.masks[0] = 1
-        for i in range(1, self.num_steps+1):
-            diff = (self.masks[i-1] - self.dones[i-1])
-            self.masks[i] = diff * (diff > 0)
+        # Ignore incomplete rollouts (REINFORCE)
+        self.masks[self.num_steps] = self.dones[self.num_steps]
+        for i in reversed(range(self.num_steps)):
+            self.masks[i] = self.masks[i+1] + self.dones[i]
+
+        self.masks = (self.masks > 0).float()
+
 
 
 

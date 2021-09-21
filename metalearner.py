@@ -168,7 +168,7 @@ class MetaLearner:
                 random_policy = RandomPolicy(input_size=self.env.observation_space.shape, output_size=1,
                                              num_actions=self.env.action_space.n).to(device)
                 sampled_mols = self.sample_policy(random_policy, oracle=self.true_oracle, oracle_model=self.true_oracle_model, num_samples = self.config[
-                    "num_initial_samples"] * 2, density_penalty = False)  # Sample from true env. using random policy (num_starting_mols, dim of mol)
+                    "num_initial_samples"] * 2, num_steps=self.config["policy"]["num_steps"], density_penalty = False)  # Sample from true env. using random policy (num_starting_mols, dim of mol)
 
             else:
 
@@ -289,7 +289,7 @@ class MetaLearner:
         # New-ish -- to be deprecated
 
         # Leo: Can parallelise this...
-        for j in range(episodes.num_samples): # Leo: TODO -- Flatten
+        for j in range(episodes.num_processes): # Leo: TODO -- High Priority
             hidden_state = None
             for i in range(episodes.num_steps+1):
                 st = episodes.states[i][j].flatten()
@@ -328,10 +328,10 @@ class MetaLearner:
                     self.policy, inner_opt, copy_initial_weights=False
             ) as (inner_policy, diffopt):
 
-                D_meta_query = RolloutStorage(num_samples=self.config["num_meta_proxy_samples"],
+                D_meta_query = RolloutStorage(num_processes=self.config["num_processes"],
                                                    state_dim=self.env.observation_space.shape,
                                                    action_dim=1,  # Discrete value
-                                                   num_steps=self.config["policy"]["num_steps"],
+                                                   num_steps=self.config["policy"]["num_meta_steps"],
                                                    device=device
                                                    )
 
@@ -340,14 +340,14 @@ class MetaLearner:
                 train_losses = []
                 time_st = time.time()
                 for k in range(self.config["num_inner_updates"]):
-                    D_j = RolloutStorage(num_samples=self.config["num_samples_per_task_update"],
+                    D_j = RolloutStorage(num_processes=self.config["num_processes"],
                                               state_dim=self.env.observation_space.shape,
                                               action_dim=1,  # Discrete value
                                               num_steps=self.config["policy"]["num_steps"],
                                               device=device
                                               )
 
-                    self.sample_policy(inner_policy, self.proxy_oracles[j], self.proxy_oracle_models[j], self.config["num_samples_per_task_update"],
+                    self.sample_policy(inner_policy, self.proxy_oracles[j], self.proxy_oracle_models[j], num_steps=self.config["policy"]["num_steps"],
                                        policy_storage=D_j, density_penalty = True)  # Sample from policy[j]
 
                     inner_loss = self.adapt(D_j, inner_policy, diffopt)
@@ -364,10 +364,10 @@ class MetaLearner:
                 # Sample mols for meta update
                 if self.config["outerloop"]["oracle"] == 'proxy':
 
-                    self.sample_policy(inner_policy, self.proxy_oracles[j], self.proxy_oracle_models[j], self.config["num_meta_proxy_samples"],
+                    self.sample_policy(inner_policy, self.proxy_oracles[j], self.proxy_oracle_models[j], num_steps=self.config["policy"]["num_meta_steps"],
                                        policy_storage=D_meta_query, density_penalty = self.config["outerloop"]["density_penalty"])
                 elif self.config["outerloop"]["oracle"] == 'true':
-                    self.sample_policy(inner_policy, self.true_oracle, self.true_oracle_model, self.config["num_meta_proxy_samples"],
+                    self.sample_policy(inner_policy, self.true_oracle, self.true_oracle_model, num_steps=self.config["policy"]["num_meta_steps"],
                                                       policy_storage=D_meta_query, density_penalty = self.config["outerloop"]["density_penalty"])
                     # queried_mols = self.sample_policy(inner_policy, self.true_oracle, self.true_oracle_model, self.config["num_meta_proxy_samples"],
                     #                                   policy_storage=D_meta_query).detach()
@@ -382,23 +382,6 @@ class MetaLearner:
                     raise NotImplementedError
 
 
-
-
-                # Currently reinforce... but we should change this to TRPO later!
-                
-
-                # reinforce_loss = rl_utl.reinforce_loss(D_meta_query)
-                # entropy_bonus = self.config["entropy_reg_coeff"] * rl_utl.entropy_bonus(D_meta_query)
-                # meta_loss = reinforce_loss + entropy_bonus
-                # logs["meta/reinforce_loss"] = reinforce_loss
-                # logs["meta/entropy_bonus"] = entropy_bonus
-
-
-                # time_st = time.time()
-                # meta_loss.backward()
-                # logs["timing/meta_loss_backward"] = time.time() - time_st
-
-
                 # Save the episodes...
 
                 episodes.append((train_episodes, D_meta_query))
@@ -406,11 +389,8 @@ class MetaLearner:
 
 
         # Log the inner losses later (possibly instead of here)! 
-
-
         loss = self.step(episodes) # Performs meta-update
         logs["meta/loss"] = loss
-
 
         # self.meta_opt.step()
         return logs
@@ -425,7 +405,7 @@ class MetaLearner:
             ) as (inner_policy, diffopt):
 
                 for k in range(self.config["num_inner_updates"]):
-                    D_j = RolloutStorage(num_samples=self.config["num_samples_per_task_update"],
+                    D_j = RolloutStorage(num_processes=self.config["num_processes"],
                                               state_dim=self.env.observation_space.shape,
                                               action_dim=1,  # Discrete value
                                               num_steps=self.config["policy"]["num_steps"],
@@ -435,7 +415,8 @@ class MetaLearner:
                     self.sample_policy(inner_policy, 
                                         oracle=self.proxy_query_oracles[j],
                                         oracle_model=self.proxy_query_oracle_models[j],
-                                        num_samples=self.config["num_samples_per_task_update"],
+                                        num_steps=self.config["policy"]["num_steps"],
+                                        num_samples=None,
                                         policy_storage=D_j,
                                         density_penalty = True)  # Sample from policy[j]
 
@@ -443,12 +424,13 @@ class MetaLearner:
                     inner_loss = self.adapt(D_j, inner_policy, diffopt)
 
                     # Sample mols (and query) for training the proxy oracles later
-                sampled_mols.append(self.sample_policy(inner_policy, self.proxy_query_oracles[j], self.proxy_query_oracle_models[j], self.config[
-                    "num_samples_per_proxy"]).detach())  # Sample from policies -- preferably make this parallelised in the future
+                sampled_mols.append(self.sample_policy(inner_policy, self.proxy_query_oracles[j], self.proxy_query_oracle_models[j], 
+                                                        num_steps=self.config["policy"]["num_steps"],
+                                                        num_samples=self.config["num_samples_per_proxy"]).detach())  # Sample from policies -- preferably make this parallelised in the future
 
         return sampled_mols, logs
 
-    def sample_policy(self, policy, oracle, oracle_model, num_samples, policy_storage=None, density_penalty=False):
+    def sample_policy(self, policy, oracle, oracle_model, num_steps, num_samples=None, policy_storage=None, density_penalty=False):
         """
             Args:
              - policy
@@ -465,7 +447,10 @@ class MetaLearner:
         time_st = time.time()
 
         state_dim = self.env.observation_space.shape
-        return_mols = torch.zeros(num_samples, *state_dim)
+        if num_samples is not None:
+            return_mols = torch.zeros(num_samples, *state_dim)
+        else:
+            return_mols = None
         query_reward = policy_storage is not None
         curr_sample = 0
         data = {"reward_oracle": oracle,
@@ -474,15 +459,17 @@ class MetaLearner:
                 "query_reward_in_env": query_reward and self.config["query_reward_in_env"], 
                 "density_penalty": density_penalty}
         self.env.set_oracles(data)
-        for meta_update in range((num_samples - 1) // self.config["num_processes"] + 1):
+
+        break_loop = False
+        while not break_loop:
             """
-                Either policy_storage is None, meaning return queried molecules
-                Or policy_storage is not None, meaning fill up the storage
+                Loop if needed to generate more molecules to query...
             """
+
 
             state = torch.tensor(self.env.reset()).float()  # Returns (num_processes, 51, 21) -- TODO: ....this needs to be parallelised
             hidden_state = None
-            for stepi in range(self.config["policy"]["num_steps"]):
+            for stepi in range(num_steps):
 
                 masks = None
                 st = state
@@ -522,7 +509,7 @@ class MetaLearner:
                 state = next_state.clone()
 
             if policy_storage is not None:
-                policy_storage.after_traj(incr = self.config["num_processes"])
+                break_loop = True
 
         if query_reward and not self.config["query_reward_in_env"]:
             bool_idx = policy_storage.dones.bool()

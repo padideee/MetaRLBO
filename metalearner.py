@@ -99,9 +99,11 @@ class MetaLearner:
                                               "div_switch"]) # TODO: This diversity switch should be implemented for the other envs too
                             
 
+        # Molecules that have been queried w/ their scores
         self.D_train = QueryStorage(storage_size=self.config["query_storage_size"],
                                     state_dim=self.env.observation_space.shape)
 
+        # Molecules that have been queried (used for diversity)
         self.query_history = []
         # Proxy -- used for training
         self.proxy_oracles = [AMPProxyOracle(training_storage=self.D_train, p=self.config["proxy_oracle"]["p"]) for j in
@@ -286,15 +288,26 @@ class MetaLearner:
         # loss = -weighted_mean(log_probs * advantages, dim=0, weights=episodes.mask)
 
 
-        # New-ish -- to be deprecated
+        # Old Version:
 
-        # Leo: Can parallelise this...
-        for j in range(episodes.num_processes): # Leo: TODO -- High Priority
-            hidden_state = None
-            for i in range(episodes.num_steps+1):
-                st = episodes.states[i][j].flatten()
-                value, action_log_probs, dist_entropy, hidden_state = policy.evaluate_actions(st.unsqueeze(0), hidden_state, episodes.masks[i][j].unsqueeze(0), episodes.actions[i][j].int().unsqueeze(0))
-                episodes.log_probs[i][j] = action_log_probs[0]
+        # for j in range(episodes.num_processes): # Leo: TODO -- High Priority
+        #     hidden_state = None
+        #     for i in range(episodes.num_steps+1):
+        #         st = episodes.states[i][j]
+        #         st = seq_to_encoding(st.unsqueeze(0))
+        #         value, action_log_probs, dist_entropy, hidden_state = policy.evaluate_actions(st.flatten().unsqueeze(0), hidden_state, episodes.masks[i][j].unsqueeze(0), episodes.actions[i][j].int().unsqueeze(0))
+        #         episodes.log_probs[i][j] = action_log_probs[0]
+
+        # New Version (Parallelised):
+        hidden_state = None
+        st = seq_to_encoding(episodes.states.flatten(0, 1)).to(device)
+        value, action_log_probs, dist_entropy, hidden_state = policy.evaluate_actions(st.flatten(-2, -1), hidden_state, episodes.masks.flatten(), episodes.actions.flatten().int())
+        episodes.log_probs = action_log_probs.reshape(episodes.log_probs.shape)
+
+
+        # st = seq_to_encoding(episodes.states.flatten(0, 1)).view(episodes.states.shape).to(device)  
+
+
 
 
         loss = rl_utl.reinforce_loss(episodes) + self.config[

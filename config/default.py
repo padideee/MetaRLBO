@@ -28,7 +28,8 @@ DEFAULT_CONFIG = {
 	},
 	"policy": {
 		"model_name": "MLP",
-		"num_steps": 50, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+		"num_steps": 150, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+		"num_meta_steps": 50,
 	},
 
 	"diversity": {

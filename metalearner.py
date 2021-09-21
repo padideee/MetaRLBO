@@ -35,6 +35,7 @@ from utils.torch_utils import (weighted_mean, detach_distribution, weighted_norm
 from algo.baseline import LinearFeatureBaseline
 
 from utils import filtering
+from algo.diversity import diversity 
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -465,12 +466,12 @@ class MetaLearner:
 
         state_dim = self.env.observation_space.shape
         return_mols = torch.zeros(num_samples, *state_dim)
-
+        query_reward = policy_storage is not None
         curr_sample = 0
         data = {"reward_oracle": oracle,
                 "reward_oracle_model": oracle_model,
                 "query_history": self.query_history,
-                "query_reward": policy_storage is not None,
+                "query_reward_in_env": query_reward and self.config["query_reward_in_env"], 
                 "density_penalty": density_penalty}
         self.env.set_oracles(data)
         for meta_update in range((num_samples - 1) // self.config["num_processes"] + 1):
@@ -503,7 +504,6 @@ class MetaLearner:
                                           reward=reward.detach().clone(),
                                           done=done.detach().clone())
 
-
                 # reset environments that are done
                 done_indices = np.argwhere(done.cpu().flatten()).flatten()
                 if len(done_indices) > 0:
@@ -519,21 +519,32 @@ class MetaLearner:
 
                     next_state = utl.reset_env(self.env, self.config, done_indices, next_state)
 
-
                 state = next_state.clone()
 
             if policy_storage is not None:
                 policy_storage.after_traj(incr = self.config["num_processes"])
 
+        if query_reward and not self.config["query_reward_in_env"]:
+            bool_idx = policy_storage.dones.bool()
+            query_states = policy_storage.next_states[bool_idx]
+
+            dens = diversity(query_states, 
+                                self.query_history, 
+                                div_switch=self.config["diversity"]["div_switch"], 
+                                radius=self.config["env"]["radius"], 
+                                div_metric_name=self.config["diversity"]["div_metric_name"]).get_density()            
+
+            query_scores = oracle.query(oracle_model, query_states, flatten_input=self.flatten_proxy_oracle_input)
+
+            policy_storage.rewards[bool_idx] = torch.tensor(query_scores) - self.config["env"]["lambda"] * dens # TODO: Set the rewards to include the density penalties...
+            
+
         if policy_storage is not None:
             
             policy_storage.compute_returns()
 
-            # import pdb; pdb.set_trace()
             # TODO: If the meta optimiser doesn't use bootstrapping... then we do this
             policy_storage.after_rollouts()
-
-            # assert policy_storage.dones.sum() == num_samples
 
         self.total_time_sampling += time.time() - time_st
 

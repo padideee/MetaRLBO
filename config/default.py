@@ -59,6 +59,7 @@ DEFAULT_CONFIG = {
 		"lambda": 0.1, # Diversity hyperparameter -- higher is more penalty for more similar mols.
 		"radius": 2, 
 	},
+	"query_reward_in_env": False, # Faster to do the querying outside of the env since we can do it in batches.
 	"entropy_reg_coeff": 0.0, # Deprecated (Ignore)
 	"data_source": "DynaPPO", # Either: DynaPPO or Custom (Custom being data Padideh generated)
 	"mode": "test", # mode -- val (hyperparameter opt.), test (eval. )

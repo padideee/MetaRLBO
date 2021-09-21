@@ -116,7 +116,7 @@ debug_TRPO_True = {
 
 debug_REINFORCE = {
 	"exp_label": "DEBUG-REINFORCE",
-	"num_proxies": 2,
+	"num_proxies": 4,
 	"num_inner_updates": 1, 
 	"num_meta_proxy_samples": 8,
 	"num_initial_samples": 250,

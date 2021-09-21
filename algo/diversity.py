@@ -18,6 +18,26 @@ def hamming_distance(history, seq):
     """
     return ((1 - history) * seq + history * (1 - seq)).sum([1, 2]) / 2 # Average Hamming distance (by seq. length) between the strings? 
 
+def batch_hamming_distance(history, seqs):
+    """
+        Args:
+            - history: (length, 50, 21)
+            - seqs: (batch_size, 50, 21)
+        Return:
+            - Hamming Distance between each of seqs and each in history
+               - (batch_size, length)
+    """
+    batch_size = seqs.shape[0]
+
+    scores = []
+    for i in range(batch_size):
+        scores.append(hamming_distance(history, seqs[i]))
+
+    return torch.stack(scores)
+
+
+
+
 def pairwise_hamming_distance(history):
     """
         Args:
@@ -63,6 +83,10 @@ class diversity():
         self.div_switch=div_switch
         self.seq = seq
         self.history = torch.stack(history)
+        if len(self.seq.shape) == len(self.history.shape):
+            self.batch_query = True # Querying in batches
+        else:
+            self.batch_query = False
         self.radius = radius
         # self.history = history
         self.div_metric_name = div_metric_name
@@ -91,14 +115,24 @@ class diversity():
     def density_hamming(self):
         if self.div_switch == "ON":
 
-            # Hamming Distance is equiv. to XOR, but in our case, it's not exactly XOR since we're one hot encoding characters.
-            sums = hamming_distance(self.history, self.seq)
+            if self.batch_query:
+                # Hamming Distance is equiv. to XOR, but in our case, it's XOR/2 since we're one hot encoding characters.
+                sums = batch_hamming_distance(self.history, self.seq)
 
-            penalty_sums = sums[(sums < self.radius)]
+                batch_size = sums.shape[0]
 
-            # ret = (sums < self.radius).sum().item()
+                ret = []
+                for i in range(batch_size):
+                    penalty_sums = sums[i][(sums[i] < self.radius)]
+                    ret.append(((self.radius - penalty_sums) / self.radius).sum())
+                return torch.tensor(ret)
+            else:
+                # Hamming Distance is equiv. to XOR, but in our case, it's XOR/2 since we're one hot encoding characters.
+                sums = hamming_distance(self.history, self.seq)
 
-            ret = ((self.radius - penalty_sums)/self.radius).sum().item() # Linear penalty weighting...
+                penalty_sums = sums[(sums < self.radius)]
+
+                ret = ((self.radius - penalty_sums)/self.radius).sum() # Linear penalty weighting...
 
             return ret
 
@@ -107,15 +141,18 @@ class diversity():
 
     def density_blast(self):
         if self.div_switch == "ON":
-            convert = utl.convertor()
-            s_seq = convert.one_hot_to_AA(self.seq)
-            utl.make_fasta(s_seq)
-            b_score = blast_score("data/seq.fasta", "data/history.fasta")
-            # print("score: ", sum(b_score))
+            if self.batch_query:
+                raise NotImplementedError
+            else:
+                convert = utl.convertor()
+                s_seq = convert.one_hot_to_AA(self.seq)
+                utl.make_fasta(s_seq)
+                b_score = blast_score("data/seq.fasta", "data/history.fasta")
+                # print("score: ", sum(b_score))
 
-            utl.append_history_fasta()
+                utl.append_history_fasta()
 
-            return sum(b_score)
+                return sum(b_score)
 
         else:
             return 0.0

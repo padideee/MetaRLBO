@@ -58,7 +58,7 @@ class AMPEnv(gym.Env):
         self.reward_oracle = data["reward_oracle"]
         self.reward_oracle_model = data["reward_oracle_model"]
         self.query_history = data["query_history"]
-        self.query_reward = data["query_reward"]
+        self.query_reward = data["query_reward_in_env"]
         self.density_penalty = data["density_penalty"]
 
 
@@ -79,13 +79,12 @@ class AMPEnv(gym.Env):
         done = False
         reward = torch.tensor(0.0)
         pred_prob = torch.tensor([0.0, 0.0])
-
+        density_penalty = torch.tensor(0.0)
         
         self.curr_state[self.time_step] = F.one_hot(action, num_classes = self.num_actions)
 
         queried = False
         if action.item() == self.EOS_idx or self.time_step + 1 == self.max_AMP_length:
-            queried = True
             done = True
 
             # Pad the rest of the state...
@@ -93,54 +92,57 @@ class AMPEnv(gym.Env):
             self.curr_state[self.time_step+1:] = padding            
 
 
-            # compute density of similar sequences in the history
-            if len(self.query_history) > 1:
-                dens = diversity(self.curr_state, self.query_history, div_switch=self.div_switch, radius=self.radius, div_metric_name=self.div_metric_name).get_density()
-            else:
-                dens = 0.0
-                convert = utl.convertor()
-                s_seq = convert.one_hot_to_AA(self.curr_state)
-                utl.make_fasta(s_seq)
-                utl.append_history_fasta()
+            if self.query_reward:
+                queried = True
+                # compute density of similar sequences in the history
+                if len(self.query_history) > 1:
+                    dens = diversity(self.curr_state, self.query_history, div_switch=self.div_switch, radius=self.radius, div_metric_name=self.div_metric_name).get_density()
+                else:
+                    dens = 0.0
+                    convert = utl.convertor()
+                    s_seq = convert.one_hot_to_AA(self.curr_state)
+                    utl.make_fasta(s_seq)
+                    utl.append_history_fasta()
 
-            # self.history.append(self.curr_state)
+                density_penalty = self.lambd * dens
+                # self.history.append(self.curr_state)
 
-            # Store predictive probability for regression
-            if self.modelbased:
-                # NOTE: This is regression case -> the oracle predicts the probability of given
-                # sequence to be AMP-like i.e. prob. of being antimicrobial towards a certain pathogen
-                # print("Model based: ", predict_seq)
+                # Store predictive probability for regression
+                if self.modelbased:
+                    # NOTE: This is regression case -> the oracle predicts the probability of given
+                    # sequence to be AMP-like i.e. prob. of being antimicrobial towards a certain pathogen
+                    # print("Model based: ", predict_seq)
 
-                pred = []
-                for m in self.proxy_oracles:
-                    # s = seq_to_encoding(self.curr_state.unsqueeze(0)) # seq_to_encoding -- not the one hot encoding...
-                    s = self.curr_state.unsqueeze(0)
-                    d = m.predict(s.numpy()[np.newaxis, :])
-                    pred.append(d)
-                predictionAMP = np.average(pred)
-                # print("Avg. prediction: ", predictionAMP)
-                # Return avg. prediction based on proxy models
-                pred_prob = torch.tensor([[1 - predictionAMP, predictionAMP]])
-                if self.query_reward:
+                    pred = []
+                    for m in self.proxy_oracles:
+                        # s = seq_to_encoding(self.curr_state.unsqueeze(0)) # seq_to_encoding -- not the one hot encoding...
+                        s = self.curr_state.unsqueeze(0)
+                        d = m.predict(s.numpy()[np.newaxis, :])
+                        pred.append(d)
+                    predictionAMP = np.average(pred)
+                    # print("Avg. prediction: ", predictionAMP)
+                    # Return avg. prediction based on proxy models
+                    pred_prob = torch.tensor([[1 - predictionAMP, predictionAMP]])
+                    
                     reward = torch.tensor(predictionAMP)
-                    reward -= self.lambd * dens
 
-                with open('logs/log.txt', 'a+') as f:
-                    f.write('Model Based' + '\t' + str(reward.detach().cpu().numpy()) + '\n')
-                self.evaluate['seq'].append(self.curr_state.detach().cpu().numpy())
-                self.evaluate['embed_seq'].append(s.detach().cpu().numpy())
-                self.evaluate['reward'].append(reward.detach().cpu().numpy())
-                self.evaluate['pred_prob'].append(predictionAMP)
+                    if self.density_penalty:
+                        reward -= density_penalty
 
-                # wandb.log({"train_pred_prob": predictionAMP})
+                    with open('logs/log.txt', 'a+') as f:
+                        f.write('Model Based' + '\t' + str(reward.detach().cpu().numpy()) + '\n')
+                    self.evaluate['seq'].append(self.curr_state.detach().cpu().numpy())
+                    self.evaluate['embed_seq'].append(s.detach().cpu().numpy())
+                    self.evaluate['reward'].append(reward.detach().cpu().numpy())
+                    self.evaluate['pred_prob'].append(predictionAMP)
 
-            else:
-                # (returns prob. per classification class --> [Prob. Neg., Prob. Pos.])
+                    # wandb.log({"train_pred_prob": predictionAMP})
 
-                # s = seq_to_encoding(self.curr_state.unsqueeze(0)) # Leo: TODO (this takes as input -- not the one hot encoding...)
-                
+                else:
+                    # (returns prob. per classification class --> [Prob. Neg., Prob. Pos.])
 
-                if self.query_reward:
+                    # s = seq_to_encoding(self.curr_state.unsqueeze(0)) # Leo: TODO (this takes as input -- not the one hot encoding...)
+                    
                     s = self.curr_state.unsqueeze(0).flatten(-2, -1)
                     
                     # try:
@@ -154,7 +156,7 @@ class AMPEnv(gym.Env):
 
                     reward = torch.tensor(pred_prob[0])
                     if self.density_penalty:
-                        reward -= self.lambd * dens
+                        reward -= density_penalty
 
                    
                     # with open('logs/log.txt', 'a+') as f:
@@ -170,7 +172,7 @@ class AMPEnv(gym.Env):
         self.time_step += 1
 
         # Info must be a dictionary
-        info = [{"action": action, "state": self.curr_state, "pred_prob": pred_prob, "queried": queried}]
+        info = [{"action": action, "state": self.curr_state, "pred_prob": pred_prob, "queried": queried, "density_penalty": density_penalty}]
 
         return(self.curr_state, reward, done, info)
 

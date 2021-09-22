@@ -14,6 +14,7 @@ from policies.gru_policy import CategoricalGRUPolicy
 from policies.random_policy import RandomPolicy
 
 from oracles.AMP_true_oracle import AMPTrueOracle
+from oracles.CLAMP_true_oracle import CLAMPTrueOracle
 from oracles.proxy.AMP_proxy_oracle import AMPProxyOracle
 
 from environments.AMP_env import AMPEnv
@@ -57,19 +58,27 @@ class MetaLearner:
         # The seq and the label from library
         # seq shape: (batch, 46*21)
         # label shape: (batch) -> in binary format:{'positive': AMP, 'negative': not AMP}
-        if self.config["data_source"] == 'DynaPPO':
-            from data import dynappo_data
-            D_AMP = dynappo_data.get_AMP_data(self.config["mode"])
-        elif self.config["data_source"] == 'Custom':
-            from data.process_data import get_AMP_data
-            D_AMP = get_AMP_data('data/data_train.hkl')
+
+
+        if self.config["task"] == "AMP-v0":
+            if self.config["data_source"] == 'DynaPPO':
+                from data import dynappo_data
+                D_AMP = dynappo_data.get_AMP_data(self.config["mode"])
+            elif self.config["data_source"] == 'Custom':
+                from data.process_data import get_AMP_data
+                D_AMP = get_AMP_data('data/data_train.hkl')
+            else:
+                raise NotImplementedError
+
+            self.true_oracle = AMPTrueOracle(training_storage=D_AMP)
+            self.true_oracle_model = utl.get_true_oracle_model(self.config)
+        elif self.config["task"] == "CLAMP-v0":
+            from common_evaluation.clamp_common_eval.defaults import get_test_oracle
+            self.true_oracle = CLAMPTrueOracle()
+            self.true_oracle_model = get_test_oracle(source="D1_target", model="RandomForest", feature="AlBert")
         else:
             raise NotImplementedError
-        # path to pickle 'data/data_train.pickle'
-        # TODO : the data for train and test as sys argument
 
-        self.true_oracle = AMPTrueOracle(training_storage=D_AMP)
-        self.true_oracle_model = utl.get_true_oracle_model(self.config)
 
         # -- BEGIN ---
         # Leo: Temporary putting this here (probably want to organise this better)
@@ -96,7 +105,7 @@ class MetaLearner:
                                           radius=self.config["env"]["radius"],
                                           div_metric_name=self.config["diversity"]["div_metric_name"],
                                           div_switch=self.config["diversity"][
-                                              "div_switch"]) # TODO: This diversity switch should be implemented for the other envs too
+                                              "div_switch"])
                             
 
         # Molecules that have been queried w/ their scores
@@ -138,7 +147,7 @@ class MetaLearner:
         self.baseline = LinearFeatureBaseline(input_size = self.env.observation_space.shape[0] * self.env.observation_space.shape[1]).to(device) # TODO: FIX
 
         self.meta_opt = optim.SGD(self.policy.parameters(), lr=self.config["outer_lr"])
-        # self.test_oracle = get_test_oracle()
+        
         self.iter_idx = 0
 
 
@@ -299,9 +308,9 @@ class MetaLearner:
         #         episodes.log_probs[i][j] = action_log_probs[0]
 
         # New Version (Parallelised):
-        hidden_state = None
+        hidden_state, policy_masks = None, None
         st = seq_to_encoding(episodes.states.flatten(0, 1)).to(device)
-        value, action_log_probs, dist_entropy, hidden_state = policy.evaluate_actions(st.flatten(-2, -1), hidden_state, episodes.masks.flatten(), episodes.actions.flatten().int())
+        value, action_log_probs, dist_entropy, hidden_state = policy.evaluate_actions(st.flatten(-2, -1), hidden_state, policy_masks, episodes.actions.flatten().int())
         episodes.log_probs = action_log_probs.reshape(episodes.log_probs.shape)
 
 
@@ -556,16 +565,17 @@ class MetaLearner:
              - Let's select the ones that have the highest score according to the proxy oracles? -- Check...
         """
 
-
-
         # Remove duplicate molecules... in current batch
         mols = np.unique(mols, axis=0)
 
         # Remove duplicate molecules that have already been queried...
         valid_idx = []
         for i in range(mols.shape[0]):
-            tuple_mol = tuple(mols[i].flatten().tolist())
-            if tuple_mol not in self.D_train.mols_set:
+            from data.dynappo_data import enc_to_seq
+            seq = enc_to_seq(torch.tensor(mols[i]))
+            seq = seq[:seq.find(">")]
+
+            if seq not in self.D_train.mols_set:
                 valid_idx.append(i)
             else:
                 print("Already queried...")

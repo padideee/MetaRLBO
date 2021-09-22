@@ -8,3 +8,8 @@ register( # This is an issue...
     entry_point='environments.AMP_env:AMPEnv',
     kwargs={},
 )
+register( # This is an issue...
+    'CLAMP-v0',
+    entry_point='environments.AMP_env:AMPEnv',
+    kwargs={},
+)

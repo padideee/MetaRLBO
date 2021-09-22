@@ -9,11 +9,9 @@ DEFAULT_CONFIG = {
 	"num_meta_updates": 5000, # Max. # of meta updates (ignore)
 	"num_proxies": 4, # Number of proxies for training (i.e., tasks)
 	"num_query_proxies": 4, # Number of proxies used to generate molecules to query from...
-	"num_meta_proxy_samples": 4, # Number of samples (per proxy) to perform meta updates with
 	"num_initial_samples": 250, # Number of initial samples to train proxy models on (generated via Random Policy)
 	"num_samples_per_proxy": 16, # Number of proposed samples per proxy/task to select from to query the true oracle 
 	"num_query_per_iter": 20,  # Number of samples to query the true oracle (per iteration) -- (i.e. equiv. to batch size for Bayesian Opt.)
-	"num_samples_per_task_update": 16, # Number of samples to train policy on per proxy
 	"num_meta_updates_per_iter": 1, # Number of meta updates before each query to the true oracle
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,

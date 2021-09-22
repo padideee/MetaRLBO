@@ -530,3 +530,46 @@ debug_diversity = {
 	},
 	"log_interval": 1,
 }
+
+
+
+
+
+
+
+
+
+######################### CLAMP DEBUGGING
+
+
+debug_CLAMP = {
+	"exp_label": "DEBUG-CLAMP",
+	"task": "CLAMP-v0",
+	"num_proxies": 4,
+	"num_inner_updates": 1, 
+	"num_meta_proxy_samples": 8,
+	"num_initial_samples": 250,
+	"num_query_proxies": 8,
+	"num_samples_per_proxy": 16, 
+	"num_samples_per_task_update": 16,
+	"num_query_per_iter": 10,
+	"inner_lr": 5.0,
+	"outer_lr": 0.5,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.7, # Proportion of data to sample to train proxy oracles
+	},
+	"entropy_reg_coeff": 0.0,
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB",
+		"config": {
+			'beta': 6.0,
+		}
+	},
+	"metalearner": {
+		"method": "REINFORCE",  # REINFORCE or TRPO
+	},
+	"num_processes": 8,
+	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
+	"log_interval": 1,
+}

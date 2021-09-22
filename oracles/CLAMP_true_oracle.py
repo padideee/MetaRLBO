@@ -31,9 +31,11 @@ class CLAMPTrueOracle(BaseOracle):
 			seq = seq[:seq.find(">")]
 			seqs.append(seq)
 
+		print(seq)
 		self.query_count += batch_size
 
 		return model.evaluate_many(seqs)
+
 
 
 	def fit(self, model, flatten_input=False):

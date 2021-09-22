@@ -9,7 +9,7 @@ import os
 import torch
 
 # get configs
-from config import AMP_configs
+from config import AMP_configs, CLAMP_configs
 from config.default import DEFAULT_CONFIG
 from config import debug_configs
 from metalearner import MetaLearner
@@ -32,9 +32,15 @@ def main():
     elif "debug" in config_name:
         debug_config = getattr(debug_configs, config_name)
         config = merge_dicts(DEFAULT_CONFIG, debug_config)
-    else:
+    elif "clamp" in config_name:
+        clamp_config = getattr(CLAMP_configs, config_name)
+        config = merge_dicts(DEFAULT_CONFIG, clamp_config)
+    elif "amp" in config_name:
         amp_config = getattr(AMP_configs, config_name)
         config = merge_dicts(DEFAULT_CONFIG, amp_config)
+    else:
+        raise NotImplementedError
+
     
     args, rest_args = parser.parse_known_args()
     

@@ -11,7 +11,7 @@ class QueryStorage(BaseStorage):
         self.mols = torch.zeros(self.storage_size, *state_dim)
         self.scores = torch.zeros(self.storage_size)
 
-        self.mols_set = set("") # Initialise with the empty molecule...         
+        self.mols_set = set([""]) # Initialise with the empty molecule...         
 
         self.storage_filled = 0
 

@@ -63,6 +63,7 @@ DEFAULT_CONFIG = {
 	"data_source": "DynaPPO", # Either: DynaPPO or Custom (Custom being data Padideh generated)
 	"mode": "test", # mode -- val (hyperparameter opt.), test (eval. )
 	"log_interval": 1, 
+	"save_interval": 10, # Save model every n batch queries
 	"num_processes": 8, 
 	"results_log_dir": "./logs", 
 	"seed": 73,

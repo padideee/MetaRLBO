@@ -111,6 +111,7 @@ class MetaLearner:
         # Molecules that have been queried w/ their scores
         self.D_train = QueryStorage(storage_size=self.config["query_storage_size"],
                                     state_dim=self.env.observation_space.shape)
+        self.D_train.mols_set.add("") # Add the empty mol...
 
         # Molecules that have been queried (used for diversity)
         self.query_history = []
@@ -212,6 +213,7 @@ class MetaLearner:
                 sampled_mols = torch.cat(sampled_mols, dim=0)
 
             st_time = time.time()
+            
             # Do some filtering of the molecules here...
             queried_mols, logs = self.select_molecules(sampled_mols, logs)
             logs["timing/selecting_molecules"] = time.time() - st_time
@@ -279,6 +281,11 @@ class MetaLearner:
                 utl.save_mols(mols=self.D_train.mols[:self.D_train.storage_filled].numpy(),
                               scores=self.D_train.scores[:self.D_train.storage_filled].numpy(),
                               folder=self.logger.full_output_folder)
+
+            if (self.iter_idx + 1) % self.config["save_interval"] == 0:
+                print(f"Saving model at iter-{self.iter_idx}...")
+                save_path = os.path.join(self.logger.full_output_folder, f"policy_{self.iter_idx}.pt")
+                torch.save(policy.state_dict(), save_path)
 
     def inner_loss(self, episodes, policy, params=None):
         """Compute the inner loss for the one-step gradient update. The inner 

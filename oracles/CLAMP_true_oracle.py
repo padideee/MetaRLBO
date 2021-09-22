@@ -31,7 +31,7 @@ class CLAMPTrueOracle(BaseOracle):
 			seq = seq[:seq.find(">")]
 			seqs.append(seq)
 
-		print(seq)
+		print(seqs)
 		self.query_count += batch_size
 
 		return model.evaluate_many(seqs)

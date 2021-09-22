@@ -150,6 +150,8 @@ class MetaLearner:
         self.meta_opt = optim.SGD(self.policy.parameters(), lr=self.config["outer_lr"])
         
         self.iter_idx = 0
+        self.best_batch_mean = 0
+        self.best_batch_max = 0
 
 
         self.total_time_sampling = 0
@@ -213,7 +215,7 @@ class MetaLearner:
                 sampled_mols = torch.cat(sampled_mols, dim=0)
 
             st_time = time.time()
-            
+
             # Do some filtering of the molecules here...
             queried_mols, logs = self.select_molecules(sampled_mols, logs)
             logs["timing/selecting_molecules"] = time.time() - st_time
@@ -230,18 +232,19 @@ class MetaLearner:
                 # Sync query_history with D_train
                 self.query_history += list(self.D_train.mols[len(self.query_history):self.D_train.storage_filled])
 
-                logs["outer_loop/queried_mols_scores/current_batch/mean"] = queried_mols_scores.mean().item()
-                logs["outer_loop/queried_mols_scores/current_batch/max"] = queried_mols_scores.max().item()
+                batch_mean, batch_max = queried_mols_scores.mean().item(), queried_mols_scores.max().item()
+
+                logs["outer_loop/queried_mols_scores/current_batch/mean"] = batch_mean
+                logs["outer_loop/queried_mols_scores/current_batch/max"] = batch_max
 
                 # TODO: Log diversity here... parallelise the querying (after the unique checking)
-                logs["outer_loop/queried_mols/diversity"] = pairwise_hamming_distance(queried_mols)  # TODO
+                logs["outer_loop/queried_mols/diversity"] = pairwise_hamming_distance(queried_mols)
 
-            logs[f"outer_loop/sampled_mols_scores/cumulative/mean"] = self.D_train.scores[
-                                                                      :self.D_train.storage_filled].mean().item()
-            logs[f"outer_loop/sampled_mols_scores/cumulative/max"] = self.D_train.scores[
-                                                                     :self.D_train.storage_filled].max().item()
-            logs[f"outer_loop/sampled_mols_scores/cumulative/min"] = self.D_train.scores[
-                                                                     :self.D_train.storage_filled].min().item()
+            cum_min, cum_mean, cum_max = self.D_train.scores[:self.D_train.storage_filled].min().item(), self.D_train.scores[:self.D_train.storage_filled].mean().item(), self.D_train.scores[:self.D_train.storage_filled].max().item()
+
+            logs[f"outer_loop/sampled_mols_scores/cumulative/mean"] = cumul_mean
+            logs[f"outer_loop/sampled_mols_scores/cumulative/max"] = cumul_max
+            logs[f"outer_loop/sampled_mols_scores/cumulative/min"] = cumul_min
 
             logs["outer_loop/num_queried/unique"] = self.true_oracle.query_count
 
@@ -274,6 +277,18 @@ class MetaLearner:
 
                 # # # TODO adding to log
                 # # print('Iteration {}, test oracle accuracy: {}'.format(self.iter_idx, score))
+
+                if self.best_batch_mean < batch_mean:
+                    self.best_batch_mean = batch_mean
+                    save_path = os.path.join(self.logger.full_output_folder, f"best_batch_mean_policy.pt")
+                    torch.save(policy.state_dict(), save_path)
+
+                if self.best_batch_max < batch_max:
+                    self.best_batch_max = batch_max
+                    save_path = os.path.join(self.logger.full_output_folder, f"best_batch_max_policy.pt")
+                    torch.save(policy.state_dict(), save_path)
+
+
                 logs["timing/time_running"] = time.time() - start_time
                 self.print_timing(logs)
                 self.log(logs)

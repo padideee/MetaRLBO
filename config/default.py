@@ -6,7 +6,7 @@ DEFAULT_CONFIG = {
 	"max_num_queries": 3000, # Maximum number of queries in experiment
 	"query_storage_size": 100000, # Maximum number of queries allowed in the storage
 	"num_inner_updates": 1, # Number of inner loop updates
-	"num_meta_updates": 5000, # Max. # of meta updates (ignore)
+	"num_meta_updates": 20000, # Max. # of meta updates (ignore)
 	"num_proxies": 4, # Number of proxies for training (i.e., tasks)
 	"num_query_proxies": 4, # Number of proxies used to generate molecules to query from...
 	"num_initial_samples": 250, # Number of initial samples to train proxy models on (generated via Random Policy)

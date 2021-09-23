@@ -115,18 +115,8 @@ class MetaLearner:
 
         # Molecules that have been queried (used for diversity)
         self.query_history = []
-        # Proxy -- used for training
-        self.proxy_oracles = [AMPProxyOracle(training_storage=self.D_train, p=self.config["proxy_oracle"]["p"]) for j in
-                              range(self.config["num_proxies"])]
-        self.proxy_oracle_models = [utl.get_proxy_oracle_model(self.config) for j in range(self.config["num_proxies"])]
-
-
-
-        # Proxy -- used for generating molecules for querying
-        self.proxy_query_oracles = [AMPProxyOracle(training_storage=self.D_train, p=self.config["proxy_oracle"]["p"])
-                                    for j in range(self.config["num_query_proxies"])]
-        self.proxy_query_oracle_models = [utl.get_proxy_oracle_model(self.config) for j in
-                                          range(self.config["num_query_proxies"])]
+        self.proxy_oracles = None
+        self.proxy_oracle_models = None 
 
         if self.config["policy"]["model_name"] == "GRU":
             self.policy = CategoricalGRUPolicy(num_actions=self.env.action_space.n + 1,
@@ -189,23 +179,13 @@ class MetaLearner:
                 st_time = time.time()
                 # Training
                 for mi in range(self.config["num_meta_updates_per_iter"]):
-                    logs = self.meta_update(logs)
+                    logs = self.meta_update(logs, self.config["num_proxies"])
 
                 logs["timing/meta_updates"] = time.time() - st_time
+                
                 st_time = time.time()
 
-
-                # Sample molecules for Querying:
-                # Fit proxy query oracles
-                for j in range(self.config["num_query_proxies"]):
-                    self.proxy_query_oracle_models[j] = self.proxy_query_oracles[j].fit(
-                        self.proxy_query_oracle_models[j], flatten_input=self.flatten_proxy_oracle_input)
-
-                logs["timing/fitting_proxy_query_oracle"] = time.time() - st_time
-                st_time = time.time()
-
-
-                sampled_mols, logs = self.sample_query_mols(logs)
+                sampled_mols, logs = self.sample_query_mols(logs, self.config["num_query_proxies"], self.config["num_samples_per_proxy"])
 
                 logs["timing/sample_query_mols"] = time.time() - st_time
                 st_time = time.time()
@@ -240,7 +220,7 @@ class MetaLearner:
                 # TODO: Log diversity here... parallelise the querying (after the unique checking)
                 logs["outer_loop/queried_mols/diversity"] = pairwise_hamming_distance(queried_mols)
 
-            cum_min, cum_mean, cum_max = self.D_train.scores[:self.D_train.storage_filled].min().item(), self.D_train.scores[:self.D_train.storage_filled].mean().item(), self.D_train.scores[:self.D_train.storage_filled].max().item()
+            cumul_min, cumul_mean, cumul_max = self.D_train.scores[:self.D_train.storage_filled].min().item(), self.D_train.scores[:self.D_train.storage_filled].mean().item(), self.D_train.scores[:self.D_train.storage_filled].max().item()
 
             logs[f"outer_loop/sampled_mols_scores/cumulative/mean"] = cumul_mean
             logs[f"outer_loop/sampled_mols_scores/cumulative/max"] = cumul_max
@@ -281,12 +261,12 @@ class MetaLearner:
                 if self.best_batch_mean < batch_mean:
                     self.best_batch_mean = batch_mean
                     save_path = os.path.join(self.logger.full_output_folder, f"best_batch_mean_policy.pt")
-                    torch.save(policy.state_dict(), save_path)
+                    torch.save(self.policy.state_dict(), save_path)
 
                 if self.best_batch_max < batch_max:
                     self.best_batch_max = batch_max
                     save_path = os.path.join(self.logger.full_output_folder, f"best_batch_max_policy.pt")
-                    torch.save(policy.state_dict(), save_path)
+                    torch.save(self.policy.state_dict(), save_path)
 
 
                 logs["timing/time_running"] = time.time() - start_time
@@ -300,7 +280,7 @@ class MetaLearner:
             if (self.iter_idx + 1) % self.config["save_interval"] == 0:
                 print(f"Saving model at iter-{self.iter_idx}...")
                 save_path = os.path.join(self.logger.full_output_folder, f"policy_{self.iter_idx}.pt")
-                torch.save(policy.state_dict(), save_path)
+                torch.save(self.policy.state_dict(), save_path)
 
     def inner_loss(self, episodes, policy, params=None):
         """Compute the inner loss for the one-step gradient update. The inner 
@@ -346,7 +326,12 @@ class MetaLearner:
 
         return loss
 
-    def meta_update(self, logs):
+    def meta_update(self, logs, num_proxies):
+
+        # Proxy -- used for training
+        self.proxy_oracles = [AMPProxyOracle(training_storage=self.D_train, p=self.config["proxy_oracle"]["p"]) for j in
+                              range(num_proxies)]
+        self.proxy_oracle_models = [utl.get_proxy_oracle_model(self.config) for j in range(num_proxies)]
 
 
         self.meta_opt.zero_grad()
@@ -359,8 +344,6 @@ class MetaLearner:
             self.proxy_oracle_models[j] = self.proxy_oracles[j].fit(self.proxy_oracle_models[j],
                                                                     flatten_input=self.flatten_proxy_oracle_input)
         logs["timing/fitting_proxy_oracle"] = time.time() - time_st
-
-
 
         episodes = []
         train_losses_s = []
@@ -439,10 +422,27 @@ class MetaLearner:
         # self.meta_opt.step()
         return logs
 
-    def sample_query_mols(self, logs):
+    def sample_query_mols(self, logs, num_query_proxies, num_samples_per_proxy):
+
+
+        # Proxy -- used for generating molecules for querying
+        self.proxy_query_oracles = [AMPProxyOracle(training_storage=self.D_train, p=self.config["proxy_oracle"]["p"])
+                                    for j in range(num_query_proxies)]
+        self.proxy_query_oracle_models = [utl.get_proxy_oracle_model(self.config) for j in
+                                          range(num_query_proxies)]
+        st_time = time.time()
+        # Sample molecules for Querying:
+        # Fit proxy query oracles
+        for j in range(num_query_proxies):
+            self.proxy_query_oracle_models[j] = self.proxy_query_oracles[j].fit(
+                self.proxy_query_oracle_models[j], flatten_input=self.flatten_proxy_oracle_input)
+
+        logs["timing/fitting_proxy_query_oracle"] = time.time() - st_time
+        st_time = time.time()
+
         inner_opt = optim.SGD(self.policy.parameters(), lr=self.config["inner_lr"])
         sampled_mols = []
-        for j in range(self.config["num_query_proxies"]):
+        for j in range(num_query_proxies):
             # Proxy(Task)-specific updates
             with higher.innerloop_ctx(
                     self.policy, inner_opt, copy_initial_weights=False
@@ -470,7 +470,7 @@ class MetaLearner:
                     # Sample mols (and query) for training the proxy oracles later
                 sampled_mols.append(self.sample_policy(inner_policy, self.proxy_query_oracles[j], self.proxy_query_oracle_models[j], 
                                                         num_steps=self.config["policy"]["num_steps"],
-                                                        num_samples=self.config["num_samples_per_proxy"]).detach())  # Sample from policies -- preferably make this parallelised in the future
+                                                        num_samples=num_samples_per_proxy).detach())  # Sample from policies -- preferably make this parallelised in the future
 
         return sampled_mols, logs
 

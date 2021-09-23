@@ -22,7 +22,7 @@ from environments.parallel_envs import make_vec_envs
 import higher
 from utils.tb_logger import TBLogger
 
-from evaluation import get_test_oracle
+# from evaluation import get_test_oracle
 from data.process_data import seq_to_encoding
 from algo.diversity import pairwise_hamming_distance
 import time
@@ -75,7 +75,9 @@ class MetaLearner:
         elif self.config["task"] == "CLAMP-v0":
             from common_evaluation.clamp_common_eval.defaults import get_test_oracle
             self.true_oracle = CLAMPTrueOracle()
-            self.true_oracle_model = get_test_oracle(source="D1_target", model="RandomForest", feature="AlBert")
+            self.true_oracle_model = get_test_oracle(source=self.config["CLAMP"]["data_source"], 
+                                                    model=self.config["CLAMP"]["true_oracle_model"], 
+                                                    feature="AlBert") #TODO: Set this up to either be RandomForest... or MLP
         else:
             raise NotImplementedError
 
@@ -190,8 +192,7 @@ class MetaLearner:
                 logs["timing/sample_query_mols"] = time.time() - st_time
                 st_time = time.time()
 
-                # Perform the querying stage
-                # This is a bug...
+
                 sampled_mols = torch.cat(sampled_mols, dim=0)
 
             st_time = time.time()

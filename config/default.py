@@ -58,6 +58,15 @@ DEFAULT_CONFIG = {
 		"lambda": 0.1, # Diversity hyperparameter -- higher is more penalty for more similar mols.
 		"radius": 2, 
 	},
+	"CLAMP": { # CLAMP Specific configs... do not use normally
+		"true_oracle_model": "RandomForest", # RandomForest or MLP
+		"data_source": "D1_target",
+		"evaluation": { # post-training
+			"num_query_proxies": 64,
+			"num_samples_per_proxy": 500,
+			"num_mols_select": 10000,
+		},
+	},
 	"query_reward_in_env": False, # Faster to do the querying outside of the env since we can do it in batches.
 	"entropy_reg_coeff": 0.0, # Deprecated (Ignore)
 	"data_source": "DynaPPO", # Either: DynaPPO or Custom (Custom being data Padideh generated)

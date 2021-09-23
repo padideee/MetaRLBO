@@ -70,6 +70,12 @@ def main():
         metalearner = MetaLearner(config)
         metalearner.run()
 
+        if config["task"] == 'CLAMP-v0':
+            from clamp_evaluation import Evaluation
+
+            evaluation = Evaluation(config, metalearner)
+            evaluation.run()
+        
 
 if __name__ == '__main__':
     main()

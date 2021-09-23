@@ -545,13 +545,12 @@ debug_diversity = {
 debug_CLAMP = {
 	"exp_label": "DEBUG-CLAMP",
 	"task": "CLAMP-v0",
-	"num_proxies": 4,
+	"max_num_queries": 11,
+	"num_proxies": 2,
 	"num_inner_updates": 1, 
-	"num_meta_proxy_samples": 8,
-	"num_initial_samples": 250,
-	"num_query_proxies": 8,
-	"num_samples_per_proxy": 16, 
-	"num_samples_per_task_update": 16,
+	"num_initial_samples": 10,
+	"num_query_proxies": 2,
+	"num_samples_per_proxy": 8, 
 	"num_query_per_iter": 10,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
@@ -568,6 +567,15 @@ debug_CLAMP = {
 	},
 	"metalearner": {
 		"method": "REINFORCE",  # REINFORCE or TRPO
+	},
+	"CLAMP": { # CLAMP Specific configs... do not use normally
+		"true_oracle_model": "RandomForest", # RandomForest or MLP
+		"data_source": "D1_target",
+		"evaluation": { # post-training
+			"num_query_proxies": 2,
+			"num_samples_per_proxy": 4,
+			"num_mols_select": 5,
+		},
 	},
 	"num_processes": 8,
 	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )

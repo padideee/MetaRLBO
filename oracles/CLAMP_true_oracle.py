@@ -34,7 +34,7 @@ class CLAMPTrueOracle(BaseOracle):
 		print(seqs)
 		self.query_count += batch_size
 
-		return model.evaluate_many(seqs)
+		return model.evaluate_many(seqs)["confidence"][:, 1]
 
 
 

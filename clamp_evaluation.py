@@ -11,9 +11,9 @@ class Evaluation:
     def __init__(self, config, metalearner):
         self.config = config
         self.metalearner = metalearner
-        self.true_oracle = CLAMPTrueOracle()
+        self.true_oracle = CLAMPTrueOracle(model_type = self.config["CLAMP"]["evaluation"]["actual_model"])
         self.metalearner_true_oracle_model = metalearner.true_oracle_model
-        self.actual_true_oracle_model = get_test_oracle(source="D2_target", model="MLP", feature="AlBert")
+        self.actual_true_oracle_model = get_test_oracle(source="D2_target", model=self.config["CLAMP"]["evaluation"]["actual_model"], feature="AlBert")
 
     def run(self):
         model_names = ["best_batch_mean_policy", "best_batch_max_policy"]

@@ -18,6 +18,10 @@ clamp_large_001 = {
 		"model_name": "KNR",
 		"p": 0.8, 
 	},
+	"policy": {
+		"num_steps": 400, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+		"num_meta_steps": 150,
+	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
@@ -41,6 +45,7 @@ clamp_large_001 = {
 	},
 	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
 	"log_interval": 1,
+	"num_processes": 3,
 	"results_log_dir": "./logs",
 	"seed": 73,
 }
@@ -62,6 +67,10 @@ clamp_large_002 = {
 	"proxy_oracle": {
 		"model_name": "KNR",
 		"p": 0.8, 
+	},
+	"policy": {
+		"num_steps": 400, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+		"num_meta_steps": 150,
 	},
 	"outerloop": {
 		"oracle": "proxy",
@@ -86,6 +95,7 @@ clamp_large_002 = {
 	},
 	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
 	"log_interval": 1,
+	"num_processes": 3,
 	"results_log_dir": "./logs",
 	"seed": 73,
 }
@@ -106,6 +116,10 @@ clamp_large_003 = {
 	"proxy_oracle": {
 		"model_name": "KNR",
 		"p": 0.8, 
+	},
+	"policy": {
+		"num_steps": 400, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+		"num_meta_steps": 150,
 	},
 	"outerloop": {
 		"oracle": "proxy",
@@ -128,6 +142,7 @@ clamp_large_003 = {
 	},
 	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
 	"log_interval": 1,
+	"num_processes": 3,
 	"results_log_dir": "./logs",
 	"seed": 73,
 }
@@ -153,6 +168,10 @@ clamp_medium_001 = {
 		"model_name": "KNR", 
 		"p": 0.8, 
 	},
+	"policy": {
+		"num_steps": 400, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+		"num_meta_steps": 150,
+	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
@@ -176,6 +195,7 @@ clamp_medium_001 = {
 	},
 	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
 	"log_interval": 1,
+	"num_processes": 3,
 	"results_log_dir": "./logs",
 	"seed": 73,
 }
@@ -197,6 +217,10 @@ clamp_medium_002 = {
 	"proxy_oracle": {
 		"model_name": "KNR", 
 		"p": 0.8, 
+	},
+	"policy": {
+		"num_steps": 400, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+		"num_meta_steps": 150,
 	},
 	"outerloop": {
 		"oracle": "proxy",
@@ -221,6 +245,7 @@ clamp_medium_002 = {
 	},
 	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
 	"log_interval": 1,
+	"num_processes": 3,
 	"results_log_dir": "./logs",
 	"seed": 73,
 }
@@ -243,6 +268,10 @@ clamp_medium_003 = {
 		"model_name": "KNR", 
 		"p": 0.8, 
 	},
+	"policy": {
+		"num_steps": 400, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+		"num_meta_steps": 150,
+	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
@@ -264,6 +293,7 @@ clamp_medium_003 = {
 	},
 	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
 	"log_interval": 1,
+	"num_processes": 3,
 	"results_log_dir": "./logs",
 	"seed": 73,
 }
@@ -289,6 +319,10 @@ clamp_test_001 = {
 		"model_name": "KNR",
 		"p": 0.8, 
 	},
+	"policy": {
+		"num_steps": 400, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+		"num_meta_steps": 150,
+	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
@@ -310,6 +344,7 @@ clamp_test_001 = {
 	},
 	"mode": "test", # mode -- val (hyperparameter opt.), test (eval. )
 	"log_interval": 1,
+	"num_processes": 3,
 	"results_log_dir": "./logs",
 	"seed": 73,
 }

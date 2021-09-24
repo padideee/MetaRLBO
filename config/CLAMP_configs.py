@@ -36,6 +36,7 @@ clamp_knr_large_001 = {
 			"num_mols_select": 10000,
 		},
 	},
+	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
 	"log_interval": 1,
 	"results_log_dir": "./logs",
 	"seed": 73,
@@ -71,14 +72,16 @@ clamp_knr_medium_001 = {
 		"diversity_threshold": 10, # Diversity threshold when greedily selecting molecules...
 	},
 	"CLAMP": { # CLAMP Specific configs... do not use normally
-		"true_oracle_model": "RandomForest", # RandomForest or MLP
-		"data_source": "D1_target",
+		"true_oracle_model": "RandomForest", # Pretrained oracle model: RandomForest or MLP
+		"use_pretrained_model": True,
+		"data_source": "D1_target", # Only if using pre-trained oracle model
 		"evaluation": { # post-training
 			"num_query_proxies": 128,
 			"num_samples_per_proxy": 500,
 			"num_mols_select": 10000,
 		},
 	},
+	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
 	"log_interval": 1,
 	"results_log_dir": "./logs",
 	"seed": 73,

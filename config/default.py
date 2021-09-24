@@ -65,6 +65,7 @@ DEFAULT_CONFIG = {
 			"num_query_proxies": 64,
 			"num_samples_per_proxy": 500,
 			"num_mols_select": 10000,
+			"actual_model": "MLP",
 		},
 	},
 	"query_reward_in_env": False, # Faster to do the querying outside of the env since we can do it in batches.

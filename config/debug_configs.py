@@ -545,13 +545,13 @@ debug_diversity = {
 debug_CLAMP = {
 	"exp_label": "DEBUG-CLAMP",
 	"task": "CLAMP-v0",
-	"max_num_queries": 11,
+	"max_num_queries": 20,
 	"num_proxies": 2,
 	"num_inner_updates": 1, 
 	"num_initial_samples": 10,
 	"num_query_proxies": 2,
 	"num_samples_per_proxy": 8, 
-	"num_query_per_iter": 10,
+	"num_query_per_iter": 5,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
 	"proxy_oracle": {
@@ -571,6 +571,7 @@ debug_CLAMP = {
 	"CLAMP": { # CLAMP Specific configs... do not use normally
 		"true_oracle_model": "RandomForest", # RandomForest or MLP
 		"data_source": "D1_target",
+		"use_pretrained_model": False,
 		"evaluation": { # post-training
 			"num_query_proxies": 2,
 			"num_samples_per_proxy": 4,

@@ -37,6 +37,7 @@ from algo.baseline import LinearFeatureBaseline
 
 from utils import filtering
 from algo.diversity import diversity 
+from data import dynappo_data, clamp_data
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -60,9 +61,9 @@ class MetaLearner:
         # label shape: (batch) -> in binary format:{'positive': AMP, 'negative': not AMP}
 
 
+        
         if self.config["task"] == "AMP-v0":
             if self.config["data_source"] == 'DynaPPO':
-                from data import dynappo_data
                 D_AMP = dynappo_data.get_AMP_data(self.config["mode"])
             elif self.config["data_source"] == 'Custom':
                 from data.process_data import get_AMP_data
@@ -73,11 +74,23 @@ class MetaLearner:
             self.true_oracle = AMPTrueOracle(training_storage=D_AMP)
             self.true_oracle_model = utl.get_true_oracle_model(self.config)
         elif self.config["task"] == "CLAMP-v0":
-            from common_evaluation.clamp_common_eval.defaults import get_test_oracle
-            self.true_oracle = CLAMPTrueOracle()
-            self.true_oracle_model = get_test_oracle(source=self.config["CLAMP"]["data_source"], 
-                                                    model=self.config["CLAMP"]["true_oracle_model"], 
-                                                    feature="AlBert") #TODO: Set this up to either be RandomForest... or MLP
+
+            if self.config["mode"] == "val" and self.config["CLAMP"]["use_pretrained_model"]:
+                from common_evaluation.clamp_common_eval.defaults import get_test_oracle
+                self.true_oracle = CLAMPTrueOracle(self.config["CLAMP"]["true_oracle_model"])
+                self.true_oracle_model = get_test_oracle(source=self.config["CLAMP"]["data_source"], 
+                                                        model=self.config["CLAMP"]["true_oracle_model"], 
+                                                        feature="AlBert") #TODO: Set this up to either be RandomForest... or MLP
+            elif self.config["mode"] == "val" and not self.config["CLAMP"]["use_pretrained_model"]:
+                D_AMP = clamp_data.get_CLAMP_data(self.config["mode"])
+                self.true_oracle = AMPTrueOracle(training_storage=D_AMP) # Use the RFC classifier from AMP task
+                self.true_oracle_model = utl.get_true_oracle_model(self.config)
+            elif self.config["mode"] == "test":
+                D_AMP = clamp_data.get_CLAMP_data(self.config["mode"])
+                self.true_oracle = AMPTrueOracle(training_storage=D_AMP) # Use the RFC classifier from AMP task
+                self.true_oracle_model = utl.get_true_oracle_model(self.config)
+            else:
+                raise NotImplementedError
         else:
             raise NotImplementedError
 

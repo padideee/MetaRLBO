@@ -9,8 +9,9 @@ import torch
 
 
 class CLAMPTrueOracle(BaseOracle):
-	def __init__(self):
+	def __init__(self, model_type):
 		self.query_count = 0
+		self.model_type = model_type
 
 	def query(self, model, x, flatten_input=False):
 		"""
@@ -34,7 +35,10 @@ class CLAMPTrueOracle(BaseOracle):
 		print(seqs)
 		self.query_count += batch_size
 
-		return model.evaluate_many(seqs)["confidence"][:, 1]
+		try:
+			return model.evaluate_many(seqs)["confidence"][:, 1]
+		except:
+			return model.evaluate_many(seqs)
 
 
 

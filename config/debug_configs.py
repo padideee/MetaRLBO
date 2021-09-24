@@ -578,7 +578,7 @@ debug_CLAMP = {
 			"num_mols_select": 5,
 		},
 	},
-	"num_processes": 8,
+	"num_processes": 1,
 	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
 	"log_interval": 1,
 }

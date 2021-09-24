@@ -17,6 +17,7 @@ class AMPEnv(gym.Env):
         # For non-finite horizon case: An extra action is added to
         # represent the "end of sequence" token
         self.max_AMP_length = max_AMP_length
+        self._max_episode_steps = max_AMP_length
         self.num_actions = 21
         self.EOS_idx = 20 # EOS/Padding token
 

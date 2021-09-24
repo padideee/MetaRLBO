@@ -53,11 +53,13 @@ class DummyVecEnv(VecEnv):
                 actions, self.num_envs)
             self.actions = [actions]
 
+    def set_oracles(self, data):
+        for e in range(self.num_envs):
+            self.envs[e].set_oracles(data)
+
     def step_wait(self):
         for e in range(self.num_envs):
             action = self.actions[e]
-            if isinstance(self.envs[e].action_space, spaces.Discrete):
-                action = int(action)
 
             obs, self.buf_rews[e], self.buf_dones[e], self.buf_infos[e] = self.envs[e].step(action)
             self._save_obs(e, obs)

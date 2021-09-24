@@ -88,5 +88,3 @@ class AMPTrueOracle(BaseOracle):
 
 		return model.fit(seq, value)
 
-
-

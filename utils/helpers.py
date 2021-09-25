@@ -26,8 +26,7 @@ def save_mols(mols, scores, folder):
         "seq": mols,
         'pred_prob': scores,
     }
-    df = pd.DataFrame(data=data)
-    df.to_pickle(os.path.join(folder, 'queried_mols.pkl'))
+    torch.save(data, os.path.join(folder, 'queried_mols.pt'))
 
 def save_config(config, folder):
     with open(os.path.join(folder, 'config.json'), 'w') as fp:

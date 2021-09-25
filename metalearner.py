@@ -48,13 +48,18 @@ class MetaLearner:
     Meta-Learner class with the main training loop
     """
 
-    def __init__(self, config):
+    def __init__(self, config, use_logger=True):
         self.config = config
         self.device = device
         # initialise tensorboard logger
-        self.logger = TBLogger(self.config, self.config["exp_label"])
+        self.use_logger = use_logger
+        if self.use_logger:
+            self.logger = TBLogger(self.config, self.config["exp_label"]) if self.use_logger else None
+            utl.save_config(self.config, self.logger.full_output_folder)
+        else:
+            self.logger = None
 
-        utl.save_config(self.config, self.logger.full_output_folder)
+        
 
         # The seq and the label from library
         # seq shape: (batch, 46*21)

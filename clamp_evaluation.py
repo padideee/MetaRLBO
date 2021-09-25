@@ -8,27 +8,31 @@ import numpy as np
 
 class Evaluation:
 
-    def __init__(self, config, metalearner):
+    def __init__(self, config, metalearner, logs_folder=None):
         self.config = config
         self.metalearner = metalearner
+        self.logs_folder = logs_folder if logs_folder is not None else self.metalearner.logger.full_output_folder
         self.metalearner_true_oracle = metalearner.true_oracle
         self.true_oracle = CLAMPTrueOracle(model_type = self.config["CLAMP"]["evaluation"]["actual_model"])
         self.metalearner_true_oracle_model = metalearner.true_oracle_model
-        self.actual_true_oracle_model = get_test_oracle(source="D2_target", model=self.config["CLAMP"]["evaluation"]["actual_model"], feature="AlBert", device=metalearner.device)
+
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.actual_true_oracle_model = get_test_oracle(source="D2_target", model=self.config["CLAMP"]["evaluation"]["actual_model"], feature="AlBert", device=self.device)
 
     def run(self):
         model_names = ["best_batch_mean_policy", "best_batch_max_policy"]
         save_names = ["best_batch_mean", "best_batch_max"]
 
         for name, sname in zip(model_names, save_names):
-            model_path = os.path.join(self.metalearner.logger.full_output_folder, name + ".pt")
-            self.metalearner.policy.load_state_dict(torch.load(model_path))
+            model_path = os.path.join(self.logs_folder, name + ".pt")
+            self.metalearner.policy.load_state_dict(torch.load(model_path, map_location=self.device))
 
             sampled_mols, _ = self.metalearner.sample_query_mols({}, 
                                                         num_query_proxies=self.config["CLAMP"]["evaluation"]["num_query_proxies"], 
                                                         num_samples_per_proxy=self.config["CLAMP"]["evaluation"]["num_samples_per_proxy"]) 
             sampled_mols = torch.cat(sampled_mols, dim=0)
 
+            print("Selecting Molecules")
             selected_mols, (mols, mols_scores) = self.select_molecules(sampled_mols, self.config["CLAMP"]["evaluation"]["num_mols_select"]) 
 
 
@@ -36,7 +40,7 @@ class Evaluation:
 
             # Save mols and mols_scores...
             seqs_and_scores = list(zip(seqs, mols_scores)) # Metalearner scores...
-            seqs_and_scores_save_path = os.path.join(self.metalearner.logger.full_output_folder, "seqs_and_scores_" + sname + ".lst")
+            seqs_and_scores_save_path = os.path.join(self.logs_folder, "seqs_and_scores_" + sname + ".lst")
             torch.save(seqs_and_scores, seqs_and_scores_save_path)
 
             print("Seqs + Scores:", seqs_and_scores)
@@ -46,7 +50,7 @@ class Evaluation:
             selected_mols_scores = self.true_oracle.query(self.actual_true_oracle_model, selected_mols, flatten_input=True) # Actual scores...
 
             selected_seqs_and_scores = list(zip(selected_seqs, selected_mols_scores))
-            seqs_and_scores_save_path = os.path.join(self.metalearner.logger.full_output_folder, "actual_oracle_selected_seqs_" + sname + ".lst")
+            seqs_and_scores_save_path = os.path.join(self.logs_folder, "actual_oracle_selected_seqs_" + sname + ".lst")
             torch.save(selected_seqs_and_scores, seqs_and_scores_save_path)
             
             print("Selected Seqs + Scores:", selected_seqs_and_scores)
@@ -108,4 +112,22 @@ class Evaluation:
 
         return np.stack(ret, 0)
 
+
+if __name__ == '__main__':
+    import sys
+    if len(sys.argv) >= 2: 
+        folder_name = sys.argv[1]
+    else: 
+        raise NotImplementedError
+
+    import json, os
+    logs_folder = os.path.join("./logs/logs_CLAMP-v0", folder_name)
+    with open(os.path.join(logs_folder, "config.json")) as f:
+        config = json.load(f)
+
+    from metalearner import MetaLearner
+    metalearner = MetaLearner(config, use_logger=False)
+    clamp_eval = Evaluation(config, metalearner, logs_folder)
+    print("Running Evaluation!")
+    clamp_eval.run()
 

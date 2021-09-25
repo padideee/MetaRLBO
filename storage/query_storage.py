@@ -43,7 +43,7 @@ class QueryStorage(BaseStorage):
                 valid_idx.append(i)
                 self.mols_set.add(seq)
             else:
-                print("Already queried...")
+                print("Storage: Already queried...", seq)
 
         x = x[valid_idx]
         y = y[valid_idx]

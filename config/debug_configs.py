@@ -285,14 +285,12 @@ debug_GPR_RBF = {
 	"exp_label": "DEBUG-GPR-RBF",
 	"num_proxies": 2,
 	"num_inner_updates": 1, 
-	"num_meta_proxy_samples": 2,
 	"num_initial_samples": 250,
-	"num_query_proxies": 8,
-	"num_samples_per_proxy": 8, 
-	"num_samples_per_task_update": 8,
+	"num_query_proxies": 4,
+	"num_samples_per_proxy": 30, 
 	"num_query_per_iter": 20,
-	"inner_lr": 20.0,
-	"outer_lr": 2.0,
+	"inner_lr": 2.0,
+	"outer_lr": 0.2,
 	"proxy_oracle": {
 		"model_name": "GPR",
 		"p": 0.8, # Proportion of data to sample to train proxy oracles
@@ -304,7 +302,7 @@ debug_GPR_RBF = {
 	"selection_criteria": { # Configs for selecting the samples
 		"method": "UCB",
 		"config": {
-			'beta': 6.0,
+			'beta': 4.0,
 		}
 	},
 	"metalearner": {

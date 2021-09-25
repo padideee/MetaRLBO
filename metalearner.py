@@ -50,7 +50,7 @@ class MetaLearner:
 
     def __init__(self, config):
         self.config = config
-
+        self.device = device
         # initialise tensorboard logger
         self.logger = TBLogger(self.config, self.config["exp_label"])
 
@@ -61,7 +61,7 @@ class MetaLearner:
         # label shape: (batch) -> in binary format:{'positive': AMP, 'negative': not AMP}
 
 
-        
+
         if self.config["task"] == "AMP-v0":
             if self.config["data_source"] == 'DynaPPO':
                 D_AMP = dynappo_data.get_AMP_data(self.config["mode"])
@@ -80,7 +80,8 @@ class MetaLearner:
                 self.true_oracle = CLAMPTrueOracle(self.config["CLAMP"]["true_oracle_model"])
                 self.true_oracle_model = get_test_oracle(source=self.config["CLAMP"]["data_source"], 
                                                         model=self.config["CLAMP"]["true_oracle_model"], 
-                                                        feature="AlBert") #TODO: Set this up to either be RandomForest... or MLP
+                                                        feature="AlBert",
+                                                        device=device) #TODO: Set this up to either be RandomForest... or MLP
             elif self.config["mode"] == "val" and not self.config["CLAMP"]["use_pretrained_model"]:
                 D_AMP = clamp_data.get_CLAMP_data(self.config["mode"])
                 self.true_oracle = AMPTrueOracle(training_storage=D_AMP) # Use the RFC classifier from AMP task
@@ -193,7 +194,7 @@ class MetaLearner:
 
                 st_time = time.time()
                 # Training
-                for mi in range(self.config["num_meta_updates_per_iter"]):
+                for mi in tqdm(range(self.config["num_meta_updates_per_iter"])):
                     logs = self.meta_update(logs, self.config["num_proxies"])
 
                 logs["timing/meta_updates"] = time.time() - st_time
@@ -581,7 +582,7 @@ class MetaLearner:
 
             query_scores = oracle.query(oracle_model, query_states.cpu(), flatten_input=self.flatten_proxy_oracle_input)
 
-            policy_storage.rewards[bool_idx] = torch.tensor(query_scores).to(device) - self.config["env"]["lambda"] * dens.to(device) # TODO: Set the rewards to include the density penalties...
+            policy_storage.rewards[bool_idx] = torch.tensor(query_scores).float().to(device) - self.config["env"]["lambda"] * dens.to(device) # TODO: Set the rewards to include the density penalties...
             
 
         if policy_storage is not None:
@@ -624,7 +625,8 @@ class MetaLearner:
             if self.iter_idx == 0:  # Special case: Random Policy
                 n_query = self.config["num_initial_samples"]
             else:
-                n_query = min(self.config["num_query_per_iter"], mols.shape[0])
+                n_query = self.config["num_query_per_iter"]
+            n_query = min(n_query, mols.shape[0])
 
             logs, scores = filtering.get_scores(self.config, mols, self.proxy_oracles, self.proxy_oracle_models, self.flatten_proxy_oracle_input, logs, iter_idx = self.iter_idx)
 

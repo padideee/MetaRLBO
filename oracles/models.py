@@ -5,6 +5,7 @@ import xgboost as xgb
 
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, RationalQuadratic, Matern
+from oracles.custom_models.GPR import CustomGPR
 
 # Classifiers
 
@@ -63,6 +64,7 @@ def GPR(kernel = "RBF"):
         kernel_model = Matern()
     else:
         raise NotImplementedError
-    model = GaussianProcessRegressor(kernel=kernel_model)
+
+    model = CustomGPR(kernel=kernel_model)
 
     return model

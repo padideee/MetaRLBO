@@ -92,6 +92,7 @@ class MetaLearner:
                 self.true_oracle = AMPTrueOracle(training_storage=D_AMP) # Use the RFC classifier from AMP task
                 self.true_oracle_model = utl.get_true_oracle_model(self.config)
             elif self.config["mode"] == "test":
+                # Use Moksh + Emmanuels oracle! 
                 D_AMP = clamp_data.get_CLAMP_data(self.config["mode"])
                 self.true_oracle = AMPTrueOracle(training_storage=D_AMP) # Use the RFC classifier from AMP task
                 self.true_oracle_model = utl.get_true_oracle_model(self.config)
@@ -217,7 +218,10 @@ class MetaLearner:
             st_time = time.time()
 
             # Do some filtering of the molecules here...
-            queried_mols, logs = self.select_molecules(sampled_mols, logs)
+            if self.iter_idx == 0:
+                queried_mols, logs = self.select_molecules(sampled_mols, logs, self.config["num_initial_samples"])
+            else:
+                queried_mols, logs = self.select_molecules(sampled_mols, logs, self.config["num_query_per_iter"])
             logs["timing/selecting_molecules"] = time.time() - st_time
             logs["timing/total_time_sampling"] = self.total_time_sampling
 
@@ -462,7 +466,7 @@ class MetaLearner:
 
         inner_opt = optim.SGD(self.policy.parameters(), lr=self.config["inner_lr"])
         sampled_mols = []
-        for j in range(num_query_proxies):
+        for j in tqdm(range(num_query_proxies)):
             # Proxy(Task)-specific updates
             with higher.innerloop_ctx(
                     self.policy, inner_opt, copy_initial_weights=False
@@ -601,19 +605,19 @@ class MetaLearner:
 
         return return_mols
 
-    def select_molecules(self, mols, logs):
+    def select_molecules(self, mols, logs, n_query, use_diversity_metric=True):
         """
             Selects the molecules to query from the ones proposed by the policy trained on each of the proxy oracle
              - Let's select the ones that have the highest score according to the proxy oracles? -- Check...
         """
 
+        from data.dynappo_data import enc_to_seq
         # Remove duplicate molecules... in current batch
         mols = np.unique(mols, axis=0)
 
         # Remove duplicate molecules that have already been queried...
         valid_idx = []
         for i in range(mols.shape[0]):
-            from data.dynappo_data import enc_to_seq
             seq = enc_to_seq(torch.tensor(mols[i]))
             seq = seq[:seq.find(">")]
 
@@ -627,10 +631,6 @@ class MetaLearner:
         if mols.shape[0] > 0:
             mols = torch.tensor(mols)
 
-            if self.iter_idx == 0:  # Special case: Random Policy
-                n_query = self.config["num_initial_samples"]
-            else:
-                n_query = self.config["num_query_per_iter"]
             n_query = min(n_query, mols.shape[0])
 
             logs, scores = filtering.get_scores(self.config, mols, self.proxy_oracles, self.proxy_oracle_models, self.flatten_proxy_oracle_input, logs, iter_idx = self.iter_idx)
@@ -638,7 +638,7 @@ class MetaLearner:
             _, sorted_idx = torch.sort(scores, descending = True)
 
             sorted_mols = mols.clone()[sorted_idx]
-            selected_mols = filtering.select(self.config, sorted_mols, n_query)
+            selected_mols = filtering.select(self.config, sorted_mols, n_query, use_diversity_metric=use_diversity_metric)
 
             return selected_mols, logs
         else:

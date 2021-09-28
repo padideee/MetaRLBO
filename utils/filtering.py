@@ -54,7 +54,7 @@ def get_scores(config, mols, proxy_oracles, proxy_oracle_models, flatten_proxy_o
     return logs, scores
 
 
-def select(config, mols, n_query):
+def select(config, mols, n_query, use_diversity_metric=False):
     """
         Greedily select the molecules that are above a threshold... exponentially decrease the threshold if insufficient molecules are selected
     """
@@ -73,6 +73,9 @@ def select(config, mols, n_query):
     selected_set = set(selected_idx)
     threshold = config["selection_criteria"]["diversity_threshold"]
 
+
+    if not use_diversity_metric:
+        return mols[:n_query]
 
     while len(selected_set) < n_query:
         for i in range(mols.shape[0]):

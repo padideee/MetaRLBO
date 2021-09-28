@@ -5,6 +5,7 @@ from data.dynappo_data import enc_to_seq, seq_to_enc
 from oracles.CLAMP_true_oracle import CLAMPTrueOracle
 from common_evaluation.clamp_common_eval.defaults import get_test_oracle
 import numpy as np
+import utils.helpers as utl
 
 class Evaluation:
 
@@ -13,13 +14,15 @@ class Evaluation:
         self.metalearner = metalearner
         self.logs_folder = logs_folder if logs_folder is not None else self.metalearner.logger.full_output_folder
         self.metalearner_true_oracle = metalearner.true_oracle
+
+
         self.true_oracle = CLAMPTrueOracle(model_type = self.config["CLAMP"]["evaluation"]["actual_model"])
         self.metalearner_true_oracle_model = metalearner.true_oracle_model
 
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.actual_true_oracle_model = get_test_oracle(source="D2_target", model=self.config["CLAMP"]["evaluation"]["actual_model"], feature="AlBert", device=self.device)
 
-    def run(self):
+    def run(self, use_metalearner_true_oracle=True):
         model_names = ["best_batch_mean_policy", "best_batch_max_policy"]
         save_names = ["best_batch_mean", "best_batch_max"]
 
@@ -32,18 +35,29 @@ class Evaluation:
                                                         num_samples_per_proxy=self.config["CLAMP"]["evaluation"]["num_samples_per_proxy"]) 
             sampled_mols = torch.cat(sampled_mols, dim=0)
 
-            print("Selecting Molecules")
-            selected_mols, (mols, mols_scores) = self.select_molecules(sampled_mols, self.config["CLAMP"]["evaluation"]["num_mols_select"]) 
+            sampled_seqs = self.to_seq(sampled_mols)
+            torch.save(sampled_seqs, os.path.join(self.logs_folder, "sampled_seqs_" + sname + ".lst"))
 
 
-            selected_seqs, seqs = self.to_seq(selected_mols), self.to_seq(mols)
+            print("Selecting Molecules -- using the metalearner... (we could also select using the ") 
+            if use_metalearner_true_oracle:
+                selected_mols, (mols, mols_scores) = self.select_molecules(sampled_mols, self.config["CLAMP"]["evaluation"]["num_mols_select"]) 
 
-            # Save mols and mols_scores...
-            seqs_and_scores = list(zip(seqs, mols_scores)) # Metalearner scores...
-            seqs_and_scores_save_path = os.path.join(self.logs_folder, "seqs_and_scores_" + sname + ".lst")
-            torch.save(seqs_and_scores, seqs_and_scores_save_path)
 
-            print("Seqs + Scores:", seqs_and_scores)
+                selected_seqs, seqs = self.to_seq(selected_mols), self.to_seq(mols)
+
+                # Save mols and mols_scores...
+                seqs_and_scores = list(zip(seqs, mols_scores)) # Metalearner scores...
+                seqs_and_scores_save_path = os.path.join(self.logs_folder, "selected_seqs_and_scores_" + sname + ".lst")
+                torch.save(seqs_and_scores, seqs_and_scores_save_path)
+
+                print("Selected Seqs + Scores:", seqs_and_scores[:30])
+            else:
+                selected_mols, _ = self.metalearner.select_molecules(sampled_mols, {}, self.config["CLAMP"]["evaluation"]["num_mols_select"], use_diversity_metric=False) 
+                selected_seqs = self.to_seq(selected_mols)
+                torch.save(selected_seqs, os.path.join(self.logs_folder, "selected_seqs_" + sname + ".lst"))
+                print("Selected Seqs", selected_seqs[:30])
+                continue
 
 
             # Query "Actual" oracle...
@@ -121,13 +135,33 @@ if __name__ == '__main__':
         raise NotImplementedError
 
     import json, os
-    logs_folder = os.path.join("./logs/logs_CLAMP-v0", folder_name)
+    if 'CLAMP' in folder_name:
+        logs_folder = os.path.join("./logs/logs_CLAMP-v0", folder_name)
+    else:
+        logs_folder = os.path.join("./logs/logs_AMP-v0", folder_name)
+
     with open(os.path.join(logs_folder, "config.json")) as f:
         config = json.load(f)
 
+
     from metalearner import MetaLearner
     metalearner = MetaLearner(config, use_logger=False)
+
+    # Setup for metalearner before it's useable
+    queried_mols = torch.load(os.path.join(logs_folder,"queried_mols.pt"))
+    encs = torch.tensor(queried_mols['seq'])
+    scores = torch.tensor(queried_mols['pred_prob'])
+
+    metalearner.D_train.mols[:encs.shape[0]] = encs
+    metalearner.D_train.scores[:scores.shape[0]] = scores
+    metalearner.D_train.storage_filled = encs.shape[0]
+    metalearner.query_history = list(map(lambda x : torch.tensor(x), queried_mols['seq'])) # needs to be a list of tensors
+
+    config["CLAMP"]["evaluation"]["num_query_proxies"] = 32
+    config["CLAMP"]["evaluation"]["num_mols_select"] = 10000
+
+    # Run evaluation
     clamp_eval = Evaluation(config, metalearner, logs_folder)
     print("Running Evaluation!")
-    clamp_eval.run()
+    clamp_eval.run(use_metalearner_true_oracle = False)
 

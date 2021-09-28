@@ -198,6 +198,7 @@ def train_proxy(args, proxy, data, outer_loop_iter):
 
     for it in tqdm(range(args.proxy_num_iterations)):
         x, y = data.sample(args.proxy_num_per_minibatch, args.proxy_pos_ratio)
+
         x = tokenizer.process(x).to(device)
         y = torch.tensor(y, device=device, dtype=torch.float)
         logit = model(x.swapaxes(0,1), x.lt(eos_tok)).squeeze(1)
@@ -292,10 +293,14 @@ def make_proxy(args):
     return [model, opt]
 
 
-def main(args):
 
+# def main():
+def get_proxy():
+
+    args = parser.parse_args()
+    print(args.save_path.split('/')[-1].split('.')[0])
     # args.device = device = torch.device('cuda')
-    args.device = device = torch.device('cpu')
+    args.device = device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
     # dist_fn = None
@@ -328,6 +333,4 @@ def main(args):
 
 # def run():
 if __name__ == '__main__':
-    args = parser.parse_args()
-    print(args.save_path.split('/')[-1].split('.')[0])
-    main(args)
+    get_proxy()

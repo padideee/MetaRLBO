@@ -396,3 +396,99 @@ clamp_test_002 = {
 	"results_log_dir": "./logs",
 	"seed": 73,
 }
+
+clamp_test_003 = {
+	"exp_label": "CLAMP-TEST-003",
+	"task": "CLAMP-v0",
+	"max_num_queries": 3000, # Maximum number of queries in experiment
+	"num_proxies": 4,
+	"num_inner_updates": 2,
+	"num_initial_samples": 250,
+	"num_query_proxies": 32,
+	"num_samples_per_proxy": 75,
+	"num_query_per_iter": 250,
+	"inner_lr": 2.0,
+	"outer_lr": 0.2,
+	"num_meta_updates_per_iter": 30,
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, 
+	},
+	"policy": {
+		"num_steps": 1000, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+		"num_meta_steps": 300,
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 4.0,
+		},
+		"diversity_threshold": 10, # Diversity threshold when greedily selecting molecules...
+	},
+	"CLAMP": { # CLAMP Specific configs... do not use normally
+		"true_oracle_model": "GFN", # RandomForest or MLP or GFN
+		"evaluation": { # post-training
+			"num_query_proxies": 64,
+			"num_samples_per_proxy": 500,
+			"num_mols_select": 10000,
+		},
+	},
+	"mode": "test", # mode -- val (hyperparameter opt.), test (eval. )
+	"log_interval": 1,
+	"num_processes": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+clamp_test_004 = {
+	"exp_label": "CLAMP-TEST-004",
+	"task": "CLAMP-v0",
+	"max_num_queries": 3000, # Maximum number of queries in experiment
+	"num_proxies": 4,
+	"num_inner_updates": 3,
+	"num_initial_samples": 250,
+	"num_query_proxies": 32,
+	"num_samples_per_proxy": 75,
+	"num_query_per_iter": 250,
+	"inner_lr": 2.0,
+	"outer_lr": 0.2,
+	"num_meta_updates_per_iter": 30,
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, 
+	},
+	"policy": {
+		"num_steps": 1000, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+		"num_meta_steps": 300,
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 4.0,
+		},
+		"diversity_threshold": 10, # Diversity threshold when greedily selecting molecules...
+	},
+	"CLAMP": { # CLAMP Specific configs... do not use normally
+		"true_oracle_model": "GFN", # RandomForest or MLP or GFN
+		"evaluation": { # post-training
+			"num_query_proxies": 64,
+			"num_samples_per_proxy": 500,
+			"num_mols_select": 10000,
+		},
+	},
+	"mode": "test", # mode -- val (hyperparameter opt.), test (eval. )
+	"log_interval": 1,
+	"num_processes": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}

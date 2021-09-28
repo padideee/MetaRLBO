@@ -74,7 +74,7 @@ parser.add_argument("--proxy_num_hid", default=64, type=int)
 parser.add_argument("--proxy_L2", default=1e-4, type=float)
 parser.add_argument("--proxy_num_per_minibatch", default=256, type=int)
 parser.add_argument("--proxy_early_stop_tol", default=5, type=int)
-parser.add_argument("--proxy_num_iterations", default=10, type=int)
+parser.add_argument("--proxy_num_iterations", default=30000, type=int)
 parser.add_argument("--proxy_num_droput_sample", default=50, type=int)
 parser.add_argument("--proxy_pos_ratio", default=0.9, type=float)
 

@@ -580,3 +580,43 @@ debug_CLAMP = {
 	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
 	"log_interval": 1,
 }
+
+
+debug_CLAMP_GFN = {
+	"exp_label": "DEBUG-CLAMP-GFN",
+	"task": "CLAMP-v0",
+	"max_num_queries": 20,
+	"num_proxies": 2,
+	"num_inner_updates": 1, 
+	"num_initial_samples": 10,
+	"num_query_proxies": 2,
+	"num_samples_per_proxy": 8, 
+	"num_query_per_iter": 5,
+	"inner_lr": 5.0,
+	"outer_lr": 0.5,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.7, # Proportion of data to sample to train proxy oracles
+	},
+	"entropy_reg_coeff": 0.0,
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB",
+		"config": {
+			'beta': 6.0,
+		}
+	},
+	"metalearner": {
+		"method": "REINFORCE",  # REINFORCE or TRPO
+	},
+	"CLAMP": { # CLAMP Specific configs... do not use normally
+		"true_oracle_model": "GFN", # RandomForest or MLP or GFN
+		"evaluation": { # post-training
+			"num_query_proxies": 2,
+			"num_samples_per_proxy": 4,
+			"num_mols_select": 5,
+		},
+	},
+	"num_processes": 1,
+	"mode": "test", # mode -- val (hyperparameter opt.), test (eval. )
+	"log_interval": 1,
+}

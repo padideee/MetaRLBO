@@ -92,10 +92,19 @@ class MetaLearner:
                 self.true_oracle = AMPTrueOracle(training_storage=D_AMP) # Use the RFC classifier from AMP task
                 self.true_oracle_model = utl.get_true_oracle_model(self.config)
             elif self.config["mode"] == "test":
-                # Use Moksh + Emmanuels oracle! 
-                D_AMP = clamp_data.get_CLAMP_data(self.config["mode"])
-                self.true_oracle = AMPTrueOracle(training_storage=D_AMP) # Use the RFC classifier from AMP task
-                self.true_oracle_model = utl.get_true_oracle_model(self.config)
+                # Use Moksh + Emmanuels oracle!
+                if self.config["CLAMP"]["true_oracle_model"] == "GFN":
+                    # Use Moksh + Emmanuels oracle! 
+                    from oracles.gflownet_oracle import get_proxy as get_oracle # Use their proxy as our oracle
+                    self.true_oracle = CLAMPTrueOracle(self.config["CLAMP"]["true_oracle_model"])
+                    print("Using GFlownet Oracle... First performing training")
+                    self.true_oracle_model = get_oracle()
+                else:
+                    D_AMP = clamp_data.get_CLAMP_data(self.config["mode"])
+                    self.true_oracle = AMPTrueOracle(training_storage=D_AMP) # Use the RFC classifier from AMP task
+                    self.true_oracle_model = utl.get_true_oracle_model(self.config)
+
+
             else:
                 raise NotImplementedError
         else:

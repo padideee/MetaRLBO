@@ -74,7 +74,7 @@ parser.add_argument("--proxy_num_hid", default=64, type=int)
 parser.add_argument("--proxy_L2", default=1e-4, type=float)
 parser.add_argument("--proxy_num_per_minibatch", default=256, type=int)
 parser.add_argument("--proxy_early_stop_tol", default=5, type=int)
-parser.add_argument("--proxy_num_iterations", default=30000, type=int)
+parser.add_argument("--proxy_num_iterations", default=10, type=int)
 parser.add_argument("--proxy_num_droput_sample", default=50, type=int)
 parser.add_argument("--proxy_pos_ratio", default=0.9, type=float)
 
@@ -268,12 +268,18 @@ def train_proxy(args, proxy, data, outer_loop_iter):
     if args.save_proxy_weights:
         torch.save(model.state_dict(), osp.join("".join(args.save_path.split('/')[:-1]), "proxy_{}.pt".format(outer_loop_iter)))
 
-    args.logger.add('proxy_losses', losses)
-    args.logger.add('proxy_test_losses', test_losses)
 
-    if args.proxy_type == "classifier":
-        args.logger.add('proxy_accs', accs)
-        args.logger.add('proxy_test_accs', test_accs)
+    print("Proxy_losses", losses)
+    print("Proxy Test Losses:", test_losses)
+
+    print("Proxy Accs:", accs)
+    print("Proxy Test Accs:", test_accs)
+    # args.logger.add('proxy_losses', losses)
+    # args.logger.add('proxy_test_losses', test_losses)
+
+    # if args.proxy_type == "classifier":
+    #     args.logger.add('proxy_accs', accs)
+    #     args.logger.add('proxy_test_accs', test_accs)
 
 
 def make_proxy(args):
@@ -297,7 +303,7 @@ def make_proxy(args):
 # def main():
 def get_proxy():
 
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
     print(args.save_path.split('/')[-1].split('.')[0])
     # args.device = device = torch.device('cuda')
     args.device = device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -327,8 +333,9 @@ def get_proxy():
     else:
         train_proxy(args, proxy, proxy_dataset, 0)
         
-    args.logger = None
-    return proxy
+
+    model, opt = proxy
+    return model
 
 
 # def run():

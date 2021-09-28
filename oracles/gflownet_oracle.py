@@ -196,8 +196,6 @@ def train_proxy(args, proxy, data, outer_loop_iter):
     # minibatches per epoch... seems low?
     epoch_length = 100
 
-    import pdb; pdb.set_trace()
-
     for it in tqdm(range(args.proxy_num_iterations)):
         x, y = data.sample(args.proxy_num_per_minibatch, args.proxy_pos_ratio)
         x = tokenizer.process(x).to(device)

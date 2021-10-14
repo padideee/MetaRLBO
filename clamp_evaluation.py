@@ -51,7 +51,7 @@ class Evaluation:
                 seqs_and_scores_save_path = os.path.join(self.logs_folder, "selected_seqs_and_scores_" + sname + ".lst")
                 torch.save(seqs_and_scores, seqs_and_scores_save_path)
 
-                print("Selected Seqs + Scores:", seqs_and_scores[:30])
+                print("Metalearner: Selected Seqs + Scores:", seqs_and_scores[:30])
             else:
                 selected_mols, _ = self.metalearner.select_molecules(sampled_mols, {}, self.config["CLAMP"]["evaluation"]["num_mols_select"], use_diversity_metric=False) 
                 selected_seqs = self.to_seq(selected_mols)
@@ -67,7 +67,7 @@ class Evaluation:
             seqs_and_scores_save_path = os.path.join(self.logs_folder, "actual_oracle_selected_seqs_" + sname + ".lst")
             torch.save(selected_seqs_and_scores, seqs_and_scores_save_path)
             
-            print("Selected Seqs + Scores:", selected_seqs_and_scores)
+            print("Actual: Selected Seqs + Scores:", selected_seqs_and_scores)
         
 
     def select_molecules(self, mols, n):

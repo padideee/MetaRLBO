@@ -7,7 +7,7 @@ class CustomGPR(GaussianProcessRegressor):
 	random_mat_generated = False
 	random_mat = None
 	div_weight = 1
-	def __init__(self, random_proj=True, embedding_size = 100, **kwargs):
+	def __init__(self, random_proj=True, embedding_size=25, **kwargs):
 		super().__init__(**kwargs)
 		self.random_proj = random_proj
 		self.embedding_size = embedding_size

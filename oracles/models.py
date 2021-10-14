@@ -6,6 +6,7 @@ import xgboost as xgb
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, RationalQuadratic, Matern
 from oracles.custom_models.GPR import CustomGPR
+from oracles.custom_models.dynappo_ensemble import DynaPPOEnsemble
 
 # Classifiers
 
@@ -55,7 +56,7 @@ def XGB():
     return model
 
 
-def GPR(kernel = "RBF"):
+def GPR(kernel = "RBF", random_proj=True, embedding_size=25):
     if kernel == "RBF":
         kernel_model = RBF()
     elif kernel == "RationalQuadratic":
@@ -65,6 +66,10 @@ def GPR(kernel = "RBF"):
     else:
         raise NotImplementedError
 
-    model = CustomGPR(kernel=kernel_model)
+    model = CustomGPR(kernel=kernel_model, random_proj=random_proj, embedding_size=embedding_size)
 
     return model
+
+def Ensemble():
+    return DynaPPOEnsemble([KNN(), RFR(), XGB(), XGBoost()])
+

@@ -588,7 +588,7 @@ class MetaLearner:
             if policy_storage is not None:
                 break_loop = True
 
-        if query_reward and not self.config["query_reward_in_env"]:
+        if query_reward and not self.config["query_reward_in_env"]: # TODO: ISSUE -- Diversity uses the raw sequence! But the policy_storage needs the transformed seq for evaluating and performing updates.
             bool_idx = policy_storage.dones.bool()
             query_states = policy_storage.next_states[bool_idx]
 

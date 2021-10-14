@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 import torch.nn.functional as F
 import torch
-from storage.query_storage import QueryStorage
 
 from collections import OrderedDict
 

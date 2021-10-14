@@ -1021,7 +1021,7 @@ amp_br_002 = { # Increased number of proxy models...
 	"seed": 73,
 }
 
-# ======================= Proxy Oracles: Gaussian Process Regressor
+# ======================= Proxy Oracles: Gaussian Process Regressor -- All Large batches now!
 
 
 
@@ -1031,13 +1031,13 @@ amp_gpr_rq_001 = {
 	"max_num_queries": 2000,
 	"num_proxies": 4, 
 	"num_inner_updates": 1,
-	"num_query_proxies": 16,
 	"num_initial_samples": 250,
-	"num_samples_per_proxy": 16,
-	"num_query_per_iter": 20,
-	"inner_lr": 5.0,
-	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 1, 
+	"num_query_proxies": 32,
+	"num_samples_per_proxy": 75,
+	"num_query_per_iter": 250,
+	"inner_lr": 2.0,
+	"outer_lr": 0.2,
+	"num_meta_updates_per_iter": 30,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "GPR",
@@ -1054,7 +1054,45 @@ amp_gpr_rq_001 = {
 	"selection_criteria": { # Configs for selecting the samples
 		"method": "UCB",
 		"config": {
-			'beta': 6.0,
+			'beta': 4.0,
+		}
+	},
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+amp_gpr_rq_002 = { 
+	"exp_label": "AMP-GPR_RQ-002",
+	"max_num_queries": 2000,
+	"num_proxies": 4, 
+	"num_inner_updates": 2,
+	"num_initial_samples": 250,
+	"num_query_proxies": 32,
+	"num_samples_per_proxy": 75,
+	"num_query_per_iter": 250,
+	"inner_lr": 2.0,
+	"outer_lr": 0.2,
+	"num_meta_updates_per_iter": 30,
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "GPR",
+		"p": 0.8, 
+		"config": {
+			"kernel": "RationalQuadratic",
+		},
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB",
+		"config": {
+			'beta': 4.0,
 		}
 	},
 	"true_oracle": {
@@ -1066,19 +1104,20 @@ amp_gpr_rq_001 = {
 }
 
 
+
 # =========== Matern
 amp_gpr_m_001 = { 
 	"exp_label": "AMP-GPR_M-001",
 	"max_num_queries": 2000,
 	"num_proxies": 4, 
 	"num_inner_updates": 1,
-	"num_query_proxies": 16,
 	"num_initial_samples": 250,
-	"num_samples_per_proxy": 16,
-	"num_query_per_iter": 20,
-	"inner_lr": 5.0,
-	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 1, 
+	"num_query_proxies": 32,
+	"num_samples_per_proxy": 75,
+	"num_query_per_iter": 250,
+	"inner_lr": 2.0,
+	"outer_lr": 0.2,
+	"num_meta_updates_per_iter": 30,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "GPR",
@@ -1095,7 +1134,45 @@ amp_gpr_m_001 = {
 	"selection_criteria": { # Configs for selecting the samples
 		"method": "UCB",
 		"config": {
-			'beta': 6.0,
+			'beta': 4.0,
+		}
+	},
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+amp_gpr_m_002 = { 
+	"exp_label": "AMP-GPR_M-002",
+	"max_num_queries": 2000,
+	"num_proxies": 4, 
+	"num_inner_updates": 2,
+	"num_initial_samples": 250,
+	"num_query_proxies": 32,
+	"num_samples_per_proxy": 75,
+	"num_query_per_iter": 250,
+	"inner_lr": 2.0,
+	"outer_lr": 0.2,
+	"num_meta_updates_per_iter": 30,
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "GPR",
+		"p": 0.8, 
+		"config": {
+			"kernel": "Matern",
+		},
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB",
+		"config": {
+			'beta': 4.0,
 		}
 	},
 	"true_oracle": {
@@ -1109,19 +1186,21 @@ amp_gpr_m_001 = {
 
 
 
+
+
 # =========== RBF
 amp_gpr_rbf_001 = { 
 	"exp_label": "AMP-GPR_RBF-001",
 	"max_num_queries": 2000,
 	"num_proxies": 4, 
 	"num_inner_updates": 1,
-	"num_query_proxies": 16,
 	"num_initial_samples": 250,
-	"num_samples_per_proxy": 16,
-	"num_query_per_iter": 20,
-	"inner_lr": 5.0,
-	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 1, 
+	"num_query_proxies": 32,
+	"num_samples_per_proxy": 75,
+	"num_query_per_iter": 250,
+	"inner_lr": 2.0,
+	"outer_lr": 0.2,
+	"num_meta_updates_per_iter": 30,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "GPR",
@@ -1138,7 +1217,46 @@ amp_gpr_rbf_001 = {
 	"selection_criteria": { # Configs for selecting the samples
 		"method": "UCB",
 		"config": {
-			'beta': 6.0,
+			'beta': 4.0,
+		}
+	},
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+amp_gpr_rbf_002 = { 
+	"exp_label": "AMP-GPR_RBF-002",
+	"max_num_queries": 2000,
+	"num_proxies": 4, 
+	"num_inner_updates": 2,
+	"num_initial_samples": 250,
+	"num_query_proxies": 32,
+	"num_samples_per_proxy": 75,
+	"num_query_per_iter": 250,
+	"inner_lr": 2.0,
+	"outer_lr": 0.2,
+	"num_meta_updates_per_iter": 30,
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "GPR",
+		"p": 0.8, 
+		"config": {
+			"kernel": "RBF",
+		},
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB",
+		"config": {
+			'beta': 4.0,
 		}
 	},
 	"true_oracle": {

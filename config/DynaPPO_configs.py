@@ -1,6 +1,7 @@
-dynappo_debug = {
-    "exp_label": "dynappo_debug",
+dynappo_001 = {
+    "exp_label": "dynappo_001",
     "task": "AMP-v0",
+    "use_metalearner": False,
     "max_num_queries": 3000, # Maximum number of queries in experiment
     "query_storage_size": 100000, # Maximum number of queries allowed in the storage
     "num_updates_per_iter": 72,
@@ -24,7 +25,7 @@ dynappo_debug = {
     },
     "policy": {
         "num_steps": 150,
-    }
+    },  
     "save_interval": 10, # Save model every n batch queries
     "num_processes": 8, 
     "results_log_dir": "./logs", 

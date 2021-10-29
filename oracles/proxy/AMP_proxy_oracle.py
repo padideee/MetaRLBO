@@ -17,7 +17,7 @@ class AMPProxyOracle(BaseOracle):
 			  - (batch_size, ...)
 		
 			Returns:
-			  - (batch_size, )
+			  - (batch_size, ) -- Probability of it being "AMP"
 		"""
 		if flatten_input:
 			x = x.flatten(start_dim=-2, end_dim = -1)

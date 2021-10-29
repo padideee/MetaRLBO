@@ -38,8 +38,8 @@ from torch.nn.utils.convert_parameters import (vector_to_parameters,
 from utils.optimization import conjugate_gradient
 from utils.torch_utils import (weighted_mean, detach_distribution, weighted_normalize)
 from algo.baseline import LinearFeatureBaseline
-from models.online_storage import RolloutStorage
-from models.query_storage import QueryStorage
+from storage.online_storage import RolloutStorage
+from storage.query_storage import QueryStorage
 from algo.ppo import PPO
 
 from utils import filtering
@@ -192,8 +192,8 @@ class Learner:
             self.config["policy"]["num_steps"],
             config["num_processes"],
             self.env.observation_space.shape,
-            1, # Action is a single discrete variable!
-            self.actor_critic.recurrent_hidden_state_size)  # TODO: Change to non recurrent
+            self.env.action_space, # Action is a single discrete variable!
+            self.policy.recurrent_hidden_state_size)  # TODO: Change to non recurrent
 
         
         self.meta_opt = optim.SGD(self.policy.parameters(), lr=self.config["outer_lr"])
@@ -322,19 +322,19 @@ class Learner:
         self.proxy_oracle_model = utl.get_proxy_oracle_model(self.config)
 
         time_st = time.time()
-        self.proxy_oracle_model = self.proxy_oracle.fit(self.proxy_oracle) # Fit proxy oracle!
+        self.proxy_oracle_model = self.proxy_oracle.fit(self.proxy_oracle_model, flatten_input=self.flatten_proxy_oracle_input) # Fit proxy oracle!
         logs["timing/fitting_proxy_oracle"] = time.time() - time_st
 
 
         for _ in tqdm(range(self.config["num_updates_per_iter"])): #TODO: Set this in config... num_updates...
-            episodes = RolloutStorage(num_processes=self.config["num_processes"],
-                                               state_dim=self.env.observation_space.shape,
-                                               action_dim=1,  # Discrete value
-                                               num_steps=self.config["policy"]["num_meta_steps"],
-                                               device=device
-                                               )
-            self.sample_policy(inner_policy, self.proxy_oracle, self.proxy_oracle_model, num_steps=self.config["policy"]["num_meta_steps"],
-                               policy_storage=episodes, density_penalty = self.config["outerloop"]["density_penalty"])
+            # episodes = RolloutStorage(num_processes=self.config["num_processes"],
+            #                                    state_dim=self.env.observation_space.shape,
+            #                                    action_dim=1,  # Discrete value
+            #                                    num_steps=self.config["policy"]["num_meta_steps"],
+            #                                    device=device
+            #                                    )
+            self.sample_policy(self.policy, self.proxy_oracle, self.proxy_oracle_model, num_steps=self.config["policy"]["num_meta_steps"],
+                               policy_storage=self.policy_storage, density_penalty = self.config["outerloop"]["density_penalty"])
             
 
             # Update the policy
@@ -403,7 +403,7 @@ class Learner:
                 value, action, log_prob, hidden_state = policy.act(st, hidden_state, masks=masks)
                 action = action.detach().cpu()
 
-                next_state, reward, done, info = self.env.step(action) 
+                next_state, reward, done, infos = self.env.step(action) 
 
 
                 done = torch.tensor(done).float()

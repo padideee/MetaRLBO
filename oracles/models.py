@@ -71,5 +71,6 @@ def GPR(kernel = "RBF", random_proj=True, embedding_size=25):
     return model
 
 def Ensemble():
+    # GPR(kernel="RBF", random_proj=False)... or other kernels
     return DynaPPOEnsemble([KNN(), RFR(), XGB(), XGBoost()])
 

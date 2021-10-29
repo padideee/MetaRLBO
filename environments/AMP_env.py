@@ -173,7 +173,7 @@ class AMPEnv(gym.Env):
         self.time_step += 1
 
         # Info must be a dictionary
-        info = [{"action": action, "state": self.curr_state, "pred_prob": pred_prob, "queried": queried, "density_penalty": density_penalty}]
+        info = {"action": action, "state": self.curr_state, "pred_prob": pred_prob, "queried": queried, "density_penalty": density_penalty}
 
         return(self.curr_state, reward, done, info)
 

@@ -5,13 +5,13 @@ TODO: Change the rollout storage -- and make it different from QueryStorage
 """
 import torch
 from torch.utils.data.sampler import BatchSampler, SubsetRandomSampler
-
+import numpy as np
 
 def _flatten_helper(T, N, _tensor):
     return _tensor.view(T * N, *_tensor.size()[2:])
 
 
-class RolloutStorage(object):
+class OnlineStorage(object):
     def __init__(self, num_steps, num_processes, obs_shape, action_space,
                  recurrent_hidden_state_size):
         self.num_steps = num_steps
@@ -19,13 +19,16 @@ class RolloutStorage(object):
         self.obs_shape = obs_shape
 
 
-        self.obs = torch.zeros(num_steps + 1, num_processes, *obs_shape)
+        self.obs = torch.zeros(num_steps + 1, num_processes, np.prod(obs_shape))
+        self.next_obs = torch.zeros(num_steps + 1, num_processes, np.prod(obs_shape))
+        self.raw_obs = torch.zeros(num_steps + 1, num_processes, *obs_shape)
+        self.raw_next_obs = torch.zeros(num_steps + 1, num_processes, *obs_shape)
         self.recurrent_hidden_states = torch.zeros(
             num_steps + 1, num_processes, recurrent_hidden_state_size)
         self.rewards = torch.zeros(num_steps, num_processes, 1)
         self.value_preds = torch.zeros(num_steps + 1, num_processes, 1)
         self.returns = torch.zeros(num_steps + 1, num_processes, 1)
-        self.action_log_probs = torch.zeros(num_steps, num_processes, 1)
+        self.action_log_probs = torch.zeros(num_steps + 1, num_processes, 1)
         self.dones = torch.zeros(num_steps + 1, num_processes, 1)
         if action_space.__class__.__name__ == 'Discrete':
             action_shape = 1
@@ -45,6 +48,8 @@ class RolloutStorage(object):
 
     def to(self, device):
         self.obs = self.obs.to(device)
+        self.raw_obs = self.raw_obs.to(device)
+        self.next_obs = self.next_obs.to(device)
         self.recurrent_hidden_states = self.recurrent_hidden_states.to(device)
         self.rewards = self.rewards.to(device)
         self.value_preds = self.value_preds.to(device)
@@ -55,9 +60,12 @@ class RolloutStorage(object):
         self.dones = self.dones.to(device)
         self.bad_masks = self.bad_masks.to(device)
 
-    def insert(self, obs, recurrent_hidden_states, actions, action_log_probs,
-               value_preds, rewards, masks, bad_masks, dones):
+    def insert(self, obs, raw_obs, recurrent_hidden_states, actions, action_log_probs,
+               value_preds, rewards, masks, bad_masks, dones, next_obs, raw_next_obs):
         self.obs[self.step + 1].copy_(obs)
+        self.raw_obs[self.step + 1].copy_(raw_obs)
+        self.next_obs[self.step + 1].copy_(next_obs)
+        self.raw_next_obs[self.step + 1].copy_(raw_next_obs)
         self.recurrent_hidden_states[self.step +
                                      1].copy_(recurrent_hidden_states)
         self.actions[self.step].copy_(actions)
@@ -71,6 +79,9 @@ class RolloutStorage(object):
 
     def after_update(self):
         self.obs[0].copy_(self.obs[-1])
+        self.raw_obs[0].copy_(self.raw_obs[-1])
+        self.next_obs[0].copy_(self.next_obs[-1])
+        self.raw_next_obs[0].copy_(self.raw_next_obs[-1])
         self.recurrent_hidden_states[0].copy_(self.recurrent_hidden_states[-1])
         self.masks[0].copy_(self.masks[-1])
         self.bad_masks[0].copy_(self.bad_masks[-1])
@@ -136,6 +147,7 @@ class RolloutStorage(object):
             mini_batch_size,
             drop_last=True)
         for indices in sampler:
+            
             obs_batch = self.obs[:-1].view(-1, *self.obs.size()[2:])[indices]
             recurrent_hidden_states_batch = self.recurrent_hidden_states[:-1].view(
                 -1, self.recurrent_hidden_states.size(-1))[indices]

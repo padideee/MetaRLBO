@@ -7,7 +7,7 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, RationalQuadratic, Matern
 from oracles.custom_models.GPR import CustomGPR
 from oracles.custom_models.dynappo_ensemble import DynaPPOEnsemble
-
+from oracles.custom_models.alt_ising_model import AlternatingChainIsingModel
 # Classifiers
 
 def RFC(n_estimators=200):
@@ -74,3 +74,7 @@ def Ensemble():
     # GPR(kernel="RBF", random_proj=False)... or other kernels
     return DynaPPOEnsemble([KNN(), RFR(), XGB(), XGBoost()])
 
+
+
+def AltIsingModel(length=50, vocab_size=20):
+    return AlternatingChainIsingModel(length=length, vocab_size=vocab_size)

@@ -11,7 +11,7 @@ import os
 import utils.helpers as utl
 import utils.reinforcement_learning as rl_utl
 
-from storage.rollout_storage import RolloutStorage
+# from storage.rollout_storage import RolloutStorage
 from storage.query_storage import QueryStorage
 from policies.policy import Policy
 from policies.gru_policy import CategoricalGRUPolicy
@@ -38,7 +38,7 @@ from torch.nn.utils.convert_parameters import (vector_to_parameters,
 from utils.optimization import conjugate_gradient
 from utils.torch_utils import (weighted_mean, detach_distribution, weighted_normalize)
 from algo.baseline import LinearFeatureBaseline
-from storage.online_storage import RolloutStorage
+from storage.online_storage import OnlineStorage
 from storage.query_storage import QueryStorage
 from algo.ppo import PPO
 
@@ -53,12 +53,6 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 class Learner:
     """
     Learner class with the main training loop -- DynaPPO
-
-    TODO: 
-      - Change proxy models -> proxy model
-        - Likely will need a new proxy model for "ensembles"
-      - Sample query mols does not need to perform inner loop updates -- just use the test policy
-      - Maybe we need to be careful of our method removing duplicates
     """
 
     def __init__(self, config, use_logger=True):
@@ -188,7 +182,7 @@ class Learner:
             eps=ppo_config["eps"],
             max_grad_norm=ppo_config["max_grad_norm"])
 
-        self.policy_storage = RolloutStorage(
+        self.policy_storage = OnlineStorage(
             self.config["policy"]["num_steps"],
             config["num_processes"],
             self.env.observation_space.shape,
@@ -246,9 +240,6 @@ class Learner:
 
                 logs["timing/sample_query_mols"] = time.time() - st_time
                 st_time = time.time()
-
-
-                sampled_mols = torch.cat(sampled_mols, dim=0)
 
             st_time = time.time()
 
@@ -336,23 +327,23 @@ class Learner:
             self.sample_policy(self.policy, self.proxy_oracle, self.proxy_oracle_model, num_steps=self.config["policy"]["num_meta_steps"],
                                policy_storage=self.policy_storage, density_penalty = self.config["outerloop"]["density_penalty"])
             
-
             # Update the policy
             value_loss, action_loss, dist_entropy = self.agent.update(self.policy_storage)
 
-            self.policy_storage.after_update()
-        logs["baseline/loss"] = loss
 
-        # self.meta_opt.step()
+            self.policy_storage.after_update()
+        logs["general/value_loss"] = value_loss
+        logs["general/action_loss"] = action_loss
+        logs["general/dist_entropy"] = dist_entropy
+
         return logs
 
     def sample_query_mols(self, logs, num_query_proxies, num_samples_per_proxy):
-        sampled_mols = []
 
         # Sample mols (and query) for training the proxy oracles later
-        sampled_mols.append(self.sample_policy(self.policy, self.proxy_query_oracles[j], self.proxy_query_oracle_models[j], 
+        sampled_mols = self.sample_policy(self.policy, self.proxy_oracle, self.proxy_oracle_model, 
                                                 num_steps=self.config["policy"]["num_steps"],
-                                                num_samples=num_samples_per_proxy).detach())  # Sample from policies -- preferably make this parallelised in the future
+                                                num_samples=num_samples_per_proxy).detach()
 
         return sampled_mols, logs
 
@@ -394,7 +385,7 @@ class Learner:
 
 
             state = torch.tensor(self.env.reset()).float()  # Returns (num_processes, 51, 21) 
-            hidden_state = None
+            hidden_state = torch.zeros((state.shape[0], 1))
             for stepi in range(num_steps):
 
                 masks = None
@@ -419,9 +410,10 @@ class Learner:
                          for info in infos])
 
                     done = torch.FloatTensor(done).unsqueeze(-1)
+                    # print(reward, reward.shape)
 
-                    policy_storage.insert(state=obs, recurrent_hidden_states=hidden_state, actions=action,
-                                               action_log_probs=log_prob, value_preds=value, rewards=reward, masks=masks, bad_masks=bad_masks, dones=done)
+                    policy_storage.insert(obs=seq_to_encoding(state).flatten(-2, -1), raw_obs=state, recurrent_hidden_states=hidden_state, actions=action,
+                                               action_log_probs=log_prob, value_preds=value, rewards=reward.unsqueeze(-1), masks=masks, bad_masks=bad_masks, dones=done, next_obs=seq_to_encoding(next_state).flatten(-2, -1), raw_next_obs=next_state)
                     # policy_storage.insert(state=state.detach().clone(),
                     #                       next_state=next_state.detach().clone(),
                     #                       action=action.detach().clone(),
@@ -449,8 +441,8 @@ class Learner:
                 break_loop = True
 
         if query_reward and not self.config["query_reward_in_env"]:
-            bool_idx = policy_storage.dones.bool()
-            query_states = policy_storage.next_states[bool_idx]
+            bool_idx = policy_storage.dones[:-1].bool().squeeze(-1)
+            query_states = policy_storage.raw_next_obs[:-1][bool_idx] # Leo: TODO
 
             dens = diversity(query_states, 
                                 self.query_history, 
@@ -460,13 +452,20 @@ class Learner:
 
             query_scores = oracle.query(oracle_model, query_states.cpu(), flatten_input=self.flatten_proxy_oracle_input)
 
-            policy_storage.rewards[bool_idx] = torch.tensor(query_scores).float().to(device) - self.config["env"]["lambda"] * dens.to(device) # TODO: Set the rewards to include the density penalties...
+            
+            policy_storage.rewards[bool_idx] = (torch.tensor(query_scores).float().to(device) - self.config["env"]["lambda"] * dens.to(device)).unsqueeze(-1) # TODO: Set the rewards to include the density penalties...
             
 
         if policy_storage is not None:
-            
-            policy_storage.compute_returns()
+            # import pdb; pdb.set_trace()
+            next_value = self.policy.get_value(
+               self.policy_storage.obs[-1], self.policy_storage.recurrent_hidden_states[-1],
+               self.policy_storage.masks[-1]).detach()
 
+            policy_storage.compute_returns(next_value, self.config["ppo_config"]["use_gae"],
+                                               self.config["ppo_config"]["gamma"],
+                                               self.config["ppo_config"]["gae_lambda"],
+                                               self.config["ppo_config"]["use_proper_time_limits"])
             # # TODO: If the meta optimiser doesn't use bootstrapping... then we do this
             # policy_storage.after_rollouts() # TODO: Does this need to be activated for the results?
 

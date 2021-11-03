@@ -53,6 +53,14 @@ class PPO():
                    value_preds_batch, return_batch, masks_batch, old_action_log_probs_batch, \
                         adv_targ = sample
 
+                # import pdb; pdb.set_trace()
+                obs_batch, recurrent_hidden_states_batch, actions_batch, \
+                   value_preds_batch, return_batch, masks_batch, old_action_log_probs_batch, \
+                        adv_targ = obs_batch.detach(), recurrent_hidden_states_batch.detach(), actions_batch.detach(), \
+                        value_preds_batch.detach(), return_batch.detach(), masks_batch.detach(), old_action_log_probs_batch.detach(), \
+                        adv_targ.detach()
+
+
                 # Reshape to do in a single forward pass for all steps
                 values, action_log_probs, dist_entropy, _ = self.actor_critic.evaluate_actions(
                     obs_batch, recurrent_hidden_states_batch, masks_batch,

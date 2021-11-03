@@ -14,6 +14,7 @@ from policies.gru_policy import CategoricalGRUPolicy
 from policies.random_policy import RandomPolicy
 
 from oracles.AMP_true_oracle import AMPTrueOracle
+from oracles.AltIsing_true_oracle import AltIsingTrueOracle
 from oracles.CLAMP_true_oracle import CLAMPTrueOracle
 from oracles.proxy.AMP_proxy_oracle import AMPProxyOracle
 
@@ -107,6 +108,19 @@ class MetaLearner:
 
             else:
                 raise NotImplementedError
+        elif 'AltIsing' in self.config["task"]:
+
+            self.true_oracle = AltIsingTrueOracle()
+            self.true_oracle_model = utl.get_true_oracle_model(self.config)
+            # if 'AltIsing20' in self.config["task"]:
+            #     self.true_oracle_model = AlternatingChainIsingModel(length=20, vocab_size=20)
+            # elif 'AltIsing50' in self.config["task"]:
+            #     self.true_oracle_model = AlternatingChainIsingModel(length=50, vocab_size=20)
+            # elif 'AltIsing100' in self.config["task"]:
+            #     self.true_oracle_model = AlternatingChainIsingModel(length=100, vocab_size=20)
+            # else:
+            #     raise NotImplementedError
+
         else:
             raise NotImplementedError
 
@@ -124,7 +138,7 @@ class MetaLearner:
         else:
             self.flatten_proxy_oracle_input = False
 
-        # -- END ---
+        # --- END ---
 
         self.env = make_vec_envs(self.config["task"],
                                              num_processes=self.config["num_processes"],

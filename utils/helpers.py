@@ -10,12 +10,9 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio import SeqIO
 
-
 import json
 import random
-import torch
 import numpy as np
-
 
 
 
@@ -37,11 +34,21 @@ def get_true_oracle_model(config):
     """
         Returns an instance of TrueOracle following config
     """
-
     if config["true_oracle"]["model_name"] == 'RFC':
         model = RFC(n_estimators = config["true_oracle"]["config"]["n_estimators"])
     elif config["true_oracle"]["model_name"] == 'NN':
         model = NN()
+    elif config["true_oracle"]["model_name"] == 'AltIsing_Oracle': # Only for AltIsing Task
+
+        if 'AltIsing20' in config["task"]:
+            length=20
+        elif 'AltIsing50' in config["task"]:
+            length=50
+        elif 'AltIsing100' in config["task"]:
+            length=100
+        else:
+            raise NotImplementedError
+        model = AltIsingModel(length=length, vocab_size=20)
     else:
         raise NotImplementedError
 

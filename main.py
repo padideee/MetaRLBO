@@ -54,7 +54,8 @@ def main():
         config["exp_label"] = config["exp_label"] + "_seed-" + str(args.seed)
 
     # standard
-    if config["task"] == 'AMP-v0' or config["task"] == 'CLAMP-v0':
+    valid_tasks = ['AMP-v0', 'CLAMP-v0', 'AltIsing20-v0', 'AltIsing50-v0', 'AltIsing100-v0']
+    if config["task"] in valid_tasks:
         pass
     else:
         name = config["task"]

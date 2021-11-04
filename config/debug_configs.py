@@ -462,7 +462,7 @@ debug_med_Ising50 = {
 	"seed": 73,
 }
 
-debug_med_Ising20 = {
+debug_metarlbo_Ising20 = {
 	"task": "AltIsing20-v0",
 	"exp_label": "DEBUG-med-Ising20",
 	"num_proxies": 4, 

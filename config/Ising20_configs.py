@@ -1,10 +1,13 @@
-dynappo_001 = {
-    "exp_label": "dynappo_001",
-    "task": "AMP-v0",
+
+dynappo_ising20_001 = {
+    "exp_label": "dynappo_ising20_001",
+	"task": "AltIsing20-v0",
     "use_metalearner": False,
     "max_num_queries": 3000, # Maximum number of queries in experiment
     "query_storage_size": 100000, # Maximum number of queries allowed in the storage
     "num_updates_per_iter": 72,
+	"num_initial_samples": 500,
+	"num_query_per_iter": 500,
     "ppo_config": { # Leo: This should be merged into train_policy_config --
         "clip_param": 0.2,
         "ppo_epoch": 4,
@@ -26,8 +29,12 @@ dynappo_001 = {
     "policy": {
         "num_steps": 150,
     },  
+	"true_oracle": {
+		"model_name": "AltIsing_Oracle",
+	},
     "save_interval": 10, # Save model every n batch queries
     "num_processes": 8, 
     "results_log_dir": "./logs", 
+	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
     "seed": 73,
 }

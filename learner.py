@@ -19,6 +19,7 @@ from policies.random_policy import RandomPolicy
 
 from oracles.AMP_true_oracle import AMPTrueOracle
 from oracles.CLAMP_true_oracle import CLAMPTrueOracle
+from oracles.AltIsing_true_oracle import AltIsingTrueOracle
 from oracles.proxy.AMP_proxy_oracle import AMPProxyOracle
 
 from environments.AMP_env import AMPEnv
@@ -109,6 +110,10 @@ class Learner:
 
             else:
                 raise NotImplementedError
+        elif 'AltIsing' in self.config["task"]:
+
+            self.true_oracle = AltIsingTrueOracle()
+            self.true_oracle_model = utl.get_true_oracle_model(self.config)
         else:
             raise NotImplementedError
 

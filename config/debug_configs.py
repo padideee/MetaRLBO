@@ -422,19 +422,19 @@ debug_KNR = {
 	"seed": 73,
 }
 
-debug_med_Ising = {
+debug_med_Ising50 = {
 	"task": "AltIsing50-v0",
-	"exp_label": "DEBUG-med-Ising",
-	"num_proxies": 2, 
-	"num_inner_updates": 1,
+	"exp_label": "DEBUG-med-Ising50",
+	"num_proxies": 4, 
+	"num_inner_updates": 2,
 	"num_meta_proxy_samples": 4, 
 	"num_query_proxies": 4,
-	"num_initial_samples": 250,
+	"num_initial_samples": 500,
 	"num_samples_per_proxy": 16,
 	"num_samples_per_task_update": 8,
 	"num_query_per_iter": 20,
-	"inner_lr": 5.0,
-	"outer_lr": 0.5,
+	"inner_lr": 1.0,
+	"outer_lr": 0.1,
 	"num_meta_updates_per_iter": 1, 
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
@@ -461,6 +461,47 @@ debug_med_Ising = {
 	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
 	"seed": 73,
 }
+
+debug_med_Ising20 = {
+	"task": "AltIsing20-v0",
+	"exp_label": "DEBUG-med-Ising20",
+	"num_proxies": 4, 
+	"num_inner_updates": 2,
+	"num_meta_proxy_samples": 4, 
+	"num_query_proxies": 4,
+	"num_initial_samples": 500,
+	"num_samples_per_proxy": 16,
+	"num_samples_per_task_update": 8,
+	"num_query_per_iter": 20,
+	"inner_lr": 1.0,
+	"outer_lr": 0.1,
+	"num_meta_updates_per_iter": 1, 
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, 
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 4.0,
+		},
+		"diversity_threshold": 0, # Diversity threshold when greedily selecting molecules...
+	},
+
+	"true_oracle": {
+		"model_name": "AltIsing_Oracle",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
+	"seed": 73,
+}
+
 
 
 
@@ -663,6 +704,47 @@ debug_dynappo = {
     "policy": {
         "num_steps": 150,
     },  
+    "save_interval": 10, # Save model every n batch queries
+    "num_processes": 8, 
+    "results_log_dir": "./logs", 
+	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
+    "seed": 73,
+}
+
+
+debug_dynappo_ising20 = {
+    "exp_label": "dynappo_debug_ising20",
+	"task": "AltIsing20-v0",
+    "use_metalearner": False,
+    "max_num_queries": 3000, # Maximum number of queries in experiment
+    "query_storage_size": 100000, # Maximum number of queries allowed in the storage
+    "num_updates_per_iter": 72,
+	"num_initial_samples": 500,
+	"num_query_per_iter": 500,
+    "ppo_config": { # Leo: This should be merged into train_policy_config --
+        "clip_param": 0.2,
+        "ppo_epoch": 4,
+        "num_mini_batch": 4,
+        "value_loss_coef": 0.5,
+        "entropy_coef": 0.01,
+        "lr": 7e-4,
+        "eps": 1e-5,
+        "max_grad_norm": 0.5,
+        "use_gae": True,
+        "gamma": 0.99,
+        "gae_lambda": 0.95,
+        "use_proper_time_limits": False,
+        # "num_steps": 10,
+    },
+    "proxy_oracle": {
+        "p": 1.0, # Proportion of data to sample to train proxy oracles -- Fixed to 1.0 for DynaPPO!
+    },
+    "policy": {
+        "num_steps": 150,
+    },  
+	"true_oracle": {
+		"model_name": "AltIsing_Oracle",
+	},
     "save_interval": 10, # Save model every n batch queries
     "num_processes": 8, 
     "results_log_dir": "./logs", 

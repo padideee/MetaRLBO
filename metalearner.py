@@ -112,14 +112,6 @@ class MetaLearner:
 
             self.true_oracle = AltIsingTrueOracle()
             self.true_oracle_model = utl.get_true_oracle_model(self.config)
-            # if 'AltIsing20' in self.config["task"]:
-            #     self.true_oracle_model = AlternatingChainIsingModel(length=20, vocab_size=20)
-            # elif 'AltIsing50' in self.config["task"]:
-            #     self.true_oracle_model = AlternatingChainIsingModel(length=50, vocab_size=20)
-            # elif 'AltIsing100' in self.config["task"]:
-            #     self.true_oracle_model = AlternatingChainIsingModel(length=100, vocab_size=20)
-            # else:
-            #     raise NotImplementedError
 
         else:
             raise NotImplementedError

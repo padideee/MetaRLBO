@@ -9,7 +9,7 @@ import os
 import torch
 
 # get configs
-from config import AMP_configs, CLAMP_configs, DynaPPO_configs
+from config import AMP_configs, CLAMP_configs, Ising20_configs, Ising50_configs, Ising100_configs
 from config.default import DEFAULT_CONFIG
 from config import debug_configs
 from metalearner import MetaLearner
@@ -39,9 +39,16 @@ def main():
     elif "amp" in config_name:
         amp_config = getattr(AMP_configs, config_name)
         config = merge_dicts(DEFAULT_CONFIG, amp_config)
-    elif "dynappo" in config_name:
-        dynappo_config = getattr(DynaPPO_configs, config_name)
-        config = merge_dicts(DEFAULT_CONFIG, dynappo_config)
+    elif "ising" in config_name:
+        if "ising20" in config_name:
+            ising_config = getattr(Ising20_configs, config_name)
+        elif "ising50" in config_name:
+            ising_config = getattr(Ising50_configs, config_name)
+        elif "ising100" in config_name:
+            ising_config = getattr(Ising100_configs, config_name)
+        else:
+            raise NotImplementedError
+        config = merge_dicts(DEFAULT_CONFIG, ising_config)
     else:
         raise NotImplementedError
 

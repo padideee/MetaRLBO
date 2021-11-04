@@ -82,8 +82,8 @@ class diversity():
     def __init__(self, seq, history, div_switch="ON", radius=2, div_metric_name="hamming"):
         super(diversity, self).__init__()
         self.div_switch=div_switch
-        self.seq = seq
-        self.history = torch.stack(history)
+        self.seq = seq.to(device)
+        self.history = torch.stack(history).to(device)
         if len(self.seq.shape) == len(self.history.shape):
             self.batch_query = True # Querying in batches
         else:
@@ -115,7 +115,6 @@ class diversity():
 
     def density_hamming(self):
         if self.div_switch == "ON":
-            self.history = self.history.to(device)
             if self.batch_query:
                 # Hamming Distance is equiv. to XOR, but in our case, it's XOR/2 since we're one hot encoding characters.
                

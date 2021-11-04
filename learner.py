@@ -193,8 +193,8 @@ class Learner:
             self.env.observation_space.shape,
             self.env.action_space, # Action is a single discrete variable!
             self.policy.recurrent_hidden_state_size)  # TODO: Change to non recurrent
+        self.policy_storage.to(device)
 
-        
         self.meta_opt = optim.SGD(self.policy.parameters(), lr=self.config["outer_lr"])
         
         self.iter_idx = 0
@@ -457,12 +457,10 @@ class Learner:
 
             query_scores = oracle.query(oracle_model, query_states.cpu(), flatten_input=self.flatten_proxy_oracle_input)
 
-            
             policy_storage.rewards[bool_idx] = (torch.tensor(query_scores).float().to(device) - self.config["env"]["lambda"] * dens.to(device)).unsqueeze(-1) # TODO: Set the rewards to include the density penalties...
             
 
         if policy_storage is not None:
-            # import pdb; pdb.set_trace()
             next_value = self.policy.get_value(
                self.policy_storage.obs[-1], self.policy_storage.recurrent_hidden_states[-1],
                self.policy_storage.masks[-1]).detach()

@@ -50,6 +50,7 @@ class OnlineStorage(object):
         self.obs = self.obs.to(device)
         self.raw_obs = self.raw_obs.to(device)
         self.next_obs = self.next_obs.to(device)
+        self.raw_next_obs = self.raw_next_obs.to(device)
         self.recurrent_hidden_states = self.recurrent_hidden_states.to(device)
         self.rewards = self.rewards.to(device)
         self.value_preds = self.value_preds.to(device)

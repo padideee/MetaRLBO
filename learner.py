@@ -241,7 +241,7 @@ class Learner:
                 
                 st_time = time.time()
 
-                sampled_mols, logs = self.sample_query_mols(logs, self.config["num_query_proxies"], self.config["num_samples_per_proxy"])
+                sampled_mols, logs = self.sample_query_mols(logs, self.config["num_query_proxies"], num_samples=self.config["num_samples_per_iter"])
 
                 logs["timing/sample_query_mols"] = time.time() - st_time
                 st_time = time.time()
@@ -343,12 +343,12 @@ class Learner:
 
         return logs
 
-    def sample_query_mols(self, logs, num_query_proxies, num_samples_per_proxy):
+    def sample_query_mols(self, logs, num_query_proxies, num_samples):
 
         # Sample mols (and query) for training the proxy oracles later
         sampled_mols = self.sample_policy(self.policy, self.proxy_oracle, self.proxy_oracle_model, 
                                                 num_steps=self.config["policy"]["num_steps"],
-                                                num_samples=num_samples_per_proxy).detach()
+                                                num_samples=num_samples).detach()
 
         return sampled_mols, logs
 

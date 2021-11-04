@@ -1,7 +1,7 @@
 
 dynappo_ising100_001 = {
     "exp_label": "dynappo_ising100_001",
-	"task": "AltIsing20-v0",
+	"task": "AltIsing100-v0",
     "use_metalearner": False,
     "max_num_queries": 8000, # Maximum number of queries in experiment
     "query_storage_size": 100000, # Maximum number of queries allowed in the storage

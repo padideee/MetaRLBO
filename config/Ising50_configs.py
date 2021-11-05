@@ -8,6 +8,7 @@ dynappo_ising50_001 = {
     "num_updates_per_iter": 72,
     "num_initial_samples": 500,
     "num_query_per_iter": 500,
+    "num_samples_per_iter": 800,
     "ppo_config": { # Leo: This should be merged into train_policy_config --
         "clip_param": 0.2,
         "ppo_epoch": 4,

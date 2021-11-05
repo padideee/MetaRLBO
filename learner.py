@@ -449,7 +449,7 @@ class Learner:
             bool_idx = policy_storage.dones[:-1].bool().squeeze(-1)
             query_states = policy_storage.raw_next_obs[:-1][bool_idx] # Leo: TODO
 
-            dens = diversity(query_states, 
+            dens = diversity(query_states.cpu(), 
                                 self.query_history, 
                                 div_switch=self.config["diversity"]["div_switch"], 
                                 radius=self.config["env"]["radius"], 

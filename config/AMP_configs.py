@@ -31,10 +31,10 @@ dynappo_amp_001 = {
         "p": 1.0, # Proportion of data to sample to train proxy oracles -- Fixed to 1.0 for DynaPPO!
     },
     "policy": {
-        "num_steps": 150,
+        "num_steps": 200,
     },  
     "save_interval": 10, # Save model every n batch queries
-    "num_processes": 8, 
+    "num_processes": 16, 
     "results_log_dir": "./logs", 
     "seed": 73,
 }

@@ -30,13 +30,13 @@ dynappo_ising20_001 = {
         "p": 1.0, # Proportion of data to sample to train proxy oracles -- Fixed to 1.0 for DynaPPO!
     },
     "policy": {
-        "num_steps": 150,
+        "num_steps": 200,
     },  
 	"true_oracle": {
 		"model_name": "AltIsing_Oracle",
 	},
     "save_interval": 10, # Save model every n batch queries
-    "num_processes": 8, 
+    "num_processes": 16, 
     "results_log_dir": "./logs", 
 	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
     "seed": 73,

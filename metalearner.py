@@ -634,7 +634,8 @@ class MetaLearner:
         valid_idx = []
         for i in range(mols.shape[0]):
             seq = enc_to_seq(torch.tensor(mols[i]))
-            seq = seq[:seq.find(">")]
+            if seq.find(">") != -1:
+                seq = seq[:seq.find(">")]
 
             if seq not in self.D_train.mols_set:
                 valid_idx.append(i)

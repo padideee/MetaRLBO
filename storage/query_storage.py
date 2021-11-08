@@ -37,8 +37,8 @@ class QueryStorage(BaseStorage):
         for i in range(x.shape[0]):
             from data.dynappo_data import enc_to_seq
             seq = enc_to_seq(x[i])
-            seq = seq[:seq.find(">")]
-            
+            if seq.find(">") != -1:
+                seq = seq[:seq.find(">")]
             if seq not in self.mols_set:
                 valid_idx.append(i)
                 self.mols_set.add(seq)

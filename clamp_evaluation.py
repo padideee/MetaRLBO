@@ -111,7 +111,8 @@ class Evaluation:
 
         for i in range(len(mols)):
             seq = enc_to_seq(torch.tensor(mols[i]))
-            seq = seq[:seq.find(">")]
+            if seq.find(">") != -1:
+                seq = seq[:seq.find(">")]
             ret.append(seq)
 
         return ret

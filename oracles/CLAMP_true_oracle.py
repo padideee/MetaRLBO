@@ -36,7 +36,9 @@ class CLAMPTrueOracle(BaseOracle):
         for i in range(batch_size):
             seq = enc_to_seq(x[i])
 
-            seq = seq[:seq.find(">")]
+            if seq.find(">") != -1:
+                seq = seq[:seq.find(">")]
+            
             seqs.append(seq)
 
         print(seqs)

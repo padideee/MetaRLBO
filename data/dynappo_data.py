@@ -26,7 +26,7 @@ def seq_to_enc(seq):
 
 def enc_to_seq(enc):
     """
-        Converts encoding (50, 21) to string...
+        Converts encoding (enc_len, 21) to string...
     """
     enc = torch.argmax(enc, -1)
     seq = []

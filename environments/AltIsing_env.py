@@ -35,7 +35,6 @@ class AltIsingEnv(gym.Env):
         self.query_history = None
         self.evaluate = {'seq': [], 'embed_seq': [], 'reward': [], 'pred_prob': []}
 
-        self.max_length = max_length
         self.reward_oracle = None
         self.reward_oracle_model = None
         self.proxy_oracles = []
@@ -74,14 +73,11 @@ class AltIsingEnv(gym.Env):
         
         self.curr_state[self.time_step] = F.one_hot(action, num_classes = self.num_actions)
 
-        queried = False
-        done = (self.time_step + 1 == self.max_length)
-
-
         self.time_step += 1
+        done = (self.time_step == self.max_length)
 
         # Info must be a dictionary
-        info = {"action": action, "state": self.curr_state, "pred_prob": pred_prob, "queried": queried, "density_penalty": density_penalty}
+        info = {"action": action, "state": self.curr_state, "pred_prob": pred_prob, "queried": False, "density_penalty": density_penalty}
 
         return(self.curr_state, reward, done, info)
 

@@ -36,7 +36,7 @@ dynappo_ising20_001 = {
 		"model_name": "AltIsing_Oracle",
 	},
     "save_interval": 10, # Save model every n batch queries
-    "num_processes": 16, 
+    "num_processes": 8,
     "results_log_dir": "./logs", 
 	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
     "seed": 73,

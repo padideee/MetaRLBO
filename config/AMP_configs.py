@@ -12,6 +12,7 @@ dynappo_amp_001 = {
     "num_updates_per_iter": 72,
     "num_initial_samples": 250,
     "num_query_per_iter": 250,
+    'num_samples_per_iter': 300,
     "ppo_config": { # Leo: This should be merged into train_policy_config --
         "clip_param": 0.2,
         "ppo_epoch": 4,
@@ -34,7 +35,7 @@ dynappo_amp_001 = {
         "num_steps": 200,
     },  
     "save_interval": 10, # Save model every n batch queries
-    "num_processes": 16, 
+    "num_processes": 8, 
     "results_log_dir": "./logs", 
     "seed": 73,
 }

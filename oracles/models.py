@@ -8,6 +8,7 @@ from sklearn.gaussian_process.kernels import RBF, RationalQuadratic, Matern
 from oracles.custom_models.GPR import CustomGPR
 from oracles.custom_models.dynappo_ensemble import DynaPPOEnsemble
 from oracles.custom_models.alt_ising_model import AlternatingChainIsingModel
+from oracles.custom_models.MLP_model import MLPProxyModel
 # Classifiers
 
 def RFC(n_estimators=200):
@@ -78,3 +79,10 @@ def Ensemble():
 
 def AltIsingModel(length=50, vocab_size=20):
     return AlternatingChainIsingModel(length=length, vocab_size=vocab_size)
+
+
+def MLP(device = None): # TODO: Setup so we can use the device...
+  if device is None:
+    import torch
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+  return MLPProxyModel(device)

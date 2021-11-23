@@ -20,7 +20,7 @@ class AMPProxyOracle(BaseOracle):
 			  - (batch_size, ) -- Probability of it being "AMP"
 		"""
 		if flatten_input:
-			x = x.flatten(start_dim=-2, end_dim = -1)
+			x = x.flatten(-2, -1)
 
 		return model.predict(x, **kwargs) # Regressor 
 

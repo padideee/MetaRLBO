@@ -120,6 +120,8 @@ def get_proxy_oracle_model(config):
         model = XGB()
     elif config["proxy_oracle"]["model_name"] == 'GPR':
         model = GPR(kernel = config["proxy_oracle"]["config"]["kernel"])
+    elif config["proxy_oracle"]["model_name"] == 'MLP':
+        model = MLP()
     else:
         raise NotImplementedError
 

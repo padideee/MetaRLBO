@@ -478,7 +478,7 @@ debug_metarlbo_Ising20 = {
 	"num_meta_updates_per_iter": 1, 
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
-		"model_name": "KNR",
+		"model_name": "MLP",
 		"p": 0.8, 
 	},
 	"outerloop": {

@@ -125,10 +125,11 @@ class MetaLearner:
         else:
             self.flatten_true_oracle_input = False
 
-        if self.config["proxy_oracle"]["model_name"] == 'RFR' or 'KNR' or 'RR':
-            self.flatten_proxy_oracle_input = True
-        else:
-            self.flatten_proxy_oracle_input = False
+        # if self.config["proxy_oracle"]["model_name"] == 'RFR' or 'KNR' or 'RR' or "MLP":
+        #     self.flatten_proxy_oracle_input = True
+        # else:
+        #     self.flatten_proxy_oracle_input = False
+        self.flatten_proxy_oracle_input = True
 
         # --- END ---
 
@@ -605,7 +606,7 @@ class MetaLearner:
                                 div_metric_name=self.config["diversity"]["div_metric_name"]).get_density()            
 
             query_scores = oracle.query(oracle_model, query_states.cpu(), flatten_input=self.flatten_proxy_oracle_input)
-
+            # import pdb; pdb.set_trace()
             policy_storage.rewards[bool_idx] = torch.tensor(query_scores).float().to(device) - self.config["env"]["lambda"] * dens.to(device) # TODO: Set the rewards to include the density penalties...
             
 

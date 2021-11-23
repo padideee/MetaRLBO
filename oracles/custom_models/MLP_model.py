@@ -53,8 +53,8 @@ class MLPProxyModel(RegressorMixin):
     def __init__(self, device, **kwargs):
         super().__init__(**kwargs)
         self.model = MLP()
-        self.batch_size = 32
-        self.nEpochs = 20
+        self.batch_size = 50
+        self.nEpochs = 10
         self.device = device
 
         self.model.to(self.device)

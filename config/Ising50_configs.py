@@ -712,3 +712,81 @@ metarlbo_ising50_014 = {  # MLP Experiment... More inner loop updates compared t
     "results_log_dir": "./logs",
     "seed": 73,
 }
+
+
+metarlbo_ising50_015 = {  # MLP Experiment... More inner loop updates compared to 001
+    "exp_label": "MetaRLBO-Ising50-MLP-015",
+    "task": "AltIsing50-v0",
+    "num_proxies": 4, 
+    "max_num_queries": 8000, # Maximum number of queries in experiment
+    "num_inner_updates": 2,
+    "num_initial_samples": 500,
+    "num_query_proxies": 32,
+    "num_samples_per_proxy": 75,
+    "num_query_per_iter": 500,
+    "inner_lr": 5.0,
+    "outer_lr": 0.5,
+    "num_meta_updates_per_iter": 30,
+    "entropy_reg_coeff": 1.0,
+    "proxy_oracle": {
+        "model_name": "MLP",
+        "p": 0.8, 
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB", 
+        "config": {
+            'beta': 4.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+
+metarlbo_ising50_016 = {  # MLP Experiment... More inner loop updates compared to 001
+    "exp_label": "MetaRLBO-Ising50-MLP-016",
+    "task": "AltIsing50-v0",
+    "num_proxies": 4, 
+    "max_num_queries": 8000, # Maximum number of queries in experiment
+    "num_inner_updates": 2,
+    "num_initial_samples": 500,
+    "num_query_proxies": 32,
+    "num_samples_per_proxy": 75,
+    "num_query_per_iter": 500,
+    "inner_lr": 5.0,
+    "outer_lr": 0.5,
+    "num_meta_updates_per_iter": 30,
+    "entropy_reg_coeff": 0.5,
+    "proxy_oracle": {
+        "model_name": "MLP",
+        "p": 0.8, 
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB", 
+        "config": {
+            'beta': 4.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}

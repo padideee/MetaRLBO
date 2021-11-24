@@ -52,6 +52,7 @@ class MetaLearner:
     def __init__(self, config, use_logger=True):
         self.config = config
         self.device = device
+        torch.multiprocessing.set_start_method('spawn')
         # initialise tensorboard logger
         self.use_logger = use_logger
         if self.use_logger:

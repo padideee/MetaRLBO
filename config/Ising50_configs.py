@@ -790,3 +790,198 @@ metarlbo_ising50_016 = {  # MLP Experiment... More inner loop updates compared t
     "results_log_dir": "./logs",
     "seed": 73,
 }
+
+
+metarlbo_ising50_017 = {  # Copy general configs from AMP-KNR-003
+    "exp_label": "MetaRLBO-Ising50-MLP-017",
+    "task": "AltIsing50-v0",
+    "num_proxies": 4, 
+    "max_num_queries": 5000, # Maximum number of queries in experiment
+    "num_inner_updates": 1,
+    "num_initial_samples": 500,
+    "num_query_proxies": 32,
+    "num_samples_per_proxy": 75,
+    "num_query_per_iter": 500,
+    "inner_lr": 2.0,
+    "outer_lr": 0.2,
+    "num_meta_updates_per_iter": 30,
+    "entropy_reg_coeff": 0.0,
+    "proxy_oracle": {
+        "model_name": "MLP",
+        "p": 0.8, 
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB", 
+        "config": {
+            'beta': 4.0,
+        },
+        "diversity_threshold": 10, # Diversity threshold when greedily selecting molecules...
+    },
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+
+metarlbo_ising50_018 = {  # Increase number of meta updates
+    "exp_label": "MetaRLBO-Ising50-MLP-018",
+    "task": "AltIsing50-v0",
+    "num_proxies": 4, 
+    "max_num_queries": 5000, # Maximum number of queries in experiment
+    "num_inner_updates": 1,
+    "num_initial_samples": 500,
+    "num_query_proxies": 32,
+    "num_samples_per_proxy": 75,
+    "num_query_per_iter": 500,
+    "inner_lr": 2.0,
+    "outer_lr": 0.2,
+    "num_meta_updates_per_iter": 40,
+    "entropy_reg_coeff": 0.0,
+    "proxy_oracle": {
+        "model_name": "MLP",
+        "p": 0.8, 
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB", 
+        "config": {
+            'beta': 4.0,
+        },
+        "diversity_threshold": 10, # Diversity threshold when greedily selecting molecules...
+    },
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+
+metarlbo_ising50_019 = {  # Decrease beta
+    "exp_label": "MetaRLBO-Ising50-MLP-019",
+    "task": "AltIsing50-v0",
+    "num_proxies": 4, 
+    "max_num_queries": 5000, # Maximum number of queries in experiment
+    "num_inner_updates": 1,
+    "num_initial_samples": 500,
+    "num_query_proxies": 32,
+    "num_samples_per_proxy": 75,
+    "num_query_per_iter": 500,
+    "inner_lr": 2.0,
+    "outer_lr": 0.2,
+    "num_meta_updates_per_iter": 40,
+    "entropy_reg_coeff": 0.0,
+    "proxy_oracle": {
+        "model_name": "MLP",
+        "p": 0.8, 
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB", 
+        "config": {
+            'beta': 2.0,
+        },
+        "diversity_threshold": 10, # Diversity threshold when greedily selecting molecules...
+    },
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+
+
+metarlbo_ising50_020 = {  # Decrease diversity threshold
+    "exp_label": "MetaRLBO-Ising50-MLP-020",
+    "task": "AltIsing50-v0",
+    "num_proxies": 4, 
+    "max_num_queries": 5000, # Maximum number of queries in experiment
+    "num_inner_updates": 1,
+    "num_initial_samples": 500,
+    "num_query_proxies": 32,
+    "num_samples_per_proxy": 75,
+    "num_query_per_iter": 500,
+    "inner_lr": 2.0,
+    "outer_lr": 0.2,
+    "num_meta_updates_per_iter": 40,
+    "entropy_reg_coeff": 0.0,
+    "proxy_oracle": {
+        "model_name": "MLP",
+        "p": 0.8, 
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB", 
+        "config": {
+            'beta': 2.0,
+        },
+        "diversity_threshold": 4, # Diversity threshold when greedily selecting molecules...
+    },
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+metarlbo_ising50_021 = {  # Decrease diversity threshold further
+    "exp_label": "MetaRLBO-Ising50-MLP-021",
+    "task": "AltIsing50-v0",
+    "num_proxies": 4, 
+    "max_num_queries": 5000, # Maximum number of queries in experiment
+    "num_inner_updates": 1,
+    "num_initial_samples": 500,
+    "num_query_proxies": 32,
+    "num_samples_per_proxy": 75,
+    "num_query_per_iter": 500,
+    "inner_lr": 2.0,
+    "outer_lr": 0.2,
+    "num_meta_updates_per_iter": 40,
+    "entropy_reg_coeff": 0.0,
+    "proxy_oracle": {
+        "model_name": "MLP",
+        "p": 0.8, 
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB", 
+        "config": {
+            'beta': 2.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}

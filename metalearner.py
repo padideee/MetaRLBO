@@ -164,7 +164,7 @@ class MetaLearner:
                                                    "state_embedding_size"],
                                                ).to(device)
         elif self.config["policy"]["model_name"] == "MLP":
-            from policies.mlp_policy import Policy as MLPPolicy
+            from policies.mlp_policy_no_critic import Policy as MLPPolicy
             self.policy = MLPPolicy((self.env.observation_space.shape[0] * self.env.observation_space.shape[1],),
                                     self.env.action_space).to(device)
         elif self.config["policy"]["model_name"] == "RANDOM":
@@ -374,7 +374,7 @@ class MetaLearner:
         self.proxy_oracle_models = [utl.get_proxy_oracle_model(self.config) for j in range(num_proxies)]
 
 
-        self.meta_opt.zero_grad()
+        # self.meta_opt.zero_grad()
         inner_opt = optim.SGD(self.policy.parameters(), lr=self.config["inner_lr"])
 
 
@@ -862,6 +862,7 @@ class MetaLearner:
         old_loss, _, old_pis = self.surrogate_loss(episodes)
         # this part will take higher order gradients through the inner loop:
         grads = torch.autograd.grad(old_loss, self.policy.parameters())
+
         grads = parameters_to_vector(grads)
 
         # Compute the step direction with Conjugate Gradient

@@ -748,6 +748,237 @@ metarlbo_amp_mlp_008 = { # Increase number of inner loop updates
 
 
 
+
+
+######### Try MetaRLBO w/ TRPO
+
+
+metarlbo_amp_mlp_trpo_001 = { # This is a copy of mlp_005 (but a trpo version)
+	"exp_label": "MetaRLBO-AMP-MLP-TRPO-001",
+	"num_proxies": 8,
+	"num_inner_updates": 1,
+	"num_initial_samples": 250,
+	"num_query_proxies": 32,
+	"num_samples_per_proxy": 75,
+	"num_query_per_iter": 250,
+	"inner_lr": 2.0,
+	"num_meta_updates_per_iter": 30,
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, 
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 4.0,
+		},
+		"diversity_threshold": 10, # Diversity threshold when greedily selecting molecules...
+	},
+	"metalearner": {
+		"method": "TRPO",  # REINFORCE or TRPO
+		"tau": 1.0,
+		"gamma": 0.99,
+		"max_kl": 1e-2,
+		"cg_iters": 10,
+		"cg_damping": 1e-5,
+		"ls_max_steps": 15,
+		"ls_backtrack_ratio": 0.8,
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+metarlbo_amp_mlp_trpo_002 = { # vs. 001 -- More meta updates (70 instead of 30)
+	"exp_label": "MetaRLBO-AMP-MLP-TRPO-002",
+	"num_proxies": 8,
+	"num_inner_updates": 1,
+	"num_initial_samples": 250,
+	"num_query_proxies": 32,
+	"num_samples_per_proxy": 75,
+	"num_query_per_iter": 250,
+	"inner_lr": 2.0,
+	"num_meta_updates_per_iter": 70,
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, 
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 4.0,
+		},
+		"diversity_threshold": 10, # Diversity threshold when greedily selecting molecules...
+	},
+	"metalearner": {
+		"method": "TRPO",  # REINFORCE or TRPO
+		"tau": 1.0,
+		"gamma": 0.99,
+		"max_kl": 1e-2,
+		"cg_iters": 10,
+		"cg_damping": 1e-5,
+		"ls_max_steps": 15,
+		"ls_backtrack_ratio": 0.8,
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+metarlbo_amp_mlp_trpo_003 = { # vs. 002 -- Higher inner lr (20.0 vs 2.0)
+	"exp_label": "MetaRLBO-AMP-MLP-TRPO-003",
+	"num_proxies": 8,
+	"num_inner_updates": 1,
+	"num_initial_samples": 250,
+	"num_query_proxies": 32,
+	"num_samples_per_proxy": 75,
+	"num_query_per_iter": 250,
+	"inner_lr": 20.0,
+	"num_meta_updates_per_iter": 70,
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, 
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 4.0,
+		},
+		"diversity_threshold": 10, # Diversity threshold when greedily selecting molecules...
+	},
+	"metalearner": {
+		"method": "TRPO",  # REINFORCE or TRPO
+		"tau": 1.0,
+		"gamma": 0.99,
+		"max_kl": 1e-2,
+		"cg_iters": 10,
+		"cg_damping": 1e-5,
+		"ls_max_steps": 15,
+		"ls_backtrack_ratio": 0.8,
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+
+metarlbo_amp_mlp_trpo_004 = { # vs. 002 -- Higher inner lr (5.0 vs 2.0)
+	"exp_label": "MetaRLBO-AMP-MLP-TRPO-004",
+	"num_proxies": 8,
+	"num_inner_updates": 1,
+	"num_initial_samples": 250,
+	"num_query_proxies": 32,
+	"num_samples_per_proxy": 75,
+	"num_query_per_iter": 250,
+	"inner_lr": 2.0,
+	"num_meta_updates_per_iter": 70,
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, 
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 4.0,
+		},
+		"diversity_threshold": 10, # Diversity threshold when greedily selecting molecules...
+	},
+	"metalearner": {
+		"method": "TRPO",  # REINFORCE or TRPO
+		"tau": 1.0,
+		"gamma": 0.99,
+		"max_kl": 1e-2,
+		"cg_iters": 10,
+		"cg_damping": 1e-5,
+		"ls_max_steps": 15,
+		"ls_backtrack_ratio": 0.8,
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+metarlbo_amp_mlp_trpo_005 = { # vs. 002 -- Lower inner lr (0.5 vs 2.0)
+	"exp_label": "MetaRLBO-AMP-MLP-TRPO-005",
+	"num_proxies": 8,
+	"num_inner_updates": 1,
+	"num_initial_samples": 250,
+	"num_query_proxies": 32,
+	"num_samples_per_proxy": 75,
+	"num_query_per_iter": 250,
+	"inner_lr": 0.5,
+	"num_meta_updates_per_iter": 70,
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, 
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 4.0,
+		},
+		"diversity_threshold": 10, # Diversity threshold when greedily selecting molecules...
+	},
+	"metalearner": {
+		"method": "TRPO",  # REINFORCE or TRPO
+		"tau": 1.0,
+		"gamma": 0.99,
+		"max_kl": 1e-2,
+		"cg_iters": 10,
+		"cg_damping": 1e-5,
+		"ls_max_steps": 15,
+		"ls_backtrack_ratio": 0.8,
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
 # ======================= Old configs
 
 

@@ -750,7 +750,7 @@ metarlbo_amp_mlp_008 = { # Increase number of inner loop updates
 
 
 metarlbo_amp_cnn_001 = { # Same as MLP-005 (but with CNNs)
-	"exp_label": "MetaRLBO-AMP-MLP-001",
+	"exp_label": "MetaRLBO-AMP-CNN-001",
 	"num_proxies": 8,
 	"num_inner_updates": 1,
 	"num_initial_samples": 250,
@@ -787,7 +787,7 @@ metarlbo_amp_cnn_001 = { # Same as MLP-005 (but with CNNs)
 
 
 metarlbo_amp_cnn_002 = { # Same as 001 but more meta updates
-	"exp_label": "MetaRLBO-AMP-MLP-002",
+	"exp_label": "MetaRLBO-AMP-CNN-002",
 	"num_proxies": 8,
 	"num_inner_updates": 1,
 	"num_initial_samples": 250,

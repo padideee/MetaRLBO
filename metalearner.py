@@ -67,7 +67,7 @@ class MetaLearner:
         # seq shape: (batch, 46*21)
         # label shape: (batch) -> in binary format:{'positive': AMP, 'negative': not AMP}
 
-
+        self.config = utl.setup_task_configs(self.config)
 
         if self.config["task"] == "AMP-v0":
             if self.config["data_source"] == 'DynaPPO':
@@ -130,7 +130,10 @@ class MetaLearner:
         #     self.flatten_proxy_oracle_input = True
         # else:
         #     self.flatten_proxy_oracle_input = False
-        self.flatten_proxy_oracle_input = True
+        if self.config["proxy_oracle"]["model_name"] == "CNN":
+            self.flatten_proxy_oracle_input = False
+        else:    
+            self.flatten_proxy_oracle_input = True
 
         # --- END ---
 

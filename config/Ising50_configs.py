@@ -1118,3 +1118,135 @@ metarlbo_ising50_024 = {  # Copy 22 -> (increase number of meta updates)
     "results_log_dir": "./logs",
     "seed": 73,
 }
+
+
+
+metarlbo_ising50_025 = {  # Copy KNR-008 (and MLP-022) -> (Make into CNN version) -- Direct comparison between CNN and (MLP and KNR)
+    "exp_label": "MetaRLBO-Ising50-MLP-025",
+    "task": "AltIsing50-v0",
+    "num_proxies": 4, 
+    "max_num_queries": 8000, # Maximum number of queries in experiment
+    "num_inner_updates": 1,
+    "num_initial_samples": 500,
+    "num_query_proxies": 32,
+    "num_samples_per_proxy": 75,
+    "num_query_per_iter": 500,
+    "inner_lr": 2.0,
+    "outer_lr": 0.2,
+    "num_meta_updates_per_iter": 30,
+    "entropy_reg_coeff": 0.0,
+    "proxy_oracle": {
+        "model_name": "CNN",
+        "p": 0.8, 
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB", 
+        "config": {
+            'beta': 4.0,
+        },
+        "diversity_threshold": 10, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": 0.0, # Diversity hyperparameter -- higher is more penalty for more similar mols. -- essentially no penalty...
+        "radius": 2, 
+    },
+
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+
+metarlbo_ising50_026 = {  # Same as 025 but with more meta updates
+    "exp_label": "MetaRLBO-Ising50-MLP-026",
+    "task": "AltIsing50-v0",
+    "num_proxies": 4, 
+    "max_num_queries": 8000, # Maximum number of queries in experiment
+    "num_inner_updates": 1,
+    "num_initial_samples": 500,
+    "num_query_proxies": 32,
+    "num_samples_per_proxy": 75,
+    "num_query_per_iter": 500,
+    "inner_lr": 2.0,
+    "outer_lr": 0.2,
+    "num_meta_updates_per_iter": 50,
+    "entropy_reg_coeff": 0.0,
+    "proxy_oracle": {
+        "model_name": "CNN",
+        "p": 0.8, 
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB", 
+        "config": {
+            'beta': 4.0,
+        },
+        "diversity_threshold": 10, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": 0.0, # Diversity hyperparameter -- higher is more penalty for more similar mols. -- essentially no penalty...
+        "radius": 2, 
+    },
+
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+metarlbo_ising50_027 = {  # Same as 026 but with no diversity threshold
+    "exp_label": "MetaRLBO-Ising50-MLP-027",
+    "task": "AltIsing50-v0",
+    "num_proxies": 4, 
+    "max_num_queries": 8000, # Maximum number of queries in experiment
+    "num_inner_updates": 1,
+    "num_initial_samples": 500,
+    "num_query_proxies": 32,
+    "num_samples_per_proxy": 75,
+    "num_query_per_iter": 500,
+    "inner_lr": 2.0,
+    "outer_lr": 0.2,
+    "num_meta_updates_per_iter": 50,
+    "entropy_reg_coeff": 0.0,
+    "proxy_oracle": {
+        "model_name": "CNN",
+        "p": 0.8, 
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB", 
+        "config": {
+            'beta': 4.0,
+        },
+        "diversity_threshold": 10, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": 0.0, # Diversity hyperparameter -- higher is more penalty for more similar mols. -- essentially no penalty...
+        "radius": 2, 
+    },
+
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}

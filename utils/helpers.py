@@ -39,7 +39,19 @@ def get_true_oracle_model(config):
     elif config["true_oracle"]["model_name"] == 'NN':
         model = NN()
     elif config["true_oracle"]["model_name"] == 'AltIsing_Oracle': # Only for AltIsing Task
+        model = AltIsingModel(length=config["task_config"]["seq_len"], vocab_size=20)
+    else:
+        raise NotImplementedError
 
+
+    return model
+
+
+def setup_task_configs(config):
+    config["task_config"] = {}
+    if config["task"] == "AMP-v0":
+        config["task_config"]["seq_len"], config["task_config"]["alphabet_len"] = 50, 21
+    elif 'AltIsing' in config["task"]:
         if 'AltIsing20' in config["task"]:
             length=20
         elif 'AltIsing50' in config["task"]:
@@ -48,12 +60,12 @@ def get_true_oracle_model(config):
             length=100
         else:
             raise NotImplementedError
-        model = AltIsingModel(length=length, vocab_size=20)
+        config["task_config"]["seq_len"], config["task_config"]["alphabet_len"] = length, 20
     else:
         raise NotImplementedError
 
+    return config
 
-    return model
 
 def seed(seed, deterministic_execution=False):
     print('Seeding random, torch, numpy.')
@@ -121,7 +133,9 @@ def get_proxy_oracle_model(config):
     elif config["proxy_oracle"]["model_name"] == 'GPR':
         model = GPR(kernel = config["proxy_oracle"]["config"]["kernel"])
     elif config["proxy_oracle"]["model_name"] == 'MLP':
-        model = MLP()
+        model = MLP(seq_len=config["task_config"]["seq_len"], alphabet_len=config["task_config"]["alphabet_len"])
+    elif config["proxy_oracle"]["model_name"] == 'CNN':
+        model = CNN(seq_len=config["task_config"]["seq_len"], alphabet_len=config["task_config"]["alphabet_len"])
     else:
         raise NotImplementedError
 

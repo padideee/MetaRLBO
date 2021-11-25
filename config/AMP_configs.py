@@ -762,7 +762,7 @@ metarlbo_amp_cnn_001 = { # Same as MLP-005 (but with CNNs)
 	"num_meta_updates_per_iter": 30,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
-		"model_name": "KNR",
+		"model_name": "CNN",
 		"p": 0.8, 
 	},
 	"outerloop": {
@@ -799,7 +799,7 @@ metarlbo_amp_cnn_002 = { # Same as 001 but more meta updates
 	"num_meta_updates_per_iter": 50,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
-		"model_name": "KNR",
+		"model_name": "CNN",
 		"p": 0.8, 
 	},
 	"outerloop": {

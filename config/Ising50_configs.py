@@ -1122,7 +1122,7 @@ metarlbo_ising50_024 = {  # Copy 22 -> (increase number of meta updates)
 
 
 metarlbo_ising50_025 = {  # Copy KNR-008 (and MLP-022) -> (Make into CNN version) -- Direct comparison between CNN and (MLP and KNR)
-    "exp_label": "MetaRLBO-Ising50-MLP-025",
+    "exp_label": "MetaRLBO-Ising50-CNN-025",
     "task": "AltIsing50-v0",
     "num_proxies": 4, 
     "max_num_queries": 8000, # Maximum number of queries in experiment
@@ -1166,7 +1166,7 @@ metarlbo_ising50_025 = {  # Copy KNR-008 (and MLP-022) -> (Make into CNN version
 
 
 metarlbo_ising50_026 = {  # Same as 025 but with more meta updates
-    "exp_label": "MetaRLBO-Ising50-MLP-026",
+    "exp_label": "MetaRLBO-Ising50-CNN-026",
     "task": "AltIsing50-v0",
     "num_proxies": 4, 
     "max_num_queries": 8000, # Maximum number of queries in experiment
@@ -1209,7 +1209,7 @@ metarlbo_ising50_026 = {  # Same as 025 but with more meta updates
 }
 
 metarlbo_ising50_027 = {  # Same as 026 but with no diversity threshold
-    "exp_label": "MetaRLBO-Ising50-MLP-027",
+    "exp_label": "MetaRLBO-Ising50-CNN-027",
     "task": "AltIsing50-v0",
     "num_proxies": 4, 
     "max_num_queries": 8000, # Maximum number of queries in experiment

@@ -1004,7 +1004,7 @@ metarlbo_ising20_021 = { # Same as 020 -- but increase the learning rate (5.0 an
 
 
 metarlbo_ising20_022 = { # Copy 006 but use CNN instead
-    "exp_label": "MetaRLBO-Ising20-KNR-022",
+    "exp_label": "MetaRLBO-Ising20-CNN-022",
     "task": "AltIsing20-v0",
     "num_proxies": 4, 
     "max_num_queries": 8000, # Maximum number of queries in experiment
@@ -1043,7 +1043,7 @@ metarlbo_ising20_022 = { # Copy 006 but use CNN instead
 
 
 metarlbo_ising20_023 = { # Same as 019 but lambda = 0 and proxy oracle is CNN
-    "exp_label": "MetaRLBO-Ising20-MLP-023",
+    "exp_label": "MetaRLBO-Ising20-CNN-023",
     "task": "AltIsing20-v0",
     "num_proxies": 4, 
     "max_num_queries": 8000, # Maximum number of queries in experiment 
@@ -1085,7 +1085,7 @@ metarlbo_ising20_023 = { # Same as 019 but lambda = 0 and proxy oracle is CNN
 }
 
 metarlbo_ising20_024 = { # Same as 023 but no entropy reg coeff
-    "exp_label": "MetaRLBO-Ising20-MLP-024",
+    "exp_label": "MetaRLBO-Ising20-CNN-024",
     "task": "AltIsing20-v0",
     "num_proxies": 4, 
     "max_num_queries": 8000, # Maximum number of queries in experiment 

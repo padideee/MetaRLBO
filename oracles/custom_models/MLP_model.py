@@ -72,7 +72,7 @@ class MLPProxyModel(RegressorMixin):
         self.model = MLP()
         self.model.to(self.device)
 
-        opt = optim.SGD(self.model.parameters(), lr=0.01)
+        opt = optim.Adam(self.model.parameters())
 
         nData = X.shape[0]
 

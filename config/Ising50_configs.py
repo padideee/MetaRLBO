@@ -1356,7 +1356,7 @@ metarlbo_ising50_030 = {  # Same as 25 but with entropy regularization
     "entropy_reg_coeff": 10.0,
     "proxy_oracle": {
         "model_name": "CNN",
-        "p": 0.8, 
+        "p": 0.7, 
     },
     "outerloop": {
         "oracle": "proxy",
@@ -1372,6 +1372,310 @@ metarlbo_ising50_030 = {  # Same as 25 but with entropy regularization
     "env": { # See DynaPPO paper for these configs
         "lambda": 0.0, # Diversity hyperparameter -- higher is more penalty for more similar mols. -- essentially no penalty...
         "radius": 2, 
+    },
+
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+
+metarlbo_ising50_031 = {  # Copy 030 - but with a larger lambda (0 -> 1) and not diversity threshold
+    "exp_label": "MetaRLBO-Ising50-MLP-031",
+    "task": "AltIsing50-v0",
+    "num_proxies": 4, 
+    "max_num_queries": 8000, # Maximum number of queries in experiment
+    "num_inner_updates": 1,
+    "num_initial_samples": 500,
+    "num_query_proxies": 32,
+    "num_samples_per_proxy": 75,
+    "num_query_per_iter": 500,
+    "inner_lr": 2.0,
+    "outer_lr": 0.2,
+    "num_meta_updates_per_iter": 30,
+    "entropy_reg_coeff": 0.0,
+    "proxy_oracle": {
+        "model_name": "MLP",
+        "p": 0.7, 
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB", 
+        "config": {
+            'beta': 4.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": 1.0, # Diversity hyperparameter -- higher is more penalty for more similar mols. -- essentially no penalty...
+        "radius": 2, 
+    },
+
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+metarlbo_ising50_032 = {  # Copy 030 - but with a larger lambda (0 -> 3) and not diversity threshold
+    "exp_label": "MetaRLBO-Ising50-MLP-032",
+    "task": "AltIsing50-v0",
+    "num_proxies": 4, 
+    "max_num_queries": 8000, # Maximum number of queries in experiment
+    "num_inner_updates": 1,
+    "num_initial_samples": 500,
+    "num_query_proxies": 32,
+    "num_samples_per_proxy": 75,
+    "num_query_per_iter": 500,
+    "inner_lr": 2.0,
+    "outer_lr": 0.2,
+    "num_meta_updates_per_iter": 30,
+    "entropy_reg_coeff": 0.0,
+    "proxy_oracle": {
+        "model_name": "MLP",
+        "p": 0.7, 
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB", 
+        "config": {
+            'beta': 4.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": 3.0, # Diversity hyperparameter -- higher is more penalty for more similar mols. -- essentially no penalty...
+        "radius": 2, 
+    },
+
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+metarlbo_ising50_033 = {  # Copy 030 - but with a larger lambda (0 -> 5) and not diversity threshold
+    "exp_label": "MetaRLBO-Ising50-MLP-033",
+    "task": "AltIsing50-v0",
+    "num_proxies": 4, 
+    "max_num_queries": 8000, # Maximum number of queries in experiment
+    "num_inner_updates": 1,
+    "num_initial_samples": 500,
+    "num_query_proxies": 32,
+    "num_samples_per_proxy": 75,
+    "num_query_per_iter": 500,
+    "inner_lr": 2.0,
+    "outer_lr": 0.2,
+    "num_meta_updates_per_iter": 30,
+    "entropy_reg_coeff": 0.0,
+    "proxy_oracle": {
+        "model_name": "MLP",
+        "p": 0.7, 
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB", 
+        "config": {
+            'beta': 4.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": 5.0, # Diversity hyperparameter -- higher is more penalty for more similar mols. -- essentially no penalty...
+        "radius": 2, 
+    },
+
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+metarlbo_ising50_034 = {  # Copy 030 - but with a larger lambda (0 -> 10) and not diversity threshold
+    "exp_label": "MetaRLBO-Ising50-MLP-034",
+    "task": "AltIsing50-v0",
+    "num_proxies": 4, 
+    "max_num_queries": 8000, # Maximum number of queries in experiment
+    "num_inner_updates": 1,
+    "num_initial_samples": 500,
+    "num_query_proxies": 32,
+    "num_samples_per_proxy": 75,
+    "num_query_per_iter": 500,
+    "inner_lr": 2.0,
+    "outer_lr": 0.2,
+    "num_meta_updates_per_iter": 30,
+    "entropy_reg_coeff": 0.0,
+    "proxy_oracle": {
+        "model_name": "MLP",
+        "p": 0.7, 
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB", 
+        "config": {
+            'beta': 4.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": 5.0, # Diversity hyperparameter -- higher is more penalty for more similar mols. -- essentially no penalty...
+        "radius": 2, 
+    },
+
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+metarlbo_ising50_035 = {  # Copy 033 -- but with a larger radius (2 -> 4)
+    "exp_label": "MetaRLBO-Ising50-MLP-035",
+    "task": "AltIsing50-v0",
+    "num_proxies": 4, 
+    "max_num_queries": 8000, # Maximum number of queries in experiment
+    "num_inner_updates": 1,
+    "num_initial_samples": 500,
+    "num_query_proxies": 32,
+    "num_samples_per_proxy": 75,
+    "num_query_per_iter": 500,
+    "inner_lr": 2.0,
+    "outer_lr": 0.2,
+    "num_meta_updates_per_iter": 30,
+    "entropy_reg_coeff": 0.0,
+    "proxy_oracle": {
+        "model_name": "MLP",
+        "p": 0.8, 
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB", 
+        "config": {
+            'beta': 4.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": 5.0, # Diversity hyperparameter -- higher is more penalty for more similar mols. -- essentially no penalty...
+        "radius": 4, 
+    },
+
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+
+metarlbo_ising50_036 = {  # Copy 035 -- but with more inner updates (1 -> 2)
+    "exp_label": "MetaRLBO-Ising50-MLP-036",
+    "task": "AltIsing50-v0",
+    "num_proxies": 4, 
+    "max_num_queries": 8000, # Maximum number of queries in experiment
+    "num_inner_updates": 2,
+    "num_initial_samples": 500,
+    "num_query_proxies": 32,
+    "num_samples_per_proxy": 75,
+    "num_query_per_iter": 500,
+    "inner_lr": 2.0,
+    "outer_lr": 0.2,
+    "num_meta_updates_per_iter": 30,
+    "entropy_reg_coeff": 0.0,
+    "proxy_oracle": {
+        "model_name": "MLP",
+        "p": 0.8, 
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB", 
+        "config": {
+            'beta': 4.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": 5.0, # Diversity hyperparameter -- higher is more penalty for more similar mols. -- essentially no penalty...
+        "radius": 4, 
+    },
+
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+
+metarlbo_ising50_037 = {  # Copy 035 -- but with more inner updates (1 -> 3)
+    "exp_label": "MetaRLBO-Ising50-MLP-037",
+    "task": "AltIsing50-v0",
+    "num_proxies": 4, 
+    "max_num_queries": 8000, # Maximum number of queries in experiment
+    "num_inner_updates": 3,
+    "num_initial_samples": 500,
+    "num_query_proxies": 32,
+    "num_samples_per_proxy": 75,
+    "num_query_per_iter": 500,
+    "inner_lr": 2.0,
+    "outer_lr": 0.2,
+    "num_meta_updates_per_iter": 30,
+    "entropy_reg_coeff": 0.0,
+    "proxy_oracle": {
+        "model_name": "MLP",
+        "p": 0.8, 
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB", 
+        "config": {
+            'beta': 4.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": 5.0, # Diversity hyperparameter -- higher is more penalty for more similar mols. -- essentially no penalty...
+        "radius": 4, 
     },
 
 

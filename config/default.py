@@ -69,6 +69,7 @@ DEFAULT_CONFIG = {
 			"actual_model": "MLP",
 		},
 	},
+	"reset_policy_per_round": False,
 	"query_reward_in_env": False, # Faster to do the querying outside of the env since we can do it in batches.
 	"entropy_reg_coeff": 0.0, # Deprecated (Ignore)
 	"data_source": "DynaPPO", # Either: DynaPPO or Custom (Custom being data Padideh generated)

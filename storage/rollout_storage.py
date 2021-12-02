@@ -30,6 +30,7 @@ class RolloutStorage(BaseStorage):
         self.log_probs = torch.zeros(num_steps+1, num_processes).to(device)
         self.dones = torch.zeros(num_steps+1, num_processes).to(device)
         self.masks = torch.zeros(num_steps+1, num_processes).to(device) # 1 when action is performed, 0 when episode ends.
+        self.dist_entropy_vals = torch.zeros(num_steps + 1, num_processes, 1).to(device)
 
 
         self.returns = torch.zeros(num_steps+1, num_processes).to(device)

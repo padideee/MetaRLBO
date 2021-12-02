@@ -56,6 +56,7 @@ class Policy(nn.Module):
 
     def act(self, inputs, rnn_hxs, masks, deterministic=False, return_dist=False):
         value, actor_features, rnn_hxs = self.base(inputs, rnn_hxs, masks)
+
         try:
             dist = self.dist(actor_features)
         except:
@@ -81,6 +82,7 @@ class Policy(nn.Module):
 
     def evaluate_actions(self, inputs, rnn_hxs, masks, action, return_dist=False):
         value, actor_features, rnn_hxs = self.base(inputs, rnn_hxs, masks)
+        
         dist = self.dist(actor_features)
 
         action_log_probs = dist.log_probs(action)

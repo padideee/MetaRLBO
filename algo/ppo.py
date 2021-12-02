@@ -86,14 +86,14 @@ class PPO():
 
                 self.optimizer.zero_grad()
                 (value_loss * self.value_loss_coef + action_loss -
-                 dist_entropy * self.entropy_coef).backward()
+                 dist_entropy.mean() * self.entropy_coef).backward()
                 nn.utils.clip_grad_norm_(self.actor_critic.parameters(),
                                          self.max_grad_norm)
                 self.optimizer.step()
 
                 value_loss_epoch += value_loss.item()
                 action_loss_epoch += action_loss.item()
-                dist_entropy_epoch += dist_entropy.item()
+                dist_entropy_epoch += dist_entropy.mean().item()
 
         num_updates = self.ppo_epoch * self.num_mini_batch
 

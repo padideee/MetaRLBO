@@ -213,6 +213,8 @@ debug_REINFORCE_True_BR = {
 
 
 
+
+
 # Varying Proxy Oracle Models
 debug_BR = {
 	"exp_label": "DEBUG-BR",
@@ -466,8 +468,50 @@ debug_med_Ising50 = {
 debug_metarlbo_Ising20 = {
 	"task": "AltIsing20-v0",
 	"exp_label": "DEBUG-med-Ising20",
+	"num_proxies": 2, 
+	"num_inner_updates": 1,
+	"num_meta_proxy_samples": 4, 
+	"num_query_proxies": 4,
+	"num_initial_samples": 500,
+	"num_samples_per_proxy": 16,
+	"num_samples_per_task_update": 8,
+	"num_query_per_iter": 20,
+	"inner_lr": 1.0,
+	"outer_lr": 0.1,
+	"num_meta_updates_per_iter": 1, 
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.7, 
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 4.0,
+		},
+		"diversity_threshold": 0, # Diversity threshold when greedily selecting molecules...
+	},
+
+	"true_oracle": {
+		"model_name": "AltIsing_Oracle",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
+	"seed": 73,
+}
+
+
+
+debug_metarlbo_RNA14 = {
+	"task": "RNA14-v0",
+	"exp_label": "DEBUG-RNA14",
 	"num_proxies": 4, 
-	"num_inner_updates": 2,
+	"num_inner_updates": 1,
 	"num_meta_proxy_samples": 4, 
 	"num_query_proxies": 4,
 	"num_initial_samples": 500,
@@ -502,7 +546,6 @@ debug_metarlbo_Ising20 = {
 	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
 	"seed": 73,
 }
-
 
 
 
@@ -751,4 +794,61 @@ debug_dynappo_ising20 = {
     "results_log_dir": "./logs", 
 	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
     "seed": 73,
+}
+
+
+
+
+debug_metarlbo_ising20_trpo = {
+    "exp_label": "debug_metarlbo_ising20_trpo",
+	"task": "AltIsing20-v0",
+	"num_proxies": 2, 
+	"num_inner_updates": 1,
+	"num_meta_proxy_samples": 4, 
+	"num_query_proxies": 4,
+	"num_initial_samples": 500,
+	"num_samples_per_proxy": 16,
+	"num_samples_per_task_update": 8,
+	"num_query_per_iter": 20,
+	"inner_lr": 0.1,
+	"outer_lr": 0.1,
+	"num_meta_updates_per_iter": 1, 
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, 
+	},
+	"metalearner": {
+		"method": "TRPO",  # REINFORCE or TRPO
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"metalearner": {
+		"method": "TRPO",  # REINFORCE or TRPO
+		"tau": 1.0,
+		"gamma": 1.0,
+		"max_kl": 1e-2,
+		"cg_iters": 10,
+		"cg_damping": 1e-5,
+		"ls_max_steps": 15,
+		"ls_backtrack_ratio": 0.8,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 4.0,
+		},
+		"diversity_threshold": 0, # Diversity threshold when greedily selecting molecules...
+	},
+
+	"true_oracle": {
+		"model_name": "AltIsing_Oracle",
+	},
+	"num_processes": 8, 
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
+	"seed": 73,
 }

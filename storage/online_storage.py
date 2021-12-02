@@ -29,6 +29,7 @@ class OnlineStorage(object):
         self.value_preds = torch.zeros(num_steps + 1, num_processes, 1)
         self.returns = torch.zeros(num_steps + 1, num_processes, 1)
         self.action_log_probs = torch.zeros(num_steps + 1, num_processes, 1)
+        self.dist_entropy_vals = torch.zeros(num_steps + 1, num_processes, 1)
         self.dones = torch.zeros(num_steps + 1, num_processes, 1)
         if action_space.__class__.__name__ == 'Discrete':
             action_shape = 1
@@ -56,6 +57,7 @@ class OnlineStorage(object):
         self.value_preds = self.value_preds.to(device)
         self.returns = self.returns.to(device)
         self.action_log_probs = self.action_log_probs.to(device)
+        self.dist_entropy_vals = self.dist_entropy_vals.to(device)
         self.actions = self.actions.to(device)
         self.masks = self.masks.to(device)
         self.dones = self.dones.to(device)

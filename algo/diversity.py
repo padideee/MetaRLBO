@@ -41,6 +41,7 @@ def batch_hamming_distance(history, seqs):
 
 def pairwise_hamming_distance(history):
     """
+        
         Args:
             - history: (length, 50, 21)
             - seq: (50, 21)

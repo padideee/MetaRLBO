@@ -56,6 +56,7 @@ class Policy(nn.Module):
 
     def act(self, inputs, rnn_hxs, masks, deterministic=False, return_dist=False):
         value, actor_features, rnn_hxs = self.base(inputs, rnn_hxs, masks)
+        
         try:
             dist = self.dist(actor_features)
         except:
@@ -67,7 +68,7 @@ class Policy(nn.Module):
             action = dist.sample()
 
         action_log_probs = dist.log_probs(action)
-        dist_entropy = dist.entropy().mean()
+        dist_entropy = dist.entropy()
 
 
         if return_dist:
@@ -84,7 +85,7 @@ class Policy(nn.Module):
         dist = self.dist(actor_features)
 
         action_log_probs = dist.log_probs(action)
-        dist_entropy = dist.entropy().mean()
+        dist_entropy = dist.entropy()
 
         if return_dist:
             return value, action_log_probs, dist_entropy, rnn_hxs, dist

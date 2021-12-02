@@ -1385,7 +1385,7 @@ metarlbo_ising50_030 = {  # Same as 25 but with entropy regularization
 
 
 metarlbo_ising50_031 = {  # Copy 030 - but with a larger lambda (0 -> 1) and not diversity threshold
-    "exp_label": "MetaRLBO-Ising50-MLP-031",
+    "exp_label": "MetaRLBO-Ising50-CNN-031",
     "task": "AltIsing50-v0",
     "num_proxies": 4, 
     "max_num_queries": 8000, # Maximum number of queries in experiment
@@ -1399,7 +1399,7 @@ metarlbo_ising50_031 = {  # Copy 030 - but with a larger lambda (0 -> 1) and not
     "num_meta_updates_per_iter": 30,
     "entropy_reg_coeff": 0.0,
     "proxy_oracle": {
-        "model_name": "MLP",
+        "model_name": "CNN",
         "p": 0.7, 
     },
     "outerloop": {
@@ -1428,7 +1428,7 @@ metarlbo_ising50_031 = {  # Copy 030 - but with a larger lambda (0 -> 1) and not
 }
 
 metarlbo_ising50_032 = {  # Copy 030 - but with a larger lambda (0 -> 3) and not diversity threshold
-    "exp_label": "MetaRLBO-Ising50-MLP-032",
+    "exp_label": "MetaRLBO-Ising50-CNN-032",
     "task": "AltIsing50-v0",
     "num_proxies": 4, 
     "max_num_queries": 8000, # Maximum number of queries in experiment
@@ -1442,7 +1442,7 @@ metarlbo_ising50_032 = {  # Copy 030 - but with a larger lambda (0 -> 3) and not
     "num_meta_updates_per_iter": 30,
     "entropy_reg_coeff": 0.0,
     "proxy_oracle": {
-        "model_name": "MLP",
+        "model_name": "CNN",
         "p": 0.7, 
     },
     "outerloop": {
@@ -1471,7 +1471,7 @@ metarlbo_ising50_032 = {  # Copy 030 - but with a larger lambda (0 -> 3) and not
 }
 
 metarlbo_ising50_033 = {  # Copy 030 - but with a larger lambda (0 -> 5) and not diversity threshold
-    "exp_label": "MetaRLBO-Ising50-MLP-033",
+    "exp_label": "MetaRLBO-Ising50-CNN-033",
     "task": "AltIsing50-v0",
     "num_proxies": 4, 
     "max_num_queries": 8000, # Maximum number of queries in experiment
@@ -1485,7 +1485,7 @@ metarlbo_ising50_033 = {  # Copy 030 - but with a larger lambda (0 -> 5) and not
     "num_meta_updates_per_iter": 30,
     "entropy_reg_coeff": 0.0,
     "proxy_oracle": {
-        "model_name": "MLP",
+        "model_name": "CNN",
         "p": 0.7, 
     },
     "outerloop": {
@@ -1514,7 +1514,7 @@ metarlbo_ising50_033 = {  # Copy 030 - but with a larger lambda (0 -> 5) and not
 }
 
 metarlbo_ising50_034 = {  # Copy 030 - but with a larger lambda (0 -> 10) and not diversity threshold
-    "exp_label": "MetaRLBO-Ising50-MLP-034",
+    "exp_label": "MetaRLBO-Ising50-CNN-034",
     "task": "AltIsing50-v0",
     "num_proxies": 4, 
     "max_num_queries": 8000, # Maximum number of queries in experiment
@@ -1528,7 +1528,7 @@ metarlbo_ising50_034 = {  # Copy 030 - but with a larger lambda (0 -> 10) and no
     "num_meta_updates_per_iter": 30,
     "entropy_reg_coeff": 0.0,
     "proxy_oracle": {
-        "model_name": "MLP",
+        "model_name": "CNN",
         "p": 0.7, 
     },
     "outerloop": {
@@ -1557,7 +1557,7 @@ metarlbo_ising50_034 = {  # Copy 030 - but with a larger lambda (0 -> 10) and no
 }
 
 metarlbo_ising50_035 = {  # Copy 033 -- but with a larger radius (2 -> 4)
-    "exp_label": "MetaRLBO-Ising50-MLP-035",
+    "exp_label": "MetaRLBO-Ising50-CNN-035",
     "task": "AltIsing50-v0",
     "num_proxies": 4, 
     "max_num_queries": 8000, # Maximum number of queries in experiment
@@ -1571,7 +1571,7 @@ metarlbo_ising50_035 = {  # Copy 033 -- but with a larger radius (2 -> 4)
     "num_meta_updates_per_iter": 30,
     "entropy_reg_coeff": 0.0,
     "proxy_oracle": {
-        "model_name": "MLP",
+        "model_name": "CNN",
         "p": 0.8, 
     },
     "outerloop": {
@@ -1601,7 +1601,7 @@ metarlbo_ising50_035 = {  # Copy 033 -- but with a larger radius (2 -> 4)
 
 
 metarlbo_ising50_036 = {  # Copy 035 -- but with more inner updates (1 -> 2)
-    "exp_label": "MetaRLBO-Ising50-MLP-036",
+    "exp_label": "MetaRLBO-Ising50-CNN-036",
     "task": "AltIsing50-v0",
     "num_proxies": 4, 
     "max_num_queries": 8000, # Maximum number of queries in experiment
@@ -1615,7 +1615,7 @@ metarlbo_ising50_036 = {  # Copy 035 -- but with more inner updates (1 -> 2)
     "num_meta_updates_per_iter": 30,
     "entropy_reg_coeff": 0.0,
     "proxy_oracle": {
-        "model_name": "MLP",
+        "model_name": "CNN",
         "p": 0.8, 
     },
     "outerloop": {
@@ -1645,7 +1645,7 @@ metarlbo_ising50_036 = {  # Copy 035 -- but with more inner updates (1 -> 2)
 
 
 metarlbo_ising50_037 = {  # Copy 035 -- but with more inner updates (1 -> 3)
-    "exp_label": "MetaRLBO-Ising50-MLP-037",
+    "exp_label": "MetaRLBO-Ising50-CNN-037",
     "task": "AltIsing50-v0",
     "num_proxies": 4, 
     "max_num_queries": 8000, # Maximum number of queries in experiment
@@ -1659,7 +1659,7 @@ metarlbo_ising50_037 = {  # Copy 035 -- but with more inner updates (1 -> 3)
     "num_meta_updates_per_iter": 30,
     "entropy_reg_coeff": 0.0,
     "proxy_oracle": {
-        "model_name": "MLP",
+        "model_name": "CNN",
         "p": 0.8, 
     },
     "outerloop": {

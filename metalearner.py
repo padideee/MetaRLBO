@@ -1,4 +1,5 @@
 import torch
+import pickle
 import numpy as np
 import pandas as pd
 from torch import optim
@@ -55,7 +56,7 @@ class MetaLearner:
         torch.multiprocessing.set_start_method('spawn')
         # initialise tensorboard logger
         self.use_logger = use_logger
-        if self.use_logger:
+        if self.use_logger: 
             self.logger = TBLogger(self.config, self.config["exp_label"]) if self.use_logger else None
             utl.save_config(self.config, self.logger.full_output_folder)
         else:
@@ -79,7 +80,14 @@ class MetaLearner:
                 raise NotImplementedError
 
             self.true_oracle = AMPTrueOracle(training_storage=D_AMP)
-            self.true_oracle_model = utl.get_true_oracle_model(self.config)
+            if self.config["mode"] == "test":
+                fname = "data/metarlbo_rfc_not-alibicani.pkl"
+            elif self.config["mode"] == "val":
+                fname = "data/metarlbo_rfc_alibicani.pkl"
+            with open(fname, "rb") as f:
+                self.true_oracle_model = pickle.load(f)
+
+            # self.true_oracle_model = utl.get_true_oracle_model(self.config)
         elif self.config["task"] == "CLAMP-v0":
 
             if self.config["mode"] == "val" and self.config["CLAMP"]["use_pretrained_model"]:

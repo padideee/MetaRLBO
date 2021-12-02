@@ -80,11 +80,12 @@ class AMPTrueOracle(BaseOracle):
 
 		"""
 
-		if flatten_input:
-			seq = self.training_storage.mols.flatten(start_dim=-2, end_dim=-1) # Hardcoded for AMP
-		else:
-			seq = self.training_storage.mols
-		value = self.training_storage.scores.flatten() # [batch_size, 1] -> [batch_size]
+		# if flatten_input:
+		# 	seq = self.training_storage.mols.flatten(start_dim=-2, end_dim=-1) # Hardcoded for AMP
+		# else:
+		# 	seq = self.training_storage.mols
+		# value = self.training_storage.scores.flatten() # [batch_size, 1] -> [batch_size]
 
-		return model.fit(seq, value)
+		# return model.fit(seq, value)
+		return model
 

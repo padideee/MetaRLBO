@@ -570,7 +570,7 @@ class MetaLearner:
             masks = None
             st = state
             st = seq_to_encoding(st).flatten(-2, -1).to(device)  
-
+ 
             value, action, log_prob, hidden_state, dist = policy.act(st, hidden_state, masks=masks, return_dist=True)
             action = action.detach().cpu()
 
@@ -584,7 +584,7 @@ class MetaLearner:
             policy_storage.insert(state=state.detach().clone(),
                                   next_state=next_state.detach().clone(),
                                   action=action.detach().clone(),
-                                  reward=reward.detach().clone() + self.config["entropy_reg_coeff"] * dist.entropy(),
+                                  reward=reward.detach().clone().to(device) + self.config["entropy_reg_coeff"] * dist.entropy(), 
                                   done=done.detach().clone())
 
             # reset environments that are done

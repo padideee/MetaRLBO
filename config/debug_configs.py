@@ -477,9 +477,9 @@ debug_metarlbo_Ising20 = {
 	"num_samples_per_task_update": 8,
 	"num_query_per_iter": 20,
 	"inner_lr": 1.0,
-	"outer_lr": 0.1,
-	"num_meta_updates_per_iter": 1, 
-	"entropy_reg_coeff": 0.0,
+	"outer_lr": 0.5,
+	"num_meta_updates_per_iter": 2, 
+	"entropy_reg_coeff": 0.2, # Leo: TODO - test this!
 	"proxy_oracle": {
 		"model_name": "KNR",
 		"p": 0.7, 

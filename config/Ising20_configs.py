@@ -1413,3 +1413,174 @@ metarlbo_ising20_031 = { # Copy 029 but with a larger radius
     "results_log_dir": "./logs",
     "seed": 73,
 }
+
+
+metarlbo_ising20_032 = { # New configs w/ fixed entropy reg coeff... also it's the mean of the envs now
+    "exp_label": "MetaRLBO-Ising20-CNN-032",
+    "task": "AltIsing20-v0",
+    "num_proxies": 4, 
+    "max_num_queries": 8000, # Maximum number of queries in experiment
+    "num_inner_updates": 1,
+    "num_query_proxies": 32,
+    "num_initial_samples": 500,
+    "num_samples_per_proxy": 64,
+    "num_query_per_iter": 500,
+    "inner_lr": 1.0,
+    "outer_lr": 0.1,
+    "num_meta_updates_per_iter": 50, 
+    "entropy_reg_coeff": 0.2,
+    "proxy_oracle": {
+        "model_name": "CNN",
+        "p": 0.7, 
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB", 
+        "config": {
+            'beta': 4.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": 3.0, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 4, 
+    },
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+
+metarlbo_ising20_033 = {  # 032 -- but with larger outer lr
+    "exp_label": "MetaRLBO-Ising20-CNN-033",
+    "task": "AltIsing20-v0",
+    "num_proxies": 4, 
+    "max_num_queries": 8000, # Maximum number of queries in experiment
+    "num_inner_updates": 1,
+    "num_query_proxies": 32,
+    "num_initial_samples": 500,
+    "num_samples_per_proxy": 64,
+    "num_query_per_iter": 500,
+    "inner_lr": 1.0,
+    "outer_lr": 0.5,
+    "num_meta_updates_per_iter": 50, 
+    "entropy_reg_coeff": 0.2,
+    "proxy_oracle": {
+        "model_name": "CNN",
+        "p": 0.7, 
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB", 
+        "config": {
+            'beta': 4.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": 3.0, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 4, 
+    },
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+metarlbo_ising20_034 = {  # 032 but with more inner loop updates (1 -> 2)
+    "exp_label": "MetaRLBO-Ising20-CNN-034",
+    "task": "AltIsing20-v0",
+    "num_proxies": 4, 
+    "max_num_queries": 8000, # Maximum number of queries in experiment
+    "num_inner_updates": 2,
+    "num_query_proxies": 32,
+    "num_initial_samples": 500,
+    "num_samples_per_proxy": 64,
+    "num_query_per_iter": 500,
+    "inner_lr": 1.0,
+    "outer_lr": 0.1,
+    "num_meta_updates_per_iter": 50, 
+    "entropy_reg_coeff": 0.2,
+    "proxy_oracle": {
+        "model_name": "CNN",
+        "p": 0.7, 
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB", 
+        "config": {
+            'beta': 4.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": 3.0, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 4, 
+    },
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+
+metarlbo_ising20_035 = {  # 032 (but more meta updates)
+    "exp_label": "MetaRLBO-Ising20-CNN-035",
+    "task": "AltIsing20-v0",
+    "num_proxies": 4, 
+    "max_num_queries": 8000, # Maximum number of queries in experiment
+    "num_inner_updates": 1,
+    "num_query_proxies": 32,
+    "num_initial_samples": 500,
+    "num_samples_per_proxy": 64,
+    "num_query_per_iter": 500,
+    "inner_lr": 1.0,
+    "outer_lr": 0.1,
+    "num_meta_updates_per_iter": 80, 
+    "entropy_reg_coeff": 0.2,
+    "proxy_oracle": {
+        "model_name": "CNN",
+        "p": 0.7, 
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB", 
+        "config": {
+            'beta': 4.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": 3.0, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 4, 
+    },
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}

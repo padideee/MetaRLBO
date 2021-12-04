@@ -34,6 +34,7 @@ class RolloutStorage(BaseStorage):
 
 
         self.returns = torch.zeros(num_steps+1, num_processes).to(device)
+        self.advantages = torch.zeros(num_steps+1, num_processes).to(device)
 
 
 

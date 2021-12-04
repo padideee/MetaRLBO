@@ -69,6 +69,7 @@ DEFAULT_CONFIG = {
 			"actual_model": "MLP",
 		},
 	},
+	"use_baseline": False,
 	"reset_policy_per_round": False,
 	"query_reward_in_env": False, # Faster to do the querying outside of the env since we can do it in batches.
 	"entropy_reg_coeff": 0.0, # Deprecated (Ignore)

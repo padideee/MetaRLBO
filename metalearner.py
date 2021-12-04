@@ -168,6 +168,8 @@ class MetaLearner:
 
         self.total_time_sampling = 0
 
+        self.baseline = LinearFeatureBaseline(input_size = self.env.observation_space.shape[0] * self.env.observation_space.shape[1]).to(device) # TODO: FIX
+
     def reset_policy(self):
         if self.config["policy"]["model_name"] == "GRU":
             self.policy = CategoricalGRUPolicy(num_actions=self.env.action_space.n + 1,
@@ -185,8 +187,6 @@ class MetaLearner:
                                        num_actions=self.env.action_space.n).to(device)
         else:
             raise NotImplementedError
-
-        self.baseline = LinearFeatureBaseline(input_size = self.env.observation_space.shape[0] * self.env.observation_space.shape[1]).to(device) # TODO: FIX
 
         self.meta_opt = optim.SGD(self.policy.parameters(), lr=self.config["outer_lr"])
 
@@ -320,11 +320,18 @@ class MetaLearner:
 
         # New Version (Parallelised):
         hidden_state, policy_masks = None, None
-        st = seq_to_encoding(episodes.states.flatten(0, 1)).to(device)
-        value, action_log_probs, dist_entropy, hidden_state = policy.evaluate_actions(st.flatten(-2, -1), hidden_state, policy_masks, episodes.actions.flatten().int())
+        st = seq_to_encoding(episodes.states.flatten(0, 1)).view(episodes.states.shape).to(device)
+        value, action_log_probs, dist_entropy, hidden_state = policy.evaluate_actions(st.flatten(-2, -1).flatten(0, 1), hidden_state, policy_masks, episodes.actions.flatten().int())
         episodes.log_probs = action_log_probs.reshape(episodes.log_probs.shape)
 
-        loss = rl_utl.reinforce_loss(episodes)
+
+
+        if self.config["use_baseline"]:
+            values = self.baseline(st.flatten(-2, -1), episodes.masks).reshape(episodes.advantages.shape).detach()
+            # import pdb; pdb.set_trace()
+            episodes.advantages = episodes.returns - values
+
+        loss = rl_utl.reinforce_loss(episodes, use_baseline=self.config["use_baseline"])
 
         return loss
 
@@ -607,8 +614,8 @@ class MetaLearner:
                                 div_metric_name=self.config["diversity"]["div_metric_name"]).get_density()            
 
             query_scores = oracle.query(oracle_model, query_states.cpu(), flatten_input=self.flatten_proxy_oracle_input)
-            
             policy_storage.rewards[bool_idx] += torch.tensor(query_scores).float().to(device) - self.config["env"]["lambda"] * dens.to(device) # TODO: Set the rewards to include the density penalties...
+
             
 
         policy_storage.compute_returns()
@@ -667,6 +674,14 @@ class MetaLearner:
     # Based off of CAVIA public code: 
 
 
+    def fit_baseline(self, episodes):
+        states = seq_to_encoding(episodes.states.flatten(0, 1)).view(episodes.states.shape).to(device)  
+
+
+        # Fit the baseline to the training episodes
+        self.baseline.fit(states.flatten(-2, -1), episodes.masks, episodes.returns)
+
+
 
     def adapt(self, episodes, policy, diffopt, first_order=False, params=None, lr=None):
         """Adapt the parameters of the policy network to a new task, from 
@@ -674,10 +689,8 @@ class MetaLearner:
         """
 
 
-        states = seq_to_encoding(episodes.states.flatten(0, 1)).view(episodes.states.shape).to(device)  
-
-        # Fit the baseline to the training episodes
-        self.baseline.fit(states, episodes.masks, episodes.returns)
+        if self.config["use_baseline"]:
+            self.fit_baseline(episodes)
 
         # Get the loss on the training episodes
         loss = self.inner_loss(episodes, policy)
@@ -753,15 +766,15 @@ class MetaLearner:
 
                     # get action values after inner-loop update
 
-                    st = seq_to_encoding(valid_episodes.states.flatten(0, 1)).flatten(-2, -1).view(valid_episodes.states.shape[0], valid_episodes.states.shape[1], -1).to(device)  
-                    _, _, _, _, pi = inner_policy.act(st, None, None, return_dist=True) # Fix the policy..., so it returns "pi"
+                    st = seq_to_encoding(valid_episodes.states.flatten(0, 1)).view(valid_episodes.states.shape[0], valid_episodes.states.shape[1], -1).to(device)  
+                    _, _, _, _, pi = inner_policy.act(st.flatten(-2, -1), None, None, return_dist=True) # Fix the policy..., so it returns "pi"
                     pis.append(detach_distribution(pi))
 
                     if old_pi is None:
                         old_pi = detach_distribution(pi)
 
                     st = st.view(valid_episodes.states.shape)
-                    values = self.baseline(states=st, returns=valid_episodes.returns, masks=valid_episodes.masks) # To fix this too...
+                    values = self.baseline(states=st.flatten(-2, -1), returns=valid_episodes.returns, masks=valid_episodes.masks) # To fix this too...
                     advantages = valid_episodes.gae(values, tau=self.config["metalearner"]["tau"], gamma=self.config["metalearner"]["gamma"])
                     advantages = weighted_normalize(advantages, weights=valid_episodes.masks) # masks -> mask
 
@@ -807,14 +820,23 @@ class MetaLearner:
                 for train_episodes in train_episodes_s:
                     self.adapt(train_episodes, inner_policy, diffopt)
 
+
+
                 # get action values after inner-loop update
-                st = seq_to_encoding(valid_episodes.states.flatten(0, 1)).flatten(-2, -1).view(valid_episodes.states.shape[0], valid_episodes.states.shape[1], -1).to(device)  
-                _, _, _, _, pi = inner_policy.act(st, None, None, return_dist=True) # Fix the policy..., so it returns "pi"
+                hidden_state, policy_masks = None, None
+                # st = seq_to_encoding(valid_episodes.states.flatten(0, 1)).flatten(-2, -1).view(valid_episodes.states.shape[0], valid_episodes.states.shape[1], -1).to(device)  
+                # value, action_log_probs, dist_entropy, hidden_state = policy.evaluate_actions(st.flatten(-2, -1), hidden_state, policy_masks, valid_episodes.actions.flatten().int())
+                st = seq_to_encoding(valid_episodes.states.flatten(0, 1)).view(valid_episodes.states.shape).to(device)
+                value, action_log_probs, dist_entropy, hidden_state = inner_policy.evaluate_actions(st.flatten(-2, -1).flatten(0, 1), hidden_state, policy_masks, valid_episodes.actions.flatten().int())
+                valid_episodes.log_probs = action_log_probs.reshape(valid_episodes.log_probs.shape)
 
-                log_prob = pi.log_prob(valid_episodes.actions.squeeze(-1))
 
 
-                loss = -weighted_mean(log_prob * valid_episodes.returns, dim=0, weights=valid_episodes.masks)
+                if self.config["use_baseline"]:
+                    self.fit_baseline(valid_episodes)
+                    values = self.baseline(st.flatten(-2, -1), valid_episodes.masks).reshape(valid_episodes.advantages.shape).detach()
+                    valid_episodes.advantages = valid_episodes.returns - values
+                loss = rl_utl.reinforce_loss(valid_episodes, use_baseline=self.config["use_baseline"])
 
                 meta_losses.append(loss)
 

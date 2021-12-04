@@ -24,10 +24,9 @@ class LinearFeatureBaseline(nn.Module):
 
     def _feature(self, states, masks):
         ones = masks.unsqueeze(-1)
-        states = states.flatten(-2, -1) * ones
+        states = states * ones
         cum_sum = torch.cumsum(ones, dim=0) * ones
         al = cum_sum / 100.0
-
         return torch.cat([states, states ** 2, al, al ** 2, al ** 3, ones], dim=2)
 
 
@@ -57,6 +56,6 @@ class LinearFeatureBaseline(nn.Module):
                                '(maximum regularization: {0}).'.format(reg_coeff))
         self.linear.weight.data = coeffs.data.t()
 
-    def forward(self, states, returns, masks):
+    def forward(self, states, masks):
         features = self._feature(states, masks)
         return self.linear(features)

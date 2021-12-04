@@ -399,7 +399,7 @@ debug_KNR = {
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
 	"num_meta_updates_per_iter": 1, 
-	"entropy_reg_coeff": 0.0,
+	"entropy_reg_coeff": 0.2,
 	"proxy_oracle": {
 		"model_name": "KNR",
 		"p": 0.8, 
@@ -477,9 +477,9 @@ debug_metarlbo_Ising20 = {
 	"num_samples_per_task_update": 8,
 	"num_query_per_iter": 20,
 	"inner_lr": 1.0,
-	"outer_lr": 0.5,
+	"outer_lr": 0.1,
 	"num_meta_updates_per_iter": 2, 
-	"entropy_reg_coeff": 0.2, # Leo: TODO - test this!
+	"entropy_reg_coeff": 0.5, # Leo: TODO - test this!
 	"proxy_oracle": {
 		"model_name": "KNR",
 		"p": 0.7, 
@@ -505,6 +505,47 @@ debug_metarlbo_Ising20 = {
 	"seed": 73,
 }
 
+
+debug_metarlbo_Ising50 = {
+	"task": "AltIsing50-v0",
+	"exp_label": "DEBUG-med-Ising50",
+	"num_proxies": 2, 
+	"num_inner_updates": 1,
+	"num_meta_proxy_samples": 4, 
+	"num_query_proxies": 4,
+	"num_initial_samples": 500,
+	"num_samples_per_proxy": 16,
+	"num_samples_per_task_update": 8,
+	"num_query_per_iter": 20,
+	"inner_lr": 1.0,
+	"outer_lr": 0.1,
+	"num_meta_updates_per_iter": 2, 
+	"entropy_reg_coeff": 0.5, # Leo: TODO - test this!
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.7, 
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 4.0,
+		},
+		"diversity_threshold": 0, # Diversity threshold when greedily selecting molecules...
+	},
+
+	"true_oracle": {
+		"model_name": "AltIsing_Oracle",
+	},
+	"use_baseline": False, # Use a linear baseline or no...
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
+	"seed": 73,
+}
 
 
 debug_metarlbo_RNA14 = {

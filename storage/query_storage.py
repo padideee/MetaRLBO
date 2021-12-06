@@ -9,6 +9,8 @@ class QueryStorage(BaseStorage):
 
 
         self.mols = torch.zeros(self.storage_size, *state_dim)
+        self.mol_strings = []
+        self.mol_round = torch.zeros(self.storage_size)
         self.scores = torch.zeros(self.storage_size)
 
         self.mols_set = set([""]) # Initialise with the empty molecule...         
@@ -20,7 +22,8 @@ class QueryStorage(BaseStorage):
 
 
 
-    def insert(self, x, y):
+
+    def insert(self, x, y, x_strings, query_round=0):
         """
             Performs checks for duplicates. Inserts data into the storage in a queue like fashion [cur_idx, cur_idx + batch_size]
             
@@ -49,18 +52,24 @@ class QueryStorage(BaseStorage):
         y = y[valid_idx]
 
 
+        self.mol_strings = self.mol_strings + x_strings
+
+
         batch_size = x.shape[0]
 
         if self.curr_idx + batch_size <= self.storage_size:
             self.mols[self.curr_idx : self.curr_idx + batch_size] = x
             self.scores[self.curr_idx : self.curr_idx + batch_size] = y
+            self.mol_round[self.curr_idx : self.curr_idx + batch_size] = query_round
         else:
 
             self.mols[self.curr_idx : self.storage_size] = x[: self.storage_size - self.curr_idx]
             self.scores[self.curr_idx : self.storage_size] = y[: self.storage_size - self.curr_idx]
+            self.mol_round[self.curr_idx : self.storage_size] = query_round
 
             self.mols[: batch_size - (self.storage_size - self.curr_idx)] = x[self.storage_size - self.curr_idx:]
             self.scores[: batch_size - (self.storage_size - self.curr_idx)] = y[self.storage_size - self.curr_idx:]
+            self.mol_round[: batch_size - (self.storage_size - self.curr_idx)] = query_round
 
 
 

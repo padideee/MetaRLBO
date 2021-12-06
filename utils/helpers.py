@@ -9,21 +9,71 @@ from collections import OrderedDict
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio import SeqIO
+import data.helpers as data_utl
 
 import json
 import random
 import numpy as np
 
 
+def task_str_len(task_name):
+    if "AMP" in task_name:
+        length = 50
+    elif 'AltIsing20' in task_name:
+        length=20
+    elif 'AltIsing50' in task_name:
+        length=50
+    elif 'AltIsing100' in task_name:
+        length=100
+    else:
+        raise NotImplementedError
+    return length
 
 
-def save_mols(mols, scores, folder):
-    mols = [mols[i] for i in range(mols.shape[0])]
+def mol_to_string_encoding(config, mols):
+    """
+        Returns: List[String] - List of the mols in string format
+    """
+    length = task_str_len(config["task"])
+    mol_strings = []
+    if "AMP" in config["task"]:
+        for i in range(len(mols)):
+            mol_strings.append(data_utl.enc_to_seq(mols[i]))
+    elif "Ising" in config["task"]: 
+        for i in range(len(mols)):
+            mol_strings.append(data_utl.enc_to_seq(mols[i], enc_len=length, num_actions=20))
+    elif "RNA14" in config["task"]: # TODO:
+        assert NotImplementedError
+    else:
+        assert NotImplementedError
+
+    return mol_strings
+
+
+
+def save_queried_mols(dataset, folder):
+    mols=dataset.mol_strings
+    scores=dataset.scores[:dataset.storage_filled].numpy()
+    mol_rounds = dataset.mol_round[:dataset.storage_filled].numpy()
+
     data = {
         "seq": mols,
-        'pred_prob': scores,
+        'score': scores,
+        'mol_round': mol_rounds,
     }
     torch.save(data, os.path.join(folder, 'queried_mols.pt'))
+
+def save_sampled_mols(dataset, folder):
+    mols=dataset.mol_strings
+    mol_rounds = dataset.mol_round
+    mol_query_proxy_idx = dataset.mol_query_proxy_idx
+
+    data = {
+        "seq": mols,
+        'mol_round': mol_rounds,
+        'query_proxy_idx': mol_query_proxy_idx
+    }
+    torch.save(data, os.path.join(folder, 'sampled_mols.pt'))
 
 def save_config(config, folder):
     with open(os.path.join(folder, 'config.json'), 'w') as fp:
@@ -52,14 +102,7 @@ def setup_task_configs(config):
     if config["task"] == "AMP-v0":
         config["task_config"]["seq_len"], config["task_config"]["alphabet_len"] = 50, 21
     elif 'AltIsing' in config["task"]:
-        if 'AltIsing20' in config["task"]:
-            length=20
-        elif 'AltIsing50' in config["task"]:
-            length=50
-        elif 'AltIsing100' in config["task"]:
-            length=100
-        else:
-            raise NotImplementedError
+        length = task_str_len(config["task"])
         config["task_config"]["seq_len"], config["task_config"]["alphabet_len"] = length, 20
     else:
         raise NotImplementedError

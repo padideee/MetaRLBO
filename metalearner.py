@@ -10,6 +10,7 @@ import utils.reinforcement_learning as rl_utl
 
 from storage.rollout_storage import RolloutStorage
 from storage.query_storage import QueryStorage
+from storage.seq_storage import SeqStorage
 from policies.policy import Policy
 from policies.gru_policy import CategoricalGRUPolicy
 from policies.random_policy import RandomPolicy
@@ -153,6 +154,7 @@ class MetaLearner:
         self.D_train = QueryStorage(storage_size=self.config["query_storage_size"],
                                     state_dim=self.env.observation_space.shape)
         self.D_train.mols_set.add("") # Add the empty mol...
+        self.sampled_dataset = SeqStorage()
 
         # Molecules that have been queried (used for diversity)
         self.query_history = []
@@ -230,13 +232,15 @@ class MetaLearner:
                 
                 st_time = time.time()
 
-                sampled_mols, logs = self.sample_query_mols(logs, self.config["num_query_proxies"], self.config["num_samples_per_proxy"])
+                sampled_mols, logs, sampled_info = self.sample_query_mols(logs, self.config["num_query_proxies"], self.config["num_samples_per_proxy"])
 
                 logs["timing/sample_query_mols"] = time.time() - st_time
                 st_time = time.time()
 
-
                 sampled_mols = torch.cat(sampled_mols, dim=0)
+
+                sampled_mols_strings = utl.mol_to_string_encoding(self.config, sampled_mols)
+                self.sampled_dataset.insert(sampled_mols_strings, sampled_info['query_proxy_idx'], sampled_info['query_round'])
 
             st_time = time.time()
 
@@ -253,8 +257,9 @@ class MetaLearner:
                 # Query the scores
                 queried_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, queried_mols,
                                                                           flatten_input=self.flatten_true_oracle_input))
-
-                self.D_train.insert(queried_mols, queried_mols_scores)
+                
+                queried_mols_strings = utl.mol_to_string_encoding(self.config, queried_mols)
+                self.D_train.insert(queried_mols, queried_mols_scores, queried_mols_strings, query_round=self.iter_idx)
 
                 # Sync query_history with D_train
                 self.query_history += list(self.D_train.mols[len(self.query_history):self.D_train.storage_filled])
@@ -293,9 +298,8 @@ class MetaLearner:
                 self.print_timing(logs)
                 self.log(logs)
 
-                utl.save_mols(mols=self.D_train.mols[:self.D_train.storage_filled].numpy(),
-                              scores=self.D_train.scores[:self.D_train.storage_filled].numpy(),
-                              folder=self.logger.full_output_folder)
+                utl.save_queried_mols(dataset = self.D_train, folder=self.logger.full_output_folder)
+                utl.save_sampled_mols(dataset = self.sampled_dataset, folder=self.logger.full_output_folder)
 
             if (self.iter_idx + 1) % self.config["save_interval"] == 0:
                 print(f"Saving model at iter-{self.iter_idx}...")
@@ -451,6 +455,10 @@ class MetaLearner:
 
         inner_opt = optim.SGD(self.policy.parameters(), lr=self.config["inner_lr"])
         sampled_mols = []
+        info = {
+                'query_proxy_idx': [],
+                'query_round': [],
+                }
         for j in tqdm(range(num_query_proxies)):
             # Proxy(Task)-specific updates
             with higher.innerloop_ctx(
@@ -476,11 +484,14 @@ class MetaLearner:
                     inner_loss = self.adapt(D_j, inner_policy, diffopt)
 
                 # Sample mols (and query) for training the proxy oracles later
-                sampled_mols.append(self.sample_policy_mols(inner_policy, 
+                generated_mols = self.sample_policy_mols(inner_policy, 
                                                         num_steps=self.config["policy"]["num_steps"],
-                                                        num_samples=num_samples_per_proxy).detach())  # Sample from policies -- preferably make this parallelised in the future
-
-        return sampled_mols, logs
+                                                        num_samples=num_samples_per_proxy).detach()
+                sampled_mols.append(generated_mols)  # Sample from policies -- preferably make this parallelised in the future
+                info['query_proxy_idx'] = info['query_proxy_idx'] + [j] * len(generated_mols)
+                
+        info['query_round'] = [self.iter_idx] * len(info['query_proxy_idx'])
+        return sampled_mols, logs, info 
 
     def sample_policy_mols(self, policy, num_steps, num_samples=None):
         """
@@ -647,7 +658,7 @@ class MetaLearner:
             if seq not in self.D_train.mols_set:
                 valid_idx.append(i)
             else:
-                print("Already queried...")
+                print("Already queried (select_molecules)...")
 
         mols = mols[valid_idx] # Filter out the duplicates
 

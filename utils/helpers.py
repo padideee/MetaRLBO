@@ -41,7 +41,7 @@ def mol_to_string_encoding(config, mols):
             mol_strings.append(data_utl.enc_to_seq(mols[i]))
     elif "Ising" in config["task"]: 
         for i in range(len(mols)):
-            mol_strings.append(data_utl.enc_to_seq(mols[i], enc_len=length, num_actions=20))
+            mol_strings.append(data_utl.enc_to_seq(mols[i]))
     elif "RNA14" in config["task"]: # TODO:
         assert NotImplementedError
     else:

@@ -25,8 +25,8 @@ def worker(remote, parent_remote, env_fn_wrapper):
                 remote.send(ob)
             elif cmd == 'render':
                 remote.send(env.render(mode='rgb_array'))
-            elif cmd == 'set_oracles':
-                env.set_oracles(data)
+            # elif cmd == 'set_oracles':
+            #     env.set_oracles(data)
             elif cmd == 'close':
                 remote.close()
                 break
@@ -121,10 +121,10 @@ class SubprocVecEnv(VecEnv):
         return imgs
 
 
-    def set_oracles(self, data):
-        self._assert_not_closed()
-        for pipe in self.remotes:
-            pipe.send(('set_oracles', data))
+    # def set_oracles(self, data):
+    #     self._assert_not_closed()
+    #     for pipe in self.remotes:
+    #         pipe.send(('set_oracles', data))
 
 
     def _assert_not_closed(self):

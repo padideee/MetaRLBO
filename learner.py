@@ -339,7 +339,7 @@ class Learner:
             self.policy_storage.after_update()
         logs["general/value_loss"] = value_loss
         logs["general/action_loss"] = action_loss
-        logs["general/dist_entropy"] = dist_entropy
+        logs["general/dist_entropy"] = dist_entropy.mean()
 
         return logs
 

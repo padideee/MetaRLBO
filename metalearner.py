@@ -117,6 +117,10 @@ class MetaLearner:
 
             self.true_oracle = AltIsingTrueOracle()
             self.true_oracle_model = utl.get_true_oracle_model(self.config)
+        elif self.config['task'] == 'RNA14-v0':
+            from oracles.RNA_true_oracle import RNATrueOracle
+            self.true_oracle = RNATrueOracle()
+            self.true_oracle_model = utl.get_true_oracle_model(self.config)
 
         else:
             raise NotImplementedError
@@ -508,12 +512,12 @@ class MetaLearner:
         return_mols = torch.zeros(num_samples, *state_dim)
         
         curr_sample = 0
-        data = {"reward_oracle": None, # Leo: This is deprecated -- to remove
-                "reward_oracle_model": None,
-                "query_history": self.query_history,
-                "query_reward_in_env": self.config["query_reward_in_env"], 
-                "density_penalty": False}
-        self.env.set_oracles(data)
+        # data = {"reward_oracle": None, # Leo: This is deprecated -- to remove
+        #         "reward_oracle_model": None,
+        #         "query_history": self.query_history,
+        #         "query_reward_in_env": self.config["query_reward_in_env"], 
+        #         "density_penalty": False}
+        # self.env.set_oracles(data)
 
         while True:
             """
@@ -574,12 +578,12 @@ class MetaLearner:
 
         state_dim = self.env.observation_space.shape
         curr_sample = 0
-        data = {"reward_oracle": oracle,
-                "reward_oracle_model": oracle_model,
-                "query_history": self.query_history,
-                "query_reward_in_env": self.config["query_reward_in_env"], 
-                "density_penalty": density_penalty}
-        self.env.set_oracles(data)
+        # data = {"reward_oracle": oracle,
+        #         "reward_oracle_model": oracle_model,
+        #         "query_history": self.query_history,
+        #         "query_reward_in_env": self.config["query_reward_in_env"], 
+        #         "density_penalty": density_penalty}
+        # self.env.set_oracles(data)
 
         state = torch.tensor(self.env.reset()).float()  # Returns (num_processes, 51, 21) -- TODO: ....this needs to be parallelised
         hidden_state = None

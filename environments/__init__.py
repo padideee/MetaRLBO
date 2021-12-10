@@ -34,3 +34,12 @@ register( # This is an issue...
     kwargs={'max_length': 100, 'vocab_size': 20},
 )
 
+
+register( # This is an issue...
+    'RNA14-v0',
+    entry_point='environments.RNA_env:RNAEnv',
+    kwargs={'max_length': 14, 'vocab_size': 4},
+)
+
+
+

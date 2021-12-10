@@ -20,7 +20,6 @@ debug = {
 	"log_interval": 1,
 }
 
-
 debug_RANDOM = {
 	"exp_label": "DEBUG-RANDOM",
 	"num_initial_samples": 400,
@@ -418,6 +417,46 @@ debug_KNR = {
 
 	"true_oracle": {
 		"model_name": "RFC",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )
+	"seed": 73,
+}
+
+debug_RNA14 = {
+	"exp_label": "DEBUG-RNA14",
+    "task": "RNA14-v0",
+	"num_proxies": 2, 
+	"num_inner_updates": 1,
+	"num_meta_proxy_samples": 4, 
+	"num_query_proxies": 4,
+	"num_initial_samples": 250,
+	"num_samples_per_proxy": 16,
+	"num_samples_per_task_update": 8,
+	"num_query_per_iter": 20,
+	"inner_lr": 5.0,
+	"outer_lr": 0.5,
+	"num_meta_updates_per_iter": 1, 
+	"entropy_reg_coeff": 0.2,
+	"proxy_oracle": {
+		"model_name": "KNR",
+		"p": 0.8, 
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 4.0,
+		},
+		"diversity_threshold": 0, # Diversity threshold when greedily selecting molecules...
+	},
+
+	"true_oracle": {
+		"model_name": "RNA14_Oracle",
 	},
 	"log_interval": 1,
 	"results_log_dir": "./logs",

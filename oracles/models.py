@@ -1,7 +1,6 @@
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, GradientBoostingRegressor
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.linear_model import Ridge, BayesianRidge
-import xgboost as xgb
 
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, RationalQuadratic, Matern
@@ -9,6 +8,7 @@ from oracles.custom_models.GPR import CustomGPR
 from oracles.custom_models.dynappo_ensemble import DynaPPOEnsemble
 from oracles.custom_models.alt_ising_model import AlternatingChainIsingModel
 from oracles.custom_models.NN_model import NNProxyModel
+from oracles.custom_models.rna_model import RNAModel
 # Classifiers
 
 def RFC(n_estimators=200):
@@ -92,3 +92,8 @@ def CNN(seq_len, alphabet_len, device = None): # TODO: Setup so we can use the d
     import torch
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
   return NNProxyModel(seq_len=seq_len, alphabet_len=alphabet_len, model_type="CNN", device=device)
+
+
+
+def RNA_Model():
+  return RNAModel()

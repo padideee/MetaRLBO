@@ -25,6 +25,8 @@ def task_str_len(task_name):
         length=50
     elif 'AltIsing100' in task_name:
         length=100
+    elif 'RNA14' in task_name:
+        length=14
     else:
         raise NotImplementedError
     return length
@@ -43,7 +45,7 @@ def mol_to_string_encoding(config, mols):
         for i in range(len(mols)):
             mol_strings.append(data_utl.enc_to_seq(mols[i]))
     elif "RNA14" in config["task"]: # TODO:
-        assert NotImplementedError
+        assert NotImplementedError # TODO
     else:
         assert NotImplementedError
 
@@ -90,6 +92,8 @@ def get_true_oracle_model(config):
         model = NN()
     elif config["true_oracle"]["model_name"] == 'AltIsing_Oracle': # Only for AltIsing Task
         model = AltIsingModel(length=config["task_config"]["seq_len"], vocab_size=20)
+    elif config["true_oracle"]["model_name"] == 'RNA14_Oracle': # Only for AltIsing Task
+        model = RNA_Model()
     else:
         raise NotImplementedError
 
@@ -104,6 +108,9 @@ def setup_task_configs(config):
     elif 'AltIsing' in config["task"]:
         length = task_str_len(config["task"])
         config["task_config"]["seq_len"], config["task_config"]["alphabet_len"] = length, 20
+    elif config['task'] == 'RNA14-v0':
+        config["task_config"]["seq_len"], config["task_config"]["alphabet_len"] = 14, 4
+
     else:
         raise NotImplementedError
 

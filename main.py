@@ -9,7 +9,7 @@ import os
 import torch
 
 # get configs
-from config import AMP_configs, CLAMP_configs, Ising20_configs, Ising50_configs, Ising100_configs
+from config import AMP_configs, CLAMP_configs, Ising20_configs, Ising50_configs, Ising100_configs, RNA14_configs
 from config.default import DEFAULT_CONFIG
 from config import debug_configs
 from metalearner import MetaLearner
@@ -49,6 +49,9 @@ def main():
         else:
             raise NotImplementedError
         config = merge_dicts(DEFAULT_CONFIG, ising_config)
+    elif "rna14" in config_name:
+        rna_config = getattr(rna_configs, config_name)
+        config = merge_dicts(DEFAULT_CONFIG, rna_config)
     else:
         raise NotImplementedError
 
@@ -61,7 +64,7 @@ def main():
         config["exp_label"] = config["exp_label"] + "_seed-" + str(args.seed)
 
     # standard
-    valid_tasks = ['AMP-v0', 'CLAMP-v0', 'AltIsing20-v0', 'AltIsing50-v0', 'AltIsing100-v0']
+    valid_tasks = ['AMP-v0', 'CLAMP-v0', 'AltIsing20-v0', 'AltIsing50-v0', 'AltIsing100-v0', 'RNA14-v0']
     if config["task"] in valid_tasks:
         pass
     else:

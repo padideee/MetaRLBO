@@ -5,8 +5,11 @@ gym
 scikit-learn
 hickle
 positional-encodings
-xgboost
 tensorboard
 higher
 tqdm
 biopython
+flexs
+transformers
+
+

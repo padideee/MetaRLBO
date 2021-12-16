@@ -418,6 +418,7 @@ debug_KNR = {
 	"true_oracle": {
 		"model_name": "RFC",
 	},
+	"reset_policy_per_round": True,
 	"log_interval": 1,
 	"results_log_dir": "./logs",
 	"mode": "val", # mode -- val (hyperparameter opt.), test (eval. )

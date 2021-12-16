@@ -50,7 +50,7 @@ def main():
             raise NotImplementedError
         config = merge_dicts(DEFAULT_CONFIG, ising_config)
     elif "rna14" in config_name:
-        rna_config = getattr(rna_configs, config_name)
+        rna_config = getattr(RNA14_configs, config_name)
         config = merge_dicts(DEFAULT_CONFIG, rna_config)
     else:
         raise NotImplementedError

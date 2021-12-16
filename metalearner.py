@@ -277,7 +277,6 @@ class MetaLearner:
                 # TODO: Log diversity here... parallelise the querying (after the unique checking)
                 logs["outer_loop/queried_mols/diversity"] = pairwise_hamming_distance(queried_mols)
 
-            # Logging details
             cumul_min, cumul_mean, cumul_max = self.D_train.scores[:self.D_train.storage_filled].min().item(), self.D_train.scores[:self.D_train.storage_filled].mean().item(), self.D_train.scores[:self.D_train.storage_filled].max().item()
 
             logs[f"outer_loop/sampled_mols_scores/cumulative/mean"] = cumul_mean
@@ -516,7 +515,7 @@ class MetaLearner:
     def sample_policy_mols(self, policy, num_steps, num_samples=None):
         """
             Args:
-             - policy
+             - policy: Typically the policy after it has finished the inner loop training
              - num_steps: Number of steps to take in an environment (Honestly, this is not very useful whatsoever - ignore this)
              - num_samples: number of molecules/sequences to return
             
@@ -668,7 +667,9 @@ class MetaLearner:
 
     def select_molecules(self, mols, logs, n_query, use_diversity_metric=True):
         """
-            Selects the molecules to query from the ones proposed by the policy(ies)
+            Does the selection of the molecules/sequences from the batch of sequences proposed by the generator trained via meta-rl
+
+            Bayesian Optimization is done here.
         """
 
         from data.dynappo_data import enc_to_seq
@@ -709,7 +710,7 @@ class MetaLearner:
 
 
 
-    # Based off of CAVIA public code: 
+    # Below a good chunk of the code is for TRPO in the outer loop. It can be for the most part ignored.
 
 
     def fit_baseline(self, episodes):

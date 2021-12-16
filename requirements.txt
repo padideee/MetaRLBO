@@ -3,7 +3,6 @@ stable_baselines3
 torch
 gym
 scikit-learn
-hickle
 positional-encodings
 tensorboard
 higher
@@ -11,5 +10,4 @@ tqdm
 biopython
 flexs
 transformers
-
 

@@ -29,13 +29,13 @@ conda install -c bioconda viennarna
 
 Next, try to run `pip install -r requirements.txt`.
 
-You will likely run into issues with some packages -- for those packages, you need to install via `conda`:
+You will likely run into issues with some packages -- for those packages, you need to install via `conda`. Here are some examples:
 ```
 conda install cloudpickle
 conda install urllib3
 ```
 
-After fixing those `pip install -r requirements.txt` should work.
+After fixing those `pip install -r requirements.txt` should work. Alternatively, you can try to install the packages individually and if there are any errors with the existing packages, you can run `conda install packagename`.
 
 
 

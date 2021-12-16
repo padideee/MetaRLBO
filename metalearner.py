@@ -177,6 +177,7 @@ class MetaLearner:
         self.baseline = LinearFeatureBaseline(input_size = self.env.observation_space.shape[0] * self.env.observation_space.shape[1]).to(device) # TODO: FIX
 
     def reset_policy(self):
+        print("New Round: Resetting POLICY")
         if self.config["policy"]["model_name"] == "GRU":
             self.policy = CategoricalGRUPolicy(num_actions=self.env.action_space.n + 1,
                                                hidden_size=self.config["policy"]["model_config"]["hidden_dim"],
@@ -228,7 +229,7 @@ class MetaLearner:
             else:
 
                 st_time = time.time()
-                # Training
+                # Train generator
                 for mi in tqdm(range(self.config["num_meta_updates_per_iter"])):
                     logs = self.meta_update(logs, self.config["num_proxies"])
 
@@ -236,6 +237,7 @@ class MetaLearner:
                 
                 st_time = time.time()
 
+                # Sample from generator
                 sampled_mols, logs, sampled_info = self.sample_query_mols(logs, self.config["num_query_proxies"], self.config["num_samples_per_proxy"])
 
                 logs["timing/sample_query_mols"] = time.time() - st_time
@@ -248,7 +250,7 @@ class MetaLearner:
 
             st_time = time.time()
 
-            # Do some filtering of the molecules here...
+            # Selection of sequences
             if self.iter_idx == 0:
                 queried_mols, logs = self.select_molecules(sampled_mols, logs, self.config["num_initial_samples"])
             else:
@@ -256,9 +258,8 @@ class MetaLearner:
             logs["timing/selecting_molecules"] = time.time() - st_time
             logs["timing/total_time_sampling"] = self.total_time_sampling
 
-            # Perform the querying
+            # Query the sequences and store in queried sequence dataset
             if queried_mols is not None:
-                # Query the scores
                 queried_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, queried_mols,
                                                                           flatten_input=self.flatten_true_oracle_input))
                 
@@ -276,6 +277,7 @@ class MetaLearner:
                 # TODO: Log diversity here... parallelise the querying (after the unique checking)
                 logs["outer_loop/queried_mols/diversity"] = pairwise_hamming_distance(queried_mols)
 
+            # Logging details
             cumul_min, cumul_mean, cumul_max = self.D_train.scores[:self.D_train.storage_filled].min().item(), self.D_train.scores[:self.D_train.storage_filled].mean().item(), self.D_train.scores[:self.D_train.storage_filled].max().item()
 
             logs[f"outer_loop/sampled_mols_scores/cumulative/mean"] = cumul_mean
@@ -440,6 +442,20 @@ class MetaLearner:
         return logs
 
     def sample_query_mols(self, logs, num_query_proxies, num_samples_per_proxy):
+        """
+            Args:
+             - logs: dictionary of experiment detials
+             - num_query_proxies: Number of "query proxies"
+             - num_samples_per_proxy: Number of samples to generate
+
+            Return:
+             - sampled_mols: "num_query_proxies * num_samples_per_proxy" sequences
+             - logs: updated dictionary of experiment details
+             - info: Additional information 
+
+            This function generates "num_query_proxies * num_samples_per_proxy" molecules/sequences. 
+            These are the sequences from which Bayesian Optimization will select from.
+        """
 
 
         # Proxy -- used for generating molecules for querying
@@ -501,9 +517,13 @@ class MetaLearner:
         """
             Args:
              - policy
-             - num_samples - number of molecules to return
+             - num_steps: Number of steps to take in an environment (Honestly, this is not very useful whatsoever - ignore this)
+             - num_samples: number of molecules/sequences to return
+            
             Return:
              - Molecules: Tensor of size (num_samples, dim of mol)
+            
+            This function uses the policy to sample "num_samples" number of molecules/sequences
         """
 
         time_st = time.time()
@@ -568,10 +588,14 @@ class MetaLearner:
             Args:
              - policy
              - oracle
-             - oracle_model
+             - oracle_model 
              - policy_storage: Used to store the rollout for training the pollicy
+             - density_penalty: Boolean that determines whether or not to use the density penalty
+            
             Return:
-
+                Nothing
+            
+            This function samples trajectories and stores them in policy_storage for use in training the policy.
         """
 
         time_st = time.time()
@@ -644,8 +668,7 @@ class MetaLearner:
 
     def select_molecules(self, mols, logs, n_query, use_diversity_metric=True):
         """
-            Selects the molecules to query from the ones proposed by the policy trained on each of the proxy oracle
-             - Let's select the ones that have the highest score according to the proxy oracles? -- Check...
+            Selects the molecules to query from the ones proposed by the policy(ies)
         """
 
         from data.dynappo_data import enc_to_seq

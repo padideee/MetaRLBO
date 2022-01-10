@@ -15,7 +15,7 @@ rna14_001 = { # Based on Ising20-052
     "entropy_reg_coeff": 0.2,
     "proxy_oracle": {
         "model_name": "CNN",
-        "p": 0.7, 
+        "p": 1.0, 
     },
     "outerloop": {
         "oracle": "proxy",

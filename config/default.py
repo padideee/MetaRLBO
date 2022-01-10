@@ -4,7 +4,7 @@ DEFAULT_CONFIG = {
 	"exp_label": "DEFAULT",
 	"use_metalearner": True,
 	"task": "AMP-v0",
-	"max_num_queries": 3000, # Maximum number of queries in experiment
+	"max_num_queries": 3000, # Maximum number of queries in experiment 
 	"query_storage_size": 100000, # Maximum number of queries allowed in the storage
 	"num_inner_updates": 1, # Number of inner loop updates
 	"num_meta_updates": 20000, # Max. # of meta updates (ignore)

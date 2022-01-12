@@ -11,7 +11,7 @@ rna14_001 = { # Based on Ising20-052
     "num_query_per_iter": 100,
     "inner_lr": 1.0,
     "outer_lr": 0.1,
-    "num_meta_updates_per_iter": 80, 
+    "num_meta_updates_per_iter": 50, 
     "entropy_reg_coeff": 0.2,
     "proxy_oracle": {
         "model_name": "CNN",
@@ -34,7 +34,7 @@ rna14_001 = { # Based on Ising20-052
     },
 
     "true_oracle": {
-        "model_name": "AltIsing_Oracle",
+        "model_name": "RNA14_Oracle",
     },
     "use_baseline": False,
     "log_interval": 1,

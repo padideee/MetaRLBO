@@ -92,7 +92,7 @@ def get_true_oracle_model(config):
         model = NN()
     elif config["true_oracle"]["model_name"] == 'AltIsing_Oracle': # Only for AltIsing Task
         model = AltIsingModel(length=config["task_config"]["seq_len"], vocab_size=20)
-    elif config["true_oracle"]["model_name"] == 'RNA14_Oracle': # Only for AltIsing Task
+    elif config["true_oracle"]["model_name"] == 'RNA14_Oracle': # Only for RNA14 Task
         model = RNA_Model()
     else:
         raise NotImplementedError

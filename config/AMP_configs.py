@@ -458,7 +458,7 @@ fixed_metarlbo_amp_cnn_009 = { # 005 but (p 0.8 -> 1.0)
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "CNN",
-		"p": 0.8, 
+		"p": 1.0, 
 	},
 	"outerloop": {
 		"oracle": "proxy",
@@ -481,7 +481,7 @@ fixed_metarlbo_amp_cnn_009 = { # 005 but (p 0.8 -> 1.0)
 }
 
 fixed_metarlbo_amp_cnn_010 = { # 009 but (beta 4.0 -> 2.0)
-	"exp_label": "Fixed-MetaRLBO-AMP-CNN-009",
+	"exp_label": "Fixed-MetaRLBO-AMP-CNN-010",
 	"num_proxies": 4,
 	"num_inner_updates": 1,
 	"num_initial_samples": 250,
@@ -494,7 +494,7 @@ fixed_metarlbo_amp_cnn_010 = { # 009 but (beta 4.0 -> 2.0)
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "CNN",
-		"p": 0.8, 
+		"p": 1.0, 
 	},
 	"outerloop": {
 		"oracle": "proxy",

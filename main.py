@@ -9,11 +9,12 @@ import os
 import torch
 
 # get configs
-from config import AMP_configs, CLAMP_configs, Ising20_configs, Ising50_configs, Ising100_configs, RNA14_configs
+from config import AMP_configs, CLAMP_configs, Ising20_configs, Ising50_configs, Ising100_configs, RNA14_configs, policy_ensemble_configs
 from config.default import DEFAULT_CONFIG
 from config import debug_configs
 from metalearner import MetaLearner
 from learner import Learner
+from ensemble_learner import EnsembleLearner
 from utils.helpers import merge_dicts
 
 from random_prog import Program
@@ -52,6 +53,9 @@ def main():
     elif "rna14" in config_name:
         rna_config = getattr(RNA14_configs, config_name)
         config = merge_dicts(DEFAULT_CONFIG, rna_config)
+    elif "policy_ensemble" in config_name: 
+        policy_ensemble_config = getattr(policy_ensemble_configs, config_name)
+        config = merge_dicts(DEFAULT_CONFIG, policy_ensemble_config)
     else:
         raise NotImplementedError
 
@@ -81,6 +85,9 @@ def main():
     if "RANDOM" in config["policy"]["model_name"]:
         prog = Program(config)
         prog.run()
+    elif config["use_ensemble_learner"]:
+        ensemble_learner = EnsembleLearner(config)
+        ensemble_learner.run()
     elif not config["use_metalearner"]:
         learner = Learner(config)
         learner.run()

@@ -51,7 +51,7 @@ policy_ensemble_test = {
         "model_name": "AltIsing_Oracle",
     },
     "log_interval": 1,
-    "results_log_dir": "./logs",
+    "results_log_dir": "/home/leofeng/scratch/MetaRLBO/logs",
     "seed": 73,
 }
 
@@ -109,7 +109,7 @@ policy_ensemble_i20_001 = { # Based on Ising20_063
     },
     "reset_policy_per_round": False,
     "log_interval": 1,
-    "results_log_dir": "./logs",
+    "results_log_dir": "/home/leofeng/scratch/MetaRLBO/logs",
     "seed": 73,
 }
 
@@ -167,7 +167,7 @@ policy_ensemble_i20_002 = { # Copy 001: but reset policy per round!
     },
     "reset_policy_per_round": True,
     "log_interval": 1,
-    "results_log_dir": "./logs",
+    "results_log_dir": "/home/leofeng/scratch/MetaRLBO/logs",
     "seed": 73,
 }
 

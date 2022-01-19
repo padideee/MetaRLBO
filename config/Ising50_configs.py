@@ -2529,7 +2529,7 @@ metarlbo_ising50_056 = { # Copy 051 w/ beta: 4 -> 0
         "model_name": "AltIsing_Oracle",
     },
     "log_interval": 1,
-    "results_log_dir": "./logs",
+    "results_log_dir": "/home/leofeng/scratch/MetaRLBO/logs",
     "seed": 73,
 }
 
@@ -2577,7 +2577,7 @@ metarlbo_ising50_057 = { # Copy 056: num_meta_updates_per_iter: 30 -> 50
         "model_name": "AltIsing_Oracle",
     },
     "log_interval": 1,
-    "results_log_dir": "./logs",
+    "results_log_dir": "/home/leofeng/scratch/MetaRLBO/logs",
     "seed": 73,
 }
 
@@ -2626,7 +2626,7 @@ metarlbo_ising50_058 = { # Copy 056 (w/ reset_policy: False -> True)
     },
     "reset_policy_per_round": True,
     "log_interval": 1,
-    "results_log_dir": "./logs",
+    "results_log_dir": "/home/leofeng/scratch/MetaRLBO/logs",
     "seed": 73,
 }
 
@@ -2675,7 +2675,7 @@ metarlbo_ising50_059 = { # Copy 057: (w/ reset_policy: False -> True)
     },
     "reset_policy_per_round": True,
     "log_interval": 1,
-    "results_log_dir": "./logs",
+    "results_log_dir": "/home/leofeng/scratch/MetaRLBO/logs",
     "seed": 73,
 }
 
@@ -2724,6 +2724,6 @@ metarlbo_ising50_060 = { # Copy 059 (w/ meta_updates: 50 -> 80)
     },
     "reset_policy_per_round": True,
     "log_interval": 1,
-    "results_log_dir": "./logs",
+    "results_log_dir": "/home/leofeng/scratch/MetaRLBO/logs",
     "seed": 73,
 }

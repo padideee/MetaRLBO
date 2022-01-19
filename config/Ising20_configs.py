@@ -2998,7 +2998,7 @@ metarlbo_ising20_067 = { # Copy 063 -- but num_meta_updates_per_iter: 80 -> 160
     },
     "use_baseline": False,
     "log_interval": 1,
-    "results_log_dir": "./logs",
+    "results_log_dir": "/home/leofeng/scratch/MetaRLBO/logs",
     "seed": 73,
 }
 
@@ -3046,7 +3046,7 @@ metarlbo_ising20_068 = { # Copy 063 but (num_steps: 150 -> 81, num_meta_steps: 5
     },
     "use_baseline": False,
     "log_interval": 1,
-    "results_log_dir": "./logs",
+    "results_log_dir": "/home/leofeng/scratch/MetaRLBO/logs",
     "seed": 73,
 }
 
@@ -3095,6 +3095,6 @@ metarlbo_ising20_069 = { # Copy 068 (but reset_policy: False -> True)
     "reset_policy_per_round": True,
     "use_baseline": False,
     "log_interval": 1,
-    "results_log_dir": "./logs",
+    "results_log_dir": "/home/leofeng/scratch/MetaRLBO/logs",
     "seed": 73,
 }

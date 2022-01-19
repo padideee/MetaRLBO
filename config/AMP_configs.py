@@ -517,6 +517,192 @@ fixed_metarlbo_amp_cnn_010 = { # 009 but (beta 4.0 -> 2.0)
 }
 
 
+# ======================== Experiments for the paper:
+
+icml_metarlbo_amp_cnn_001 = { # copy fixed...cnn 006 w/ "p": 0.8 -> 1.0, "num_samples_per_proxy" 100 -> 64
+	"exp_label": "ICML-MetaRLBO-AMP-CNN-001",
+	"num_proxies": 4,
+	"num_inner_updates": 1,
+	"num_initial_samples": 250,
+	"num_query_proxies": 32,
+	"num_samples_per_proxy": 64,
+	"num_query_per_iter": 250,
+	"inner_lr": 2.0,
+	"outer_lr": 0.2,
+	"num_meta_updates_per_iter": 80,
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "CNN",
+		"p": 1.0, 
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 4.0,
+		},
+		"diversity_threshold": 10, # Diversity threshold when greedily selecting molecules...
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+
+icml_metarlbo_amp_cnn_002 = { # copy 001, but beta 4.0 -> 1.0
+	"exp_label": "ICML-MetaRLBO-AMP-CNN-002",
+	"num_proxies": 4,
+	"num_inner_updates": 1,
+	"num_initial_samples": 250,
+	"num_query_proxies": 32,
+	"num_samples_per_proxy": 64,
+	"num_query_per_iter": 250,
+	"inner_lr": 2.0,
+	"outer_lr": 0.2,
+	"num_meta_updates_per_iter": 80,
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "CNN",
+		"p": 1.0, 
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 1.0,
+		},
+		"diversity_threshold": 10, # Diversity threshold when greedily selecting molecules...
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+
+icml_metarlbo_amp_cnn_003 = { # copy 002, but entropy_reg_coeff: 0.0 -> 0.2
+	"exp_label": "ICML-MetaRLBO-AMP-CNN-003",
+	"num_proxies": 4,
+	"num_inner_updates": 1,
+	"num_initial_samples": 250,
+	"num_query_proxies": 32,
+	"num_samples_per_proxy": 64,
+	"num_query_per_iter": 250,
+	"inner_lr": 2.0,
+	"outer_lr": 0.2,
+	"num_meta_updates_per_iter": 80,
+	"entropy_reg_coeff": 0.2,
+	"proxy_oracle": {
+		"model_name": "CNN",
+		"p": 1.0, 
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 1.0,
+		},
+		"diversity_threshold": 10, # Diversity threshold when greedily selecting molecules...
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+icml_metarlbo_amp_cnn_004 = { # copy 003, but diversity_threshold: 10 -> 1
+	"exp_label": "ICML-MetaRLBO-AMP-CNN-004",
+	"num_proxies": 4,
+	"num_inner_updates": 1,
+	"num_initial_samples": 250,
+	"num_query_proxies": 32,
+	"num_samples_per_proxy": 64,
+	"num_query_per_iter": 250,
+	"inner_lr": 2.0,
+	"outer_lr": 0.2,
+	"num_meta_updates_per_iter": 80,
+	"entropy_reg_coeff": 0.2,
+	"proxy_oracle": {
+		"model_name": "CNN",
+		"p": 1.0, 
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 1.0,
+		},
+		"diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+
+icml_metarlbo_amp_cnn_005 = { # copy 003, but reset_policy: False -> True
+	"exp_label": "ICML-MetaRLBO-AMP-CNN-005",
+	"num_proxies": 4,
+	"num_inner_updates": 1,
+	"num_initial_samples": 250,
+	"num_query_proxies": 32,
+	"num_samples_per_proxy": 64,
+	"num_query_per_iter": 250,
+	"inner_lr": 2.0,
+	"outer_lr": 0.2,
+	"num_meta_updates_per_iter": 80,
+	"entropy_reg_coeff": 0.2,
+	"proxy_oracle": {
+		"model_name": "CNN",
+		"p": 1.0, 
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB", 
+		"config": {
+			'beta': 1.0,
+		},
+		"diversity_threshold": 10, # Diversity threshold when greedily selecting molecules...
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+    "reset_policy_per_round": True,
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
 # ======================= Proxy Oracles: K Nearest Regressors
 
 

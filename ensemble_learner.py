@@ -174,13 +174,6 @@ class EnsembleLearner:
 
         self.reset_policy()
 
-        self.policy_storage = OnlineStorage(
-            self.config["policy"]["num_steps"],
-            config["num_processes"],
-            self.env.observation_space.shape,
-            self.env.action_space, # Action is a single discrete variable!
-            self.policies[0].recurrent_hidden_state_size)  # TODO: Change to non recurrent
-        self.policy_storage.to(device)
 
         
         self.iter_idx = 0
@@ -194,7 +187,6 @@ class EnsembleLearner:
         print("New Round: Resetting POLICY")
         self.policies = []
         self.agents = []
-
         for _ in range(self.config["num_policies"]):
             if self.config["policy"]["model_name"] == "GRU":
                 policy = CategoricalGRUPolicy(num_actions=self.env.action_space.n + 1,
@@ -235,6 +227,19 @@ class EnsembleLearner:
                 raise NotImplementedError
 
             self.agents.append(agent)
+
+        self.policy_storages = [
+            OnlineStorage(
+                self.config["policy"]["num_steps"],
+                self.config["num_processes"],
+                self.env.observation_space.shape,
+                self.env.action_space, # Action is a single discrete variable!
+                self.policies[0].recurrent_hidden_state_size)  # TODO: Change to non recurrent
+            for _ in range(self.config["num_policies"])
+            ]
+        for storage in self.policy_storages:
+            storage.to(device)
+
 
 
 
@@ -280,8 +285,8 @@ class EnsembleLearner:
 
 
                 st_time = time.time()
-                for policy, agent, proxy_oracle, proxy_oracle_model in zip(self.policies, self.agents, self.proxy_oracles, self.proxy_oracle_models):
-                    self.train_policy(logs, policy, agent, proxy_oracle, proxy_oracle_model)
+                for policy, policy_storage, agent, proxy_oracle, proxy_oracle_model in zip(self.policies, self.policy_storages, self.agents, self.proxy_oracles, self.proxy_oracle_models):
+                    self.train_policy(logs, policy, policy_storage, agent, proxy_oracle, proxy_oracle_model)
 
                 logs["timing/updates"] = time.time() - st_time
                 
@@ -363,7 +368,7 @@ class EnsembleLearner:
                     torch.save(self.policies[i].state_dict(), save_path)
 
 
-    def train_policy(self, logs, policy, agent, proxy_oracle, proxy_oracle_model):
+    def train_policy(self, logs, policy, policy_storage, agent, proxy_oracle, proxy_oracle_model):
 
         info = {
                 'query_proxy_idx': [],
@@ -378,13 +383,13 @@ class EnsembleLearner:
             #                                    device=device
             #                                    )
             self.sample_policy(policy, proxy_oracle, proxy_oracle_model, num_steps=self.config["policy"]["num_meta_steps"],
-                               policy_storage=self.policy_storage, density_penalty = self.config["outerloop"]["density_penalty"])
+                               policy_storage=policy_storage, density_penalty = self.config["outerloop"]["density_penalty"])
             
             # Update the policy
-            value_loss, action_loss, dist_entropy = agent.update(self.policy_storage)
+            value_loss, action_loss, dist_entropy = agent.update(policy_storage)
 
 
-            self.policy_storage.after_update()
+            policy_storage.after_update()
         logs["general/value_loss"] = value_loss
         logs["general/action_loss"] = action_loss
         logs["general/dist_entropy"] = dist_entropy
@@ -520,8 +525,8 @@ class EnsembleLearner:
 
         if policy_storage is not None:
             next_value = policy.get_value(
-               self.policy_storage.obs[-1], self.policy_storage.recurrent_hidden_states[-1],
-               self.policy_storage.masks[-1]).detach()
+               policy_storage.obs[-1], policy_storage.recurrent_hidden_states[-1],
+               policy_storage.masks[-1]).detach()
 
             policy_storage.compute_returns(next_value, self.config["ppo_config"]["use_gae"],
                                                self.config["ppo_config"]["gamma"],

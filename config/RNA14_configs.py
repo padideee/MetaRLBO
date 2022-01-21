@@ -937,7 +937,7 @@ rna14_020 = { # 013 but num_meta_updates_per_iter: 50 -> 80
 
 
 rna14_021 = { # 013 but lambda: 0.1 -> 0.2
-    "exp_label": "MetaRLBO-RNA14-020",
+    "exp_label": "MetaRLBO-RNA14-021",
     "task": "RNA14-v0",
     "num_proxies": 4, 
     "max_num_queries": 1500, # Maximum number of queries in experiment

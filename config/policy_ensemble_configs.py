@@ -51,7 +51,7 @@ policy_ensemble_test = {
         "model_name": "AltIsing_Oracle",
     },
     "log_interval": 1,
-    "results_log_dir": "/home/leofeng/scratch/MetaRLBO/logs",
+    "results_log_dir": "./logs",
     "seed": 73,
 }
 

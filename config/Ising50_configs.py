@@ -2727,3 +2727,245 @@ metarlbo_ising50_060 = { # Copy 059 (w/ meta_updates: 50 -> 80)
     "results_log_dir": "/home/leofeng/scratch/MetaRLBO/logs",
     "seed": 73,
 }
+
+
+
+metarlbo_ising50_061 = { # Copy 056: num_meta_updates_per_iter: 30 -> 80
+    "exp_label": "MetaRLBO-Ising50-KNR-061",
+    "task": "AltIsing50-v0",
+    "num_proxies": 4, 
+    "max_num_queries": 8000, # Maximum number of queries in experiment
+    "num_inner_updates": 1,
+    "num_initial_samples": 500,
+    "num_query_proxies": 32,
+    "num_samples_per_proxy": 64,
+    "num_query_per_iter": 500,
+    "inner_lr": 2.0,
+    "outer_lr": 0.2,
+    "num_meta_updates_per_iter": 80,
+    "entropy_reg_coeff": 0.0,
+    "proxy_oracle": {
+        "model_name": "KNR",
+        "p": 0.8, 
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "policy": {
+        "num_steps": 155, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+        "num_meta_steps": 51,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB", 
+        "config": {
+            'beta': 0.0,
+        },
+        "diversity_threshold": 10, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": 1.0, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 2, 
+    },
+
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "log_interval": 1,
+    "results_log_dir": "/home/leofeng/scratch/MetaRLBO/logs",
+    "seed": 73,
+}
+
+
+metarlbo_ising50_062 = { # Copy 056: num_meta_updates_per_iter: 30 -> 100
+    "exp_label": "MetaRLBO-Ising50-KNR-062",
+    "task": "AltIsing50-v0",
+    "num_proxies": 4, 
+    "max_num_queries": 8000, # Maximum number of queries in experiment
+    "num_inner_updates": 1,
+    "num_initial_samples": 500,
+    "num_query_proxies": 32,
+    "num_samples_per_proxy": 64,
+    "num_query_per_iter": 500,
+    "inner_lr": 2.0,
+    "outer_lr": 0.2,
+    "num_meta_updates_per_iter": 80,
+    "entropy_reg_coeff": 0.0,
+    "proxy_oracle": {
+        "model_name": "KNR",
+        "p": 0.8, 
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "policy": {
+        "num_steps": 155, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+        "num_meta_steps": 51,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB", 
+        "config": {
+            'beta': 0.0,
+        },
+        "diversity_threshold": 10, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": 1.0, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 2, 
+    },
+
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "log_interval": 1,
+    "results_log_dir": "/home/leofeng/scratch/MetaRLBO/logs",
+    "seed": 73,
+}
+
+
+
+metarlbo_ising50_063 = { # Copy 056: num_meta_updates_per_iter: 30 -> 80 and diversity_threshold: 10 - 1
+    "exp_label": "MetaRLBO-Ising50-KNR-063",
+    "task": "AltIsing50-v0",
+    "num_proxies": 4, 
+    "max_num_queries": 8000, # Maximum number of queries in experiment
+    "num_inner_updates": 1,
+    "num_initial_samples": 500,
+    "num_query_proxies": 32,
+    "num_samples_per_proxy": 64,
+    "num_query_per_iter": 500,
+    "inner_lr": 2.0,
+    "outer_lr": 0.2,
+    "num_meta_updates_per_iter": 80,
+    "entropy_reg_coeff": 0.0,
+    "proxy_oracle": {
+        "model_name": "KNR",
+        "p": 0.8, 
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "policy": {
+        "num_steps": 155, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+        "num_meta_steps": 51,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB", 
+        "config": {
+            'beta': 0.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": 1.0, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 2, 
+    },
+
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "log_interval": 1,
+    "results_log_dir": "/home/leofeng/scratch/MetaRLBO/logs",
+    "seed": 73,
+}
+
+
+metarlbo_ising50_064 = { # Copy 056: num_meta_updates_per_iter: 30 -> 80 and diversity_threshold: 10 -> 1 and ilr, olr: 2.0, 0.2 -> 1.0, 0.1
+    "exp_label": "MetaRLBO-Ising50-KNR-064",
+    "task": "AltIsing50-v0",
+    "num_proxies": 4, 
+    "max_num_queries": 8000, # Maximum number of queries in experiment
+    "num_inner_updates": 1,
+    "num_initial_samples": 500,
+    "num_query_proxies": 32,
+    "num_samples_per_proxy": 64,
+    "num_query_per_iter": 500,
+    "inner_lr": 1.0,
+    "outer_lr": 0.1,
+    "num_meta_updates_per_iter": 80,
+    "entropy_reg_coeff": 0.0,
+    "proxy_oracle": {
+        "model_name": "KNR",
+        "p": 0.8, 
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "policy": {
+        "num_steps": 155, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+        "num_meta_steps": 51,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB", 
+        "config": {
+            'beta': 0.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": 1.0, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 2, 
+    },
+
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "log_interval": 1,
+    "results_log_dir": "/home/leofeng/scratch/MetaRLBO/logs",
+    "seed": 73,
+}
+
+
+metarlbo_ising50_065 = { # Copy 056: num_meta_updates_per_iter: 30 -> 80 and diversity_threshold: 10 -> 1 and ilr, olr: 2.0, 0.2 -> 1.0, 0.1 and entropy_reg_coeff: 0.0 -> 0.5
+    "exp_label": "MetaRLBO-Ising50-KNR-065",
+    "task": "AltIsing50-v0",
+    "num_proxies": 4, 
+    "max_num_queries": 8000, # Maximum number of queries in experiment
+    "num_inner_updates": 1,
+    "num_initial_samples": 500,
+    "num_query_proxies": 32,
+    "num_samples_per_proxy": 64,
+    "num_query_per_iter": 500,
+    "inner_lr": 1.0,
+    "outer_lr": 0.1,
+    "num_meta_updates_per_iter": 80,
+    "entropy_reg_coeff": 0.5,
+    "proxy_oracle": {
+        "model_name": "KNR",
+        "p": 0.8, 
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "policy": {
+        "num_steps": 155, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+        "num_meta_steps": 51,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB", 
+        "config": {
+            'beta': 0.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": 1.0, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 2, 
+    },
+
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "log_interval": 1,
+    "results_log_dir": "/home/leofeng/scratch/MetaRLBO/logs",
+    "seed": 73,
+}

@@ -7,6 +7,8 @@ import torch.nn.functional as F
 
 class MLP(nn.Module): # Remember to put this to device...
     def __init__(self,
+                 seq_len=50,
+                 alphabet_len=20,
                  n_out = 1, 
                  n_hidden = [32, 8, 4],
                  nonlinearity = F.relu

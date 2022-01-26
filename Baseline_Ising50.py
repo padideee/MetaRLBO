@@ -274,7 +274,7 @@ def run_genetic(nModelQueries):
             rounds=nRounds,
             starting_sequence=starting_sequence,
             sequences_batch_size=query_batch_size,
-            model_queries_per_batch=model_queries_per_batch,
+            model_queries_per_batch=nModelQueries,
             alphabet=alphabet
         )
 
@@ -333,7 +333,7 @@ def run_dynappo(nModelQueries):
             num_model_rounds=nModelRounds,
             rounds=nRounds,
             starting_sequence=starting_sequence,
-            sequences_batch_size=bsize,
+            sequences_batch_size=query_batch_size,
             model_queries_per_batch=nModelQueries,
             alphabet=alphabet,
         )

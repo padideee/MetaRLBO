@@ -272,7 +272,7 @@ def run_genetic(nModelQueries):
             rounds=nRounds,
             starting_sequence=starting_sequence,
             sequences_batch_size=query_batch_size,
-            model_queries_per_batch=model_queries_per_batch,
+            model_queries_per_batch=nModelQueries,
             alphabet=alphabet
         )
 

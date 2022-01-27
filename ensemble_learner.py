@@ -294,7 +294,7 @@ class EnsembleLearner:
                 st_time = time.time()
 
                 # Sample from generator
-                sampled_mols, logs, sampled_info = self.sample_query_mols(logs, self.config["num_query_proxies"], self.config["num_samples_per_proxy"])
+                sampled_mols, logs, sampled_info = self.sample_query_mols(logs, self.config["num_query_proxies"], self.config["num_samples_per_policy"])
 
                 logs["timing/sample_query_mols"] = time.time() - st_time
                 st_time = time.time()

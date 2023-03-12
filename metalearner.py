@@ -203,18 +203,14 @@ class MetaLearner:
             from algo.RND import MLP as MLPExp  # exploration policy
             from algo.RND import initialize_weights, get_int_r
 
-            input_size = 56  # 14*4
-            hidden_size = 28  # 14 * 2
-            output_size = 14
-
-            self.exp_policy = MLPExp(input_size,
-                        hidden_size,
-                        output_size)
+            self.exp_policy = MLPExp(self.config["exp_policy"]["input_size"],
+                        self.config["exp_policy"]["hidden_size"],
+                        self.config["exp_policy"]["output_size"]).to(device)
             self.exp_policy.apply(initialize_weights)
 
-            self.rand_exp_policy = MLPExp(input_size,
-                                     hidden_size,
-                                     output_size)
+            self.rand_exp_policy = MLPExp(self.config["exp_policy"]["input_size"],
+                        self.config["exp_policy"]["hidden_size"],
+                        self.config["exp_policy"]["output_size"]).to(device)
             self.rand_exp_policy.apply(initialize_weights)
             for param in self.rand_exp_policy.parameters():
                 param.requires_grad = False
@@ -237,7 +233,7 @@ class MetaLearner:
 
             if self.config["reset_policy_per_round"]:
                 self.reset_policy()
-            if self.config["reset_exp_policy_per_round"]: # TODO: add to config
+            if self.config["reset_exp_policy_per_round"]:
                 self.reset_exp_policy()
 
             logs = {}

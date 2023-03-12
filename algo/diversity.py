@@ -182,7 +182,7 @@ class diversity():
 
         self.optimizer.zero_grad()
         int_rew.backward()
-        optimizer.step()
+        self.optimizer.step()
 
         return log_int_r
 

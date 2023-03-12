@@ -32,7 +32,12 @@ DEFAULT_CONFIG = {
 		"num_steps": 150, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
 		"num_meta_steps": 50,
 	},
-
+	"exp_policy": { #TODO: change the size for AMP env and Ising env
+		"model_name": "MLP",
+		"input_size": 56,  # 14*4
+		"hidden_size": 28,  # 14 * 2
+		"output_size": 14,
+	},
 	"diversity": {
 		"div_metric_name": "hamming", # Options: "hamming" or "blast" (Note: blast is slow)
 		"div_switch": "ON" # switches the diversity bonus ON / OFF -- (Note: there's overlap with ["outerloop"]["density_penalty"]... be careful)
@@ -73,6 +78,7 @@ DEFAULT_CONFIG = {
 	},
 	"use_baseline": False,
 	"reset_policy_per_round": False,
+	"reset_exp_policy_per_round": True,
 	"query_reward_in_env": False, # Faster to do the querying outside of the env since we can do it in batches.
 	"entropy_reg_coeff": 0.0, # Deprecated (Ignore)
 	"data_source": "DynaPPO", # Either: DynaPPO or Custom (Custom being data Padideh generated)

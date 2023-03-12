@@ -144,3 +144,6 @@ history.fasta
 seq.fasta
 common_evaluation
 Untitled.ipynb
+data/
+*.sh
+slurm-*

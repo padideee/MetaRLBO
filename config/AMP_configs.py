@@ -33,10 +33,10 @@ dynappo_amp_001 = {
     },
     "policy": {
         "num_steps": 200,
-    },  
+    },
     "save_interval": 10, # Save model every n batch queries
-    "num_processes": 8, 
-    "results_log_dir": "./logs", 
+    "num_processes": 8,
+    "results_log_dir": "./logs",
     "seed": 73,
 }
 
@@ -152,7 +152,7 @@ amp_dynappo_random = {
 # ======================= CNN Oracle (fixed codebase)
 
 
-fixed_metarlbo_amp_cnn_001 = { # 
+fixed_metarlbo_amp_cnn_001 = { #
 	"exp_label": "Fixed-MetaRLBO-AMP-CNN-001",
 	"num_proxies": 8,
 	"num_inner_updates": 1,
@@ -166,14 +166,14 @@ fixed_metarlbo_amp_cnn_001 = { #
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "CNN",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -202,14 +202,14 @@ fixed_metarlbo_amp_cnn_002 = { # 001 but (num_meta_updates_per_iter 30 -> 50)
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "CNN",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -239,14 +239,14 @@ fixed_metarlbo_amp_cnn_003 = { # 001 but (diversity threshold 10 -> 1)
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "CNN",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -275,14 +275,14 @@ fixed_metarlbo_amp_cnn_004 = { # 001 but (entropy_reg_coeff 0.0 -> 0.1)
 	"entropy_reg_coeff": 0.1,
 	"proxy_oracle": {
 		"model_name": "CNN",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -311,14 +311,14 @@ fixed_metarlbo_amp_cnn_005 = { # 005 but (num_proxies 8 -> 4)
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "CNN",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -348,14 +348,14 @@ fixed_metarlbo_amp_cnn_006 = { # 005 but (num_meta_updates_per_iter 50 -> 80)
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "CNN",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -385,14 +385,14 @@ fixed_metarlbo_amp_cnn_007 = { # 002 but (num_samples_per_proxy 100 -> 256)
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "CNN",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -421,14 +421,14 @@ fixed_metarlbo_amp_cnn_008 = { # 007 but (proxy_oracle's -- p 0.8 -> 0.7)
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "CNN",
-		"p": 0.7, 
+		"p": 0.7,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -458,14 +458,14 @@ fixed_metarlbo_amp_cnn_009 = { # 005 but (p 0.8 -> 1.0)
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "CNN",
-		"p": 1.0, 
+		"p": 1.0,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -494,14 +494,14 @@ fixed_metarlbo_amp_cnn_010 = { # 009 but (beta 4.0 -> 2.0)
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "CNN",
-		"p": 1.0, 
+		"p": 1.0,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -533,14 +533,14 @@ icml_metarlbo_amp_cnn_001 = { # copy fixed...cnn 006 w/ "p": 0.8 -> 1.0, "num_sa
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "CNN",
-		"p": 1.0, 
+		"p": 1.0,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -570,14 +570,14 @@ icml_metarlbo_amp_cnn_002 = { # copy 001, but beta 4.0 -> 1.0
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "CNN",
-		"p": 1.0, 
+		"p": 1.0,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 1.0,
 		},
@@ -607,14 +607,14 @@ icml_metarlbo_amp_cnn_003 = { # copy 002, but entropy_reg_coeff: 0.0 -> 0.2
 	"entropy_reg_coeff": 0.2,
 	"proxy_oracle": {
 		"model_name": "CNN",
-		"p": 1.0, 
+		"p": 1.0,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 1.0,
 		},
@@ -643,14 +643,14 @@ icml_metarlbo_amp_cnn_004 = { # copy 003, but diversity_threshold: 10 -> 1
 	"entropy_reg_coeff": 0.2,
 	"proxy_oracle": {
 		"model_name": "CNN",
-		"p": 1.0, 
+		"p": 1.0,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 1.0,
 		},
@@ -680,14 +680,14 @@ icml_metarlbo_amp_cnn_005 = { # copy 003, but reset_policy: False -> True
 	"entropy_reg_coeff": 0.2,
 	"proxy_oracle": {
 		"model_name": "CNN",
-		"p": 1.0, 
+		"p": 1.0,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 1.0,
 		},
@@ -702,6 +702,118 @@ icml_metarlbo_amp_cnn_005 = { # copy 003, but reset_policy: False -> True
 	"results_log_dir": "./logs",
 	"seed": 73,
 }
+# ======================= Thesis
+thesis_metarlbo_amp_cnn_001 = { # copy fixed...cnn 006 w/ "p": 0.8 -> 1.0, "num_samples_per_proxy" 100 -> 64
+	"exp_label": "THESIS-MetaRLBO-AMP-CNN-001",
+	"num_proxies": 4,
+	"num_inner_updates": 1,
+	"num_initial_samples": 250,
+	"num_query_proxies": 32,
+	"num_samples_per_proxy": 64,
+	"num_query_per_iter": 250,
+	"inner_lr": 2.0,
+	"outer_lr": 0.2,
+	"num_meta_updates_per_iter": 80,
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "CNN",
+		"p": 1.0,
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "UCB",
+		"config": {
+			'beta': 4.0,
+		},
+		"diversity_threshold": 10, # Diversity threshold when greedily selecting molecules...
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+thesis_metarlbo_amp_cnn_002 = { # copy fixed...cnn 006 w/ "p": 0.8 -> 1.0, "num_samples_per_proxy" 100 -> 64
+	"exp_label": "THESIS-MetaRLBO-AMP-CNN-002",
+	"num_proxies": 4,
+	"num_inner_updates": 1,
+	"num_initial_samples": 250,
+	"num_query_proxies": 32,
+	"num_samples_per_proxy": 64,
+	"num_query_per_iter": 250,
+	"inner_lr": 2.0,
+	"outer_lr": 0.2,
+	"num_meta_updates_per_iter": 80,
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "CNN",
+		"p": 1.0,
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "PROXY_MEAN",
+		"config": {
+			'beta': 4.0,
+		},
+		"diversity_threshold": 10, # Diversity threshold when greedily selecting molecules...
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+
+thesis_metarlbo_amp_cnn_003 = { # copy fixed...cnn 006 w/ "p": 0.8 -> 1.0, "num_samples_per_proxy" 100 -> 64
+	"exp_label": "THESIS-MetaRLBO-AMP-CNN-003",
+	"num_proxies": 4,
+	"num_inner_updates": 1,
+	"num_initial_samples": 250,
+	"num_query_proxies": 32,
+	"num_samples_per_proxy": 64,
+	"num_query_per_iter": 250,
+	"inner_lr": 2.0,
+	"outer_lr": 0.2,
+	"num_meta_updates_per_iter": 80,
+	"entropy_reg_coeff": 0.0,
+	"proxy_oracle": {
+		"model_name": "CNN",
+		"p": 1.0,
+	},
+	"outerloop": {
+		"oracle": "proxy",
+		"density_penalty": True,
+	},
+	"selection_criteria": { # Configs for selecting the samples
+		"method": "PI",
+		"config": {
+			'beta': 4.0,
+		},
+		"diversity_threshold": 10, # Diversity threshold when greedily selecting molecules...
+	},
+
+	"true_oracle": {
+		"model_name": "RFC",
+	},
+	"log_interval": 1,
+	"results_log_dir": "./logs",
+	"seed": 73,
+}
+
+
+
 
 # ======================= Proxy Oracles: K Nearest Regressors
 
@@ -721,14 +833,14 @@ metarlbo_amp_knr_001 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -757,14 +869,14 @@ metarlbo_amp_knr_002 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -794,14 +906,14 @@ metarlbo_amp_knr_003 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -816,7 +928,7 @@ metarlbo_amp_knr_003 = {
 	"seed": 73,
 }
 
-metarlbo_amp_knr_004 = { 
+metarlbo_amp_knr_004 = {
 	"exp_label": "MetaRLBO-AMP-KNR-004",
 	"num_proxies": 8,
 	"num_inner_updates": 1,
@@ -830,14 +942,14 @@ metarlbo_amp_knr_004 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -866,14 +978,14 @@ metarlbo_amp_knr_005 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -888,7 +1000,7 @@ metarlbo_amp_knr_005 = {
 	"seed": 73,
 }
 
-metarlbo_amp_knr_006 = { 
+metarlbo_amp_knr_006 = {
 	"exp_label": "MetaRLBO-AMP-KNR-006",
 	"num_proxies": 8,
 	"num_inner_updates": 2,
@@ -902,14 +1014,14 @@ metarlbo_amp_knr_006 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -938,14 +1050,14 @@ metarlbo_amp_knr_007 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -960,7 +1072,7 @@ metarlbo_amp_knr_007 = {
 	"seed": 73,
 }
 
-metarlbo_amp_knr_008 = { 
+metarlbo_amp_knr_008 = {
 	"exp_label": "MetaRLBO-AMP-KNR-008",
 	"num_proxies": 4,
 	"num_inner_updates": 1,
@@ -974,14 +1086,14 @@ metarlbo_amp_knr_008 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.7, 
+		"p": 0.7,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -1019,14 +1131,14 @@ metarlbo_amp_mlp_001 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "MLP",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -1055,14 +1167,14 @@ metarlbo_amp_mlp_002 = { # 2 inner loop updates (compared to 001)
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "MLP",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -1092,14 +1204,14 @@ metarlbo_amp_mlp_003 = { # More proxies (compared to 001)
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "MLP",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -1129,14 +1241,14 @@ metarlbo_amp_mlp_004 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -1166,14 +1278,14 @@ metarlbo_amp_mlp_005 = { # More proxy oracles!
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -1202,14 +1314,14 @@ metarlbo_amp_mlp_006 = { # Decrease beta for UCB
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 2.0,
 		},
@@ -1238,14 +1350,14 @@ metarlbo_amp_mlp_007 = { # Increase number of meta updates
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 2.0,
 		},
@@ -1274,14 +1386,14 @@ metarlbo_amp_mlp_008 = { # Increase number of inner loop updates
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 2.0,
 		},
@@ -1315,14 +1427,14 @@ metarlbo_amp_cnn_001 = { # Same as MLP-005 (but with CNNs)
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "CNN",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -1352,14 +1464,14 @@ metarlbo_amp_cnn_002 = { # Same as 001 but more meta updates
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "CNN",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -1388,14 +1500,14 @@ metarlbo_amp_cnn_003 = { # Same as 001 but with entropy bonus
 	"entropy_reg_coeff": 0.1,
 	"proxy_oracle": {
 		"model_name": "CNN",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -1425,14 +1537,14 @@ metarlbo_amp_cnn_004 = { # Same as 001 but with more entropy bonus
 	"entropy_reg_coeff": 0.5,
 	"proxy_oracle": {
 		"model_name": "CNN",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -1461,14 +1573,14 @@ metarlbo_amp_cnn_005 = { # Same as 001 but with more entropy bonus
 	"entropy_reg_coeff": 1.0,
 	"proxy_oracle": {
 		"model_name": "CNN",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -1499,14 +1611,14 @@ metarlbo_amp_mlp_trpo_001 = { # This is a copy of mlp_005 (but a trpo version)
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -1544,14 +1656,14 @@ metarlbo_amp_mlp_trpo_002 = { # vs. 001 -- More meta updates (70 instead of 30)
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -1589,14 +1701,14 @@ metarlbo_amp_mlp_trpo_003 = { # vs. 002 -- Higher inner lr (20.0 vs 2.0)
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -1635,14 +1747,14 @@ metarlbo_amp_mlp_trpo_004 = { # vs. 002 -- Higher inner lr (5.0 vs 2.0)
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -1680,14 +1792,14 @@ metarlbo_amp_mlp_trpo_005 = { # vs. 002 -- Lower inner lr (0.5 vs 2.0)
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -1717,7 +1829,7 @@ metarlbo_amp_mlp_trpo_005 = { # vs. 002 -- Lower inner lr (0.5 vs 2.0)
 
 amp_knr_001 = { # Increased number of proxy models...
 	"exp_label": "AMP-KNR-001",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 1,
 	"num_query_proxies": 4,
 	"num_initial_samples": 250,
@@ -1725,11 +1837,11 @@ amp_knr_001 = { # Increased number of proxy models...
 	"num_query_per_iter": 20,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 
 	"true_oracle": {
@@ -1742,7 +1854,7 @@ amp_knr_001 = { # Increased number of proxy models...
 
 amp_knr_002 = { # Increased number of proxy models...
 	"exp_label": "AMP-KNR-002",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 2,
 	"num_query_proxies": 4,
 	"num_initial_samples": 250,
@@ -1750,11 +1862,11 @@ amp_knr_002 = { # Increased number of proxy models...
 	"num_query_per_iter": 20,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 
 	"true_oracle": {
@@ -1767,7 +1879,7 @@ amp_knr_002 = { # Increased number of proxy models...
 
 amp_knr_003 = { # Increased number of proxy models...
 	"exp_label": "AMP-KNR-003",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 3,
 	"num_query_proxies": 4,
 	"num_initial_samples": 250,
@@ -1775,11 +1887,11 @@ amp_knr_003 = { # Increased number of proxy models...
 	"num_query_per_iter": 20,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 
 	"true_oracle": {
@@ -1792,7 +1904,7 @@ amp_knr_003 = { # Increased number of proxy models...
 
 amp_knr_004 = { # Increased number of proxy models...
 	"exp_label": "AMP-KNR-004",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 2,
 	"num_query_proxies": 4,
 	"num_initial_samples": 250,
@@ -1800,11 +1912,11 @@ amp_knr_004 = { # Increased number of proxy models...
 	"num_query_per_iter": 20,
 	"inner_lr": 1.0,
 	"outer_lr": 0.1,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 
 	"true_oracle": {
@@ -1817,7 +1929,7 @@ amp_knr_004 = { # Increased number of proxy models...
 
 amp_knr_005 = { # Increased number of proxy models...
 	"exp_label": "AMP-KNR-005",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 2,
 	"num_query_proxies": 4,
 	"num_initial_samples": 250,
@@ -1825,11 +1937,11 @@ amp_knr_005 = { # Increased number of proxy models...
 	"num_query_per_iter": 20,
 	"inner_lr": 10.0,
 	"outer_lr": 0.1,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 
 	"true_oracle": {
@@ -1840,9 +1952,9 @@ amp_knr_005 = { # Increased number of proxy models...
 	"seed": 73,
 }
 
-amp_knr_006 = { 
+amp_knr_006 = {
 	"exp_label": "AMP-KNR-006",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 1,
 	"num_query_proxies": 4,
 	"num_initial_samples": 250,
@@ -1850,11 +1962,11 @@ amp_knr_006 = {
 	"num_query_per_iter": 20,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "true",
@@ -1869,9 +1981,9 @@ amp_knr_006 = {
 	"seed": 73,
 }
 
-amp_knr_007 = { 
+amp_knr_007 = {
 	"exp_label": "AMP-KNR-007",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 1,
 	"num_query_proxies": 4,
 	"num_initial_samples": 250,
@@ -1879,11 +1991,11 @@ amp_knr_007 = {
 	"num_query_per_iter": 20,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
@@ -1898,9 +2010,9 @@ amp_knr_007 = {
 	"seed": 73,
 }
 
-amp_knr_008 = { 
+amp_knr_008 = {
 	"exp_label": "AMP-KNR-008",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 1,
 	"num_query_proxies": 4,
 	"num_initial_samples": 250,
@@ -1908,11 +2020,11 @@ amp_knr_008 = {
 	"num_query_per_iter": 20,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "true",
@@ -1927,22 +2039,22 @@ amp_knr_008 = {
 	"seed": 73,
 }
 
-amp_knr_009 = { 
+amp_knr_009 = {
 	"exp_label": "AMP-KNR-009",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 1,
-	"num_meta_proxy_samples": 2, # 
+	"num_meta_proxy_samples": 2, #
 	"num_query_proxies": 4,
 	"num_initial_samples": 250,
 	"num_samples_per_proxy": 16,
 	"num_query_per_iter": 20,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
@@ -1957,22 +2069,22 @@ amp_knr_009 = {
 	"seed": 73,
 }
 
-amp_knr_010 = { 
+amp_knr_010 = {
 	"exp_label": "AMP-KNR-010",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 1,
-	"num_meta_proxy_samples": 2, # 
+	"num_meta_proxy_samples": 2, #
 	"num_query_proxies": 4,
 	"num_initial_samples": 250,
 	"num_samples_per_proxy": 16,
 	"num_query_per_iter": 20,
 	"inner_lr": 10.0,
 	"outer_lr": 1.0,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
@@ -1987,22 +2099,22 @@ amp_knr_010 = {
 	"seed": 73,
 }
 
-amp_knr_011 = { 
+amp_knr_011 = {
 	"exp_label": "AMP-KNR-011",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 1,
-	"num_meta_proxy_samples": 2, # 
+	"num_meta_proxy_samples": 2, #
 	"num_query_proxies": 4,
 	"num_initial_samples": 250,
 	"num_samples_per_proxy": 16,
 	"num_query_per_iter": 20,
 	"inner_lr": 2.0,
 	"outer_lr": 0.2,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
@@ -2017,22 +2129,22 @@ amp_knr_011 = {
 	"seed": 73,
 }
 
-amp_knr_012 = { 
+amp_knr_012 = {
 	"exp_label": "AMP-KNR-012",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 2,
-	"num_meta_proxy_samples": 2, # 
+	"num_meta_proxy_samples": 2, #
 	"num_query_proxies": 4,
 	"num_initial_samples": 250,
 	"num_samples_per_proxy": 16,
 	"num_query_per_iter": 20,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
@@ -2047,9 +2159,9 @@ amp_knr_012 = {
 	"seed": 73,
 }
 
-amp_knr_013 = { 
+amp_knr_013 = {
 	"exp_label": "AMP-KNR-013",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 1,
 	"num_query_proxies": 8,
 	"num_initial_samples": 250,
@@ -2057,11 +2169,11 @@ amp_knr_013 = {
 	"num_query_per_iter": 20,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
@@ -2076,9 +2188,9 @@ amp_knr_013 = {
 	"seed": 73,
 }
 
-amp_knr_014 = { 
+amp_knr_014 = {
 	"exp_label": "AMP-KNR-014",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 1,
 	"num_query_proxies": 16,
 	"num_initial_samples": 250,
@@ -2086,11 +2198,11 @@ amp_knr_014 = {
 	"num_query_per_iter": 20,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
@@ -2105,9 +2217,9 @@ amp_knr_014 = {
 	"seed": 73,
 }
 
-amp_knr_015 = { 
+amp_knr_015 = {
 	"exp_label": "AMP-KNR-015",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 2,
 	"num_query_proxies": 4,
 	"num_initial_samples": 250,
@@ -2115,11 +2227,11 @@ amp_knr_015 = {
 	"num_query_per_iter": 20,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
@@ -2134,9 +2246,9 @@ amp_knr_015 = {
 	"seed": 73,
 }
 
-amp_knr_016 = { 
+amp_knr_016 = {
 	"exp_label": "AMP-KNR-016",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 1,
 	"num_query_proxies": 4,
 	"num_initial_samples": 250,
@@ -2144,11 +2256,11 @@ amp_knr_016 = {
 	"num_query_per_iter": 20,
 	"inner_lr": 2.0,
 	"outer_lr": 0.2,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
@@ -2164,9 +2276,9 @@ amp_knr_016 = {
 }
 
 
-amp_knr_017 = { 
+amp_knr_017 = {
 	"exp_label": "AMP-KNR-017",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 1,
 	"num_query_proxies": 4,
 	"num_initial_samples": 250,
@@ -2174,18 +2286,18 @@ amp_knr_017 = {
 	"num_query_per_iter": 20,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -2200,9 +2312,9 @@ amp_knr_017 = {
 	"seed": 73,
 }
 
-amp_knr_018 = { 
+amp_knr_018 = {
 	"exp_label": "AMP-KNR-018",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 1,
 	"num_query_proxies": 4,
 	"num_initial_samples": 250,
@@ -2210,18 +2322,18 @@ amp_knr_018 = {
 	"num_query_per_iter": 20,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 8.0,
 		},
@@ -2236,9 +2348,9 @@ amp_knr_018 = {
 	"seed": 73,
 }
 
-amp_knr_019 = { 
+amp_knr_019 = {
 	"exp_label": "AMP-KNR-019",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 1,
 	"num_query_proxies": 4,
 	"num_initial_samples": 250,
@@ -2246,18 +2358,18 @@ amp_knr_019 = {
 	"num_query_per_iter": 20,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -2272,9 +2384,9 @@ amp_knr_019 = {
 	"seed": 73,
 }
 
-amp_knr_020 = { 
+amp_knr_020 = {
 	"exp_label": "AMP-KNR-020",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 1,
 	"num_query_proxies": 4,
 	"num_initial_samples": 250,
@@ -2282,18 +2394,18 @@ amp_knr_020 = {
 	"num_query_per_iter": 20,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 3, 
+	"num_meta_updates_per_iter": 3,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -2308,9 +2420,9 @@ amp_knr_020 = {
 	"seed": 73,
 }
 
-amp_knr_021 = { 
+amp_knr_021 = {
 	"exp_label": "AMP-KNR-021",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 1,
 	"num_query_proxies": 4,
 	"num_initial_samples": 250,
@@ -2318,18 +2430,18 @@ amp_knr_021 = {
 	"num_query_per_iter": 20,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -2344,9 +2456,9 @@ amp_knr_021 = {
 	"seed": 73,
 }
 
-amp_knr_022 = { 
+amp_knr_022 = {
 	"exp_label": "AMP-KNR-022",
-	"num_proxies": 2, 
+	"num_proxies": 2,
 	"num_inner_updates": 1,
 	"num_query_proxies": 4,
 	"num_initial_samples": 250,
@@ -2354,18 +2466,18 @@ amp_knr_022 = {
 	"num_query_per_iter": 20,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -2380,9 +2492,9 @@ amp_knr_022 = {
 	"seed": 73,
 }
 
-amp_knr_023 = { 
+amp_knr_023 = {
 	"exp_label": "AMP-KNR-023",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 1,
 	"num_query_proxies": 4,
 	"num_initial_samples": 250,
@@ -2390,18 +2502,18 @@ amp_knr_023 = {
 	"num_query_per_iter": 10,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 8.0,
 		},
@@ -2416,9 +2528,9 @@ amp_knr_023 = {
 	"seed": 73,
 }
 
-amp_knr_024 = { 
+amp_knr_024 = {
 	"exp_label": "AMP-KNR-024",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 1,
 	"num_query_proxies": 4,
 	"num_initial_samples": 250,
@@ -2426,18 +2538,18 @@ amp_knr_024 = {
 	"num_query_per_iter": 20,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 0.0,
 		},
@@ -2452,9 +2564,9 @@ amp_knr_024 = {
 	"seed": 73,
 }
 
-amp_knr_025 = { 
+amp_knr_025 = {
 	"exp_label": "AMP-KNR-025",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 1,
 	"num_query_proxies": 8,
 	"num_initial_samples": 250,
@@ -2462,18 +2574,18 @@ amp_knr_025 = {
 	"num_query_per_iter": 20,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 8.0,
 		},
@@ -2488,9 +2600,9 @@ amp_knr_025 = {
 	"seed": 73,
 }
 
-amp_knr_026 = { 
+amp_knr_026 = {
 	"exp_label": "AMP-KNR-026",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 1,
 	"num_query_proxies": 4,
 	"num_initial_samples": 250,
@@ -2498,18 +2610,18 @@ amp_knr_026 = {
 	"num_query_per_iter": 20,
 	"inner_lr": 2.0,
 	"outer_lr": 0.2,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -2524,9 +2636,9 @@ amp_knr_026 = {
 	"seed": 73,
 }
 
-amp_knr_027 = { 
+amp_knr_027 = {
 	"exp_label": "AMP-KNR-027",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 1,
 	"num_query_proxies": 4,
 	"num_initial_samples": 250,
@@ -2534,18 +2646,18 @@ amp_knr_027 = {
 	"num_query_per_iter": 20,
 	"inner_lr": 2.0,
 	"outer_lr": 0.2,
-	"num_meta_updates_per_iter": 3, 
+	"num_meta_updates_per_iter": 3,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -2567,7 +2679,7 @@ amp_knr_027 = {
 
 amp_br_001 = { # Increased number of proxy models...
 	"exp_label": "AMP-BR-001",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 1,
 	"num_query_proxies": 4,
 	"num_initial_samples": 250,
@@ -2575,11 +2687,11 @@ amp_br_001 = { # Increased number of proxy models...
 	"num_query_per_iter": 20,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "BR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
@@ -2597,7 +2709,7 @@ amp_br_001 = { # Increased number of proxy models...
 
 amp_br_002 = { # Increased number of proxy models...
 	"exp_label": "AMP-BR-002",
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 2,
 	"num_query_proxies": 4,
 	"num_initial_samples": 250,
@@ -2605,11 +2717,11 @@ amp_br_002 = { # Increased number of proxy models...
 	"num_query_per_iter": 20,
 	"inner_lr": 5.0,
 	"outer_lr": 0.5,
-	"num_meta_updates_per_iter": 1, 
+	"num_meta_updates_per_iter": 1,
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
@@ -2630,10 +2742,10 @@ amp_br_002 = { # Increased number of proxy models...
 
 
 # =========== Rational Quadratic
-amp_gpr_rq_001 = { 
+amp_gpr_rq_001 = {
 	"exp_label": "AMP-GPR_RQ-001",
 	"max_num_queries": 2000,
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 1,
 	"num_initial_samples": 250,
 	"num_query_proxies": 32,
@@ -2645,7 +2757,7 @@ amp_gpr_rq_001 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "GPR",
-		"p": 0.8, 
+		"p": 0.8,
 		"config": {
 			"kernel": "RationalQuadratic",
 		},
@@ -2668,10 +2780,10 @@ amp_gpr_rq_001 = {
 	"results_log_dir": "./logs",
 	"seed": 73,
 }
-amp_gpr_rq_002 = { 
+amp_gpr_rq_002 = {
 	"exp_label": "AMP-GPR_RQ-002",
 	"max_num_queries": 2000,
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 2,
 	"num_initial_samples": 250,
 	"num_query_proxies": 32,
@@ -2683,7 +2795,7 @@ amp_gpr_rq_002 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "GPR",
-		"p": 0.8, 
+		"p": 0.8,
 		"config": {
 			"kernel": "RationalQuadratic",
 		},
@@ -2710,10 +2822,10 @@ amp_gpr_rq_002 = {
 
 
 # =========== Matern
-amp_gpr_m_001 = { 
+amp_gpr_m_001 = {
 	"exp_label": "AMP-GPR_M-001",
 	"max_num_queries": 2000,
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 1,
 	"num_initial_samples": 250,
 	"num_query_proxies": 32,
@@ -2725,7 +2837,7 @@ amp_gpr_m_001 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "GPR",
-		"p": 0.8, 
+		"p": 0.8,
 		"config": {
 			"kernel": "Matern",
 		},
@@ -2748,10 +2860,10 @@ amp_gpr_m_001 = {
 	"results_log_dir": "./logs",
 	"seed": 73,
 }
-amp_gpr_m_002 = { 
+amp_gpr_m_002 = {
 	"exp_label": "AMP-GPR_M-002",
 	"max_num_queries": 2000,
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 2,
 	"num_initial_samples": 250,
 	"num_query_proxies": 32,
@@ -2763,7 +2875,7 @@ amp_gpr_m_002 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "GPR",
-		"p": 0.8, 
+		"p": 0.8,
 		"config": {
 			"kernel": "Matern",
 		},
@@ -2793,10 +2905,10 @@ amp_gpr_m_002 = {
 
 
 # =========== RBF
-amp_gpr_rbf_001 = { 
+amp_gpr_rbf_001 = {
 	"exp_label": "AMP-GPR_RBF-001",
 	"max_num_queries": 2000,
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 1,
 	"num_initial_samples": 250,
 	"num_query_proxies": 32,
@@ -2808,7 +2920,7 @@ amp_gpr_rbf_001 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "GPR",
-		"p": 0.8, 
+		"p": 0.8,
 		"config": {
 			"kernel": "RBF",
 		},
@@ -2832,10 +2944,10 @@ amp_gpr_rbf_001 = {
 	"seed": 73,
 }
 
-amp_gpr_rbf_002 = { 
+amp_gpr_rbf_002 = {
 	"exp_label": "AMP-GPR_RBF-002",
 	"max_num_queries": 2000,
-	"num_proxies": 4, 
+	"num_proxies": 4,
 	"num_inner_updates": 2,
 	"num_initial_samples": 250,
 	"num_query_proxies": 32,
@@ -2847,7 +2959,7 @@ amp_gpr_rbf_002 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "GPR",
-		"p": 0.8, 
+		"p": 0.8,
 		"config": {
 			"kernel": "RBF",
 		},
@@ -2904,7 +3016,7 @@ amp_gpr_rbf_002 = {
 
 # Medium Batches -- smaller batches than DynaPPO paper but still large
 
-amp_knr_med_001 = { 
+amp_knr_med_001 = {
 	"exp_label": "AMP-KNR-Medium-001",
 	"num_proxies": 8,
 	"num_inner_updates": 1,
@@ -2918,7 +3030,7 @@ amp_knr_med_001 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
@@ -2933,7 +3045,7 @@ amp_knr_med_001 = {
 	"seed": 73,
 }
 
-amp_knr_med_002 = { 
+amp_knr_med_002 = {
 	"exp_label": "AMP-KNR-Medium-002",
 	"num_proxies": 4,
 	"num_inner_updates": 1,
@@ -2947,14 +3059,14 @@ amp_knr_med_002 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -2969,7 +3081,7 @@ amp_knr_med_002 = {
 	"seed": 73,
 }
 
-amp_knr_med_003 = { 
+amp_knr_med_003 = {
 	"exp_label": "AMP-KNR-Medium-003",
 	"num_proxies": 4,
 	"num_inner_updates": 1,
@@ -2983,14 +3095,14 @@ amp_knr_med_003 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -3005,7 +3117,7 @@ amp_knr_med_003 = {
 	"seed": 73,
 }
 
-amp_knr_med_004 = { 
+amp_knr_med_004 = {
 	"exp_label": "AMP-KNR-Medium-004",
 	"num_proxies": 4,
 	"num_inner_updates": 1,
@@ -3019,14 +3131,14 @@ amp_knr_med_004 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -3041,7 +3153,7 @@ amp_knr_med_004 = {
 	"seed": 73,
 }
 
-amp_knr_med_005 = { 
+amp_knr_med_005 = {
 	"exp_label": "AMP-KNR-Medium-005",
 	"num_proxies": 4,
 	"num_inner_updates": 1,
@@ -3055,14 +3167,14 @@ amp_knr_med_005 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -3077,7 +3189,7 @@ amp_knr_med_005 = {
 	"seed": 73,
 }
 
-amp_knr_med_006 = { 
+amp_knr_med_006 = {
 	"exp_label": "AMP-KNR-Medium-006",
 	"num_proxies": 4,
 	"num_inner_updates": 1,
@@ -3091,14 +3203,14 @@ amp_knr_med_006 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -3113,7 +3225,7 @@ amp_knr_med_006 = {
 	"seed": 73,
 }
 
-amp_knr_med_007 = { 
+amp_knr_med_007 = {
 	"exp_label": "AMP-KNR-Medium-007",
 	"num_proxies": 4,
 	"num_inner_updates": 1,
@@ -3127,14 +3239,14 @@ amp_knr_med_007 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -3149,7 +3261,7 @@ amp_knr_med_007 = {
 	"seed": 73,
 }
 
-amp_knr_med_008 = { 
+amp_knr_med_008 = {
 	"exp_label": "AMP-KNR-Medium-008",
 	"num_proxies": 4,
 	"num_inner_updates": 1,
@@ -3163,14 +3275,14 @@ amp_knr_med_008 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 8.0,
 		},
@@ -3185,7 +3297,7 @@ amp_knr_med_008 = {
 	"seed": 73,
 }
 
-amp_knr_med_009 = { 
+amp_knr_med_009 = {
 	"exp_label": "AMP-KNR-Medium-009",
 	"num_proxies": 4,
 	"num_inner_updates": 1,
@@ -3199,14 +3311,14 @@ amp_knr_med_009 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -3221,7 +3333,7 @@ amp_knr_med_009 = {
 	"seed": 73,
 }
 
-amp_knr_med_010 = { 
+amp_knr_med_010 = {
 	"exp_label": "AMP-KNR-Medium-010",
 	"num_proxies": 4,
 	"num_inner_updates": 1,
@@ -3235,14 +3347,14 @@ amp_knr_med_010 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -3257,7 +3369,7 @@ amp_knr_med_010 = {
 	"seed": 73,
 }
 
-amp_knr_med_011 = { 
+amp_knr_med_011 = {
 	"exp_label": "AMP-KNR-Medium-011",
 	"num_proxies": 4,
 	"num_inner_updates": 1,
@@ -3271,14 +3383,14 @@ amp_knr_med_011 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -3293,7 +3405,7 @@ amp_knr_med_011 = {
 	"seed": 73,
 }
 
-amp_knr_med_012 = { 
+amp_knr_med_012 = {
 	"exp_label": "AMP-KNR-Medium-012",
 	"num_proxies": 4,
 	"num_inner_updates": 2,
@@ -3307,14 +3419,14 @@ amp_knr_med_012 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -3329,7 +3441,7 @@ amp_knr_med_012 = {
 	"seed": 73,
 }
 
-amp_knr_med_013 = { 
+amp_knr_med_013 = {
 	"exp_label": "AMP-KNR-Medium-013",
 	"num_proxies": 4,
 	"num_inner_updates": 3,
@@ -3343,14 +3455,14 @@ amp_knr_med_013 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -3365,7 +3477,7 @@ amp_knr_med_013 = {
 	"seed": 73,
 }
 
-amp_knr_med_014 = { 
+amp_knr_med_014 = {
 	"exp_label": "AMP-KNR-Medium-014",
 	"num_proxies": 4,
 	"num_inner_updates": 1,
@@ -3379,14 +3491,14 @@ amp_knr_med_014 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -3457,14 +3569,14 @@ amp_knr_large_001 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -3493,14 +3605,14 @@ amp_knr_large_002 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -3529,14 +3641,14 @@ amp_knr_large_003 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.7, 
+		"p": 0.7,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -3551,7 +3663,7 @@ amp_knr_large_003 = {
 	"seed": 73,
 }
 
-amp_knr_large_004 = { 
+amp_knr_large_004 = {
 	"exp_label": "AMP-KNR-Large-004",
 	"num_proxies": 8,
 	"num_inner_updates": 1,
@@ -3565,14 +3677,14 @@ amp_knr_large_004 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -3601,14 +3713,14 @@ amp_knr_large_005 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 8.0,
 		},
@@ -3637,14 +3749,14 @@ amp_knr_large_006 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},
@@ -3673,14 +3785,14 @@ amp_knr_large_007 = {
 	"entropy_reg_coeff": 0.0,
 	"proxy_oracle": {
 		"model_name": "KNR",
-		"p": 0.8, 
+		"p": 0.8,
 	},
 	"outerloop": {
 		"oracle": "proxy",
 		"density_penalty": True,
 	},
 	"selection_criteria": { # Configs for selecting the samples
-		"method": "UCB", 
+		"method": "UCB",
 		"config": {
 			'beta': 4.0,
 		},

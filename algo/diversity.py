@@ -1,9 +1,12 @@
+import pdb
+
 import torch
 import Bio
 from Bio.Blast.Applications import NcbiblastpCommandline
 from io import StringIO
 from Bio.Blast import NCBIXML
 import utils.helpers as utl
+
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -116,6 +119,7 @@ class diversity():
 
     def density_hamming(self):
         if self.div_switch == "ON":
+            import pdb; pdb.set_trace()
             if self.batch_query:
                 # Hamming Distance is equiv. to XOR, but in our case, it's XOR/2 since we're one hot encoding characters.
                
@@ -163,12 +167,24 @@ class diversity():
     def nearest_neighbour(self):
         pass
 
+    def RND_int_r(self):
+        """ Returns the intrinsic reward, computed by Random Network Distillation(RND) method.
+        """
+        from algo.RND import get_int_r
+
+        # int_r =
+
+        return int_r
+
+
 
     def get_density(self):
         if self.div_metric_name == "blast":
             return self.density_blast()
         elif self.div_metric_name == "hamming":
             return self.density_hamming()
+        # elif self.div_metric_name == "RND":
+        #     return self.RND_int_r()
         else:
             raise NotImplementedError
 

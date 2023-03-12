@@ -4,6 +4,7 @@ DEFAULT_CONFIG = {
 	"exp_label": "DEFAULT",
 	"use_metalearner": True,
 	"use_ensemble_learner": False,
+	"use_rl_learner": False,
 	"task": "AMP-v0",
 	"max_num_queries": 3000, # Maximum number of queries in experiment 
 	"query_storage_size": 100000, # Maximum number of queries allowed in the storage

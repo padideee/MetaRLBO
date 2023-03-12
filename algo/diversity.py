@@ -83,15 +83,18 @@ def blast_density(scores):
 class diversity():
     """ since different distance metric could lead to 'different scale', we should pay attention if
     we want use these metric for comparison purposes. """
-    def __init__(self, seq, history, div_switch="ON", radius=2, div_metric_name="hamming"):
+    def __init__(self, seq, history, model, rand_model, optimizer, div_switch="ON", radius=2, div_metric_name="hamming"):
         super(diversity, self).__init__()
-        self.div_switch=div_switch
+        self.div_switch = div_switch
         self.seq = seq.to(device)
         self.history = torch.stack(history).to(device)
         if len(self.seq.shape) == len(self.history.shape):
             self.batch_query = True # Querying in batches
         else:
             self.batch_query = False
+        self.model = model
+        self.rand_model = rand_model
+        self.optimizer = optimizer
         self.radius = radius
         # self.history = history
         self.div_metric_name = div_metric_name
@@ -119,7 +122,6 @@ class diversity():
 
     def density_hamming(self):
         if self.div_switch == "ON":
-            import pdb; pdb.set_trace()
             if self.batch_query:
                 # Hamming Distance is equiv. to XOR, but in our case, it's XOR/2 since we're one hot encoding characters.
                
@@ -170,11 +172,19 @@ class diversity():
     def RND_int_r(self):
         """ Returns the intrinsic reward, computed by Random Network Distillation(RND) method.
         """
-        from algo.RND import get_int_r
+        # from algo.RND import get_int_r
 
-        # int_r =
+        # log_int_r = get_int_r(self.seq, input_size, hidden_size, output_size)
+        # log_error = []
 
-        return int_r
+        int_rew = torch.mean(torch.square(self.model(self.seq) - self.rand_model(self.seq)))
+        log_int_r = int_rew.item()
+
+        self.optimizer.zero_grad()
+        int_rew.backward()
+        optimizer.step()
+
+        return log_int_r
 
 
 
@@ -183,8 +193,8 @@ class diversity():
             return self.density_blast()
         elif self.div_metric_name == "hamming":
             return self.density_hamming()
-        # elif self.div_metric_name == "RND":
-        #     return self.RND_int_r()
+        elif self.div_metric_name == "RND":
+            return self.RND_int_r()
         else:
             raise NotImplementedError
 

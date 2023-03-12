@@ -192,12 +192,34 @@ class MetaLearner:
         elif self.config["policy"]["model_name"] == "RANDOM":
             self.policy = RandomPolicy(input_size=self.env.observation_space.shape, output_size=1,
                                        num_actions=self.env.action_space.n).to(device)
+
         else:
             raise NotImplementedError
 
         self.meta_opt = optim.SGD(self.policy.parameters(), lr=self.config["outer_lr"])
 
+    def reset_exp_policy(self):
+        if self.config["exp_policy"]["model_name"] == "MLP":  # TODO: add to config
+            from algo.RND import MLP as MLPExp  # exploration policy
+            from algo.RND import initialize_weights, get_int_r
 
+            input_size = 56  # 14*4
+            hidden_size = 28  # 14 * 2
+            output_size = 14
+
+            self.exp_policy = MLPExp(input_size,
+                        hidden_size,
+                        output_size)
+            self.exp_policy.apply(initialize_weights)
+
+            self.rand_exp_policy = MLPExp(input_size,
+                                     hidden_size,
+                                     output_size)
+            self.rand_exp_policy.apply(initialize_weights)
+            for param in self.rand_exp_policy.parameters():
+                param.requires_grad = False
+
+            self.exp_optimizer = torch.optim.Adam(self.exp_policy.parameters(), lr=0.001)  # TODO: check parameters
 
     def run(self):
         start_time = time.time()
@@ -215,6 +237,8 @@ class MetaLearner:
 
             if self.config["reset_policy_per_round"]:
                 self.reset_policy()
+            if self.config["reset_exp_policy_per_round"]: # TODO: add to config
+                self.reset_exp_policy()
 
             logs = {}
 
@@ -645,11 +669,15 @@ class MetaLearner:
             bool_idx = policy_storage.dones.bool()
             query_states = policy_storage.next_states[bool_idx]
 
-            dens = diversity(query_states, 
-                                self.query_history, 
-                                div_switch=self.config["diversity"]["div_switch"], 
-                                radius=self.config["env"]["radius"], 
-                                div_metric_name=self.config["diversity"]["div_metric_name"]).get_density()            
+            dens = diversity(query_states,
+                                self.query_history,
+                                self.exp_policy,
+                                self.rand_exp_policy,
+                                self.exp_optimizer,
+                                div_switch=self.config["diversity"]["div_switch"],
+                                radius=self.config["env"]["radius"],
+                                div_metric_name=self.config["diversity"]["div_metric_name"]).get_density()
+
 
             query_scores = oracle.query(oracle_model, query_states.cpu(), flatten_input=self.flatten_proxy_oracle_input)
             policy_storage.rewards[bool_idx] += torch.tensor(query_scores).float().to(device) - self.config["env"]["lambda"] * dens.to(device) # TODO: Set the rewards to include the density penalties...

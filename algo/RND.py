@@ -26,26 +26,26 @@ class MLP(nn.Module):
         return x
 
 
-def get_int_r():
-    model = MLP(input_size=14*4,
-                hidden_size=14*2,
-                output_size=14)
-    model.apply(initialize_weights)
-
-    rand_model = MLP(input_size, hidden_size, output_size)
-    rand_model.apply(initialize_weights)
-    for param in rand_model.parameters():
-        param.requires_grad = False
-
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+def get_int_r(x):
+    # model = MLP(input_size,
+    #             hidden_size,
+    #             output_size)
+    # model.apply(initialize_weights)
+    #
+    # rand_model = MLP(input_size, hidden_size, output_size)
+    # rand_model.apply(initialize_weights)
+    # for param in rand_model.parameters():
+    #     param.requires_grad = False
+    #
+    # optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
     log_error = []
 
-    int_rew = torch.mean(torch.square(model(x) - rand_model(x)))
-    log_error.append(int_rew.item())
-
-    optimizer.zero_grad()
-    int_rew.backward()
-    optimizer.step()
+    # int_rew = torch.mean(torch.square(model(x) - rand_model(x)))
+    # log_error.append(int_rew.item())
+    # 
+    # optimizer.zero_grad()
+    # int_rew.backward()
+    # optimizer.step()
 
     return log_error

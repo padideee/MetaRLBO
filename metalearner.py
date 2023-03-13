@@ -676,6 +676,7 @@ class MetaLearner:
 
 
             query_scores = oracle.query(oracle_model, query_states.cpu(), flatten_input=self.flatten_proxy_oracle_input)
+            # import pdb; pdb.set_trace()
             policy_storage.rewards[bool_idx] += torch.tensor(query_scores).float().to(device) - self.config["env"]["lambda"] * dens.to(device) # TODO: Set the rewards to include the density penalties...
 
             

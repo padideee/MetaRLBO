@@ -184,7 +184,7 @@ class diversity():
         int_rew.backward()
         self.optimizer.step()
 
-        return log_int_r
+        return torch.tensor(log_int_r)
 
 
 

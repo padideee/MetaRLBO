@@ -1864,8 +1864,8 @@ Thesis_rna14_028_qp_8 = { # 023 but beta: 1 -> 0
 }
 
 ####RND
-Thesis_rna14_026_qp_8 = { # 023 but beta: 1 -> 0
-    "exp_label": "Thesis_MetaRLBO-RNA14-026-QP-8",
+Thesis_rna14_026_RND_1 = { # 023 but beta: 1 -> 0
+    "exp_label": "Thesis_MetaRLBO-RNA14-026-RND_1",
     "task": "RNA14-v0",
     "num_proxies": 4,
     "max_num_queries": 1500, # Maximum number of queries in experiment

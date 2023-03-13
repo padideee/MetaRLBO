@@ -96,7 +96,8 @@ def select(config, mols, n_query, use_diversity_metric=False):
     if config["diversity"]["div_metric_name"] == "hamming":
         diversity_metric = hamming_distance
     else:
-        raise NotImplementedError
+        diversity_metric = hamming_distance # TODO: change if necessary
+        # raise NotImplementedError
 
     selected_idx = [0]
     selected_set = set(selected_idx)

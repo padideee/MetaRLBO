@@ -1908,7 +1908,7 @@ Thesis_rna14_026_RND_1 = { # 023 but beta: 1 -> 0
         "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
     },
     "env": { # See DynaPPO paper for these configs
-        "lambda": 0.1, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "lambda": - 0.1, # Diversity hyperparameter -- higher is more penalty for more similar mols.
         "radius": 2,
     },
 

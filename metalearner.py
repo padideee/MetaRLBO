@@ -199,6 +199,8 @@ class MetaLearner:
         self.meta_opt = optim.SGD(self.policy.parameters(), lr=self.config["outer_lr"])
 
     def reset_exp_policy(self):
+        self.int_r_history = { "running_std": torch.tensor(0.), "len": torch.tensor(0.)}
+
         if self.config["exp_policy"]["model_name"] == "MLP":  # TODO: add to config
             from algo.RND import MLP as MLPExp  # exploration policy
             from algo.RND import initialize_weights, get_int_r
@@ -670,15 +672,15 @@ class MetaLearner:
                                 self.exp_policy,
                                 self.rand_exp_policy,
                                 self.exp_optimizer,
+                                self.int_r_history,
                                 div_switch=self.config["diversity"]["div_switch"],
                                 radius=self.config["env"]["radius"],
                                 div_metric_name=self.config["diversity"]["div_metric_name"]).get_density()
 
-
             query_scores = oracle.query(oracle_model, query_states.cpu(), flatten_input=self.flatten_proxy_oracle_input)
 
             policy_storage.rewards[bool_idx] += torch.tensor(query_scores).float().to(device) - self.config["env"]["lambda"] * dens.to(device) # TODO: Set the rewards to include the density penalties...
-            # import pdb; pdb.set_trace()
+
             
 
         policy_storage.compute_returns()

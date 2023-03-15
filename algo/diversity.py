@@ -79,11 +79,18 @@ def blast_score(query_fasta, subject_fasta):
 def blast_density(scores):
     raise NotImplementedError()
 
+def running_std(prevStd, prevLen, newData):
+
+    std_in_rewards = ((prevStd.pow(2) * prevLen) + (newData.var(0) * newData.shape[0])) / (prevLen + newData.shape[0])
+    # total_number_rwd = len(in_rewards) + self.obs_memory.total_number_rwd
+
+    return std_in_rewards
+
 
 class diversity():
     """ since different distance metric could lead to 'different scale', we should pay attention if
     we want use these metric for comparison purposes. """
-    def __init__(self, seq, history, model, rand_model, optimizer, div_switch="ON", radius=2, div_metric_name="hamming"):
+    def __init__(self, seq, history, model, rand_model, optimizer, int_r_history, div_switch="ON", radius=2, div_metric_name="hamming"):
         super(diversity, self).__init__()
         self.div_switch = div_switch
         self.seq = seq.to(device)
@@ -95,6 +102,7 @@ class diversity():
         self.model = model
         self.rand_model = rand_model
         self.optimizer = optimizer
+        self.int_r_history = int_r_history
         self.radius = radius
         # self.history = history
         self.div_metric_name = div_metric_name
@@ -176,15 +184,24 @@ class diversity():
 
         # log_int_r = get_int_r(self.seq, input_size, hidden_size, output_size)
         # log_error = []
+        # TODO: why in the link multiplies by 0.5? https://github.com/wisnunugroho21/reinforcement_learning_ppo_rnd/blob/bea6e8dd578706232ec390d401b0eec030852ff3/PPO_RND/pytorch/ppo_rnd_pytorch.py#L296
 
-        int_rew = torch.mean(torch.square(self.model(self.seq) - self.rand_model(self.seq)))
-        log_int_r = int_rew.item()
+        error = torch.mean(torch.square(self.model(self.seq) - self.rand_model(self.seq)), axis=-1)
+
+        # self.int_r_history = {"running_std": 0., "len": 0}
+        std_in_rewards = running_std(self.int_r_history["running_std"], self.int_r_history["len"], error)
+        self.int_r_history["running_std"] = std_in_rewards.detach()
+        self.int_r_history["len"] += error.shape[0]
+
+        int_rew = error / (std_in_rewards.sqrt() + 1e-8)
+
+        log_int_r = int_rew.detach()
 
         self.optimizer.zero_grad()
-        int_rew.backward()
+        torch.mean(int_rew).backward()
         self.optimizer.step()
 
-        return torch.tensor(log_int_r)
+        return log_int_r
 
 
 

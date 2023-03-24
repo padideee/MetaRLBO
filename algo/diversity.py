@@ -79,10 +79,18 @@ def blast_score(query_fasta, subject_fasta):
 def blast_density(scores):
     raise NotImplementedError()
 
+
 def running_std(prevStd, prevLen, newData):
 
-    std_in_rewards = ((prevStd.pow(2) * prevLen) + (newData.var(0) * newData.shape[0])) / (prevLen + newData.shape[0])
+    var_in_rewards = ((prevStd.pow(2) * prevLen) + (newData.var(0) * newData.shape[0])) / (prevLen + newData.shape[0])
     # total_number_rwd = len(in_rewards) + self.obs_memory.total_number_rwd
+
+    return var_in_rewards.sqrt()
+
+
+def running_mean(prevMean, prevLen, newData):
+
+    std_in_rewards = ((prevMean * prevLen) + newData.sum(0)) / (prevLen + newData.shape[0])
 
     return std_in_rewards
 
@@ -185,15 +193,17 @@ class diversity():
         # log_int_r = get_int_r(self.seq, input_size, hidden_size, output_size)
         # log_error = []
         # TODO: why in the link multiplies by 0.5? https://github.com/wisnunugroho21/reinforcement_learning_ppo_rnd/blob/bea6e8dd578706232ec390d401b0eec030852ff3/PPO_RND/pytorch/ppo_rnd_pytorch.py#L296
-
-        error = torch.mean(torch.square(self.model(self.seq) - self.rand_model(self.seq)), axis=-1)
+        # TODO: why for normalization only divide by std (and not -mean also)
+        error = torch.mean(torch.square(self.model(self.seq) - self.rand_model(self.seq)) * 0.5, axis=-1)
 
         # self.int_r_history = {"running_std": 0., "len": 0}
-        std_in_rewards = running_std(self.int_r_history["running_std"], self.int_r_history["len"], error)
-        self.int_r_history["running_std"] = std_in_rewards.detach()
+        std_in_rewards = running_std(self.int_r_history["running_std"], self.int_r_history["len"], error).detach()
+        mean_in_rewards = running_mean(self.int_r_history["running_mean"], self.int_r_history["len"], error).detach()
+        self.int_r_history["running_std"] = std_in_rewards
+        self.int_r_history["running_mean"] = mean_in_rewards
         self.int_r_history["len"] += error.shape[0]
 
-        int_rew = error / (std_in_rewards.sqrt() + 1e-8)
+        int_rew = error / (std_in_rewards + 1e-8)
 
         log_int_r = int_rew.detach()
 

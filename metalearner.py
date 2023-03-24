@@ -39,7 +39,7 @@ from utils.torch_utils import (weighted_mean, detach_distribution, weighted_norm
 from algo.baseline import LinearFeatureBaseline
 
 from utils import filtering
-from algo.diversity import diversity 
+from algo.diversity import diversity
 from data import dynappo_data, clamp_data
 
 
@@ -57,12 +57,11 @@ class MetaLearner:
         torch.multiprocessing.set_start_method('spawn')
         # initialise tensorboard logger
         self.use_logger = use_logger
-        if self.use_logger: 
+        if self.use_logger:
             self.logger = TBLogger(self.config, self.config["exp_label"]) if self.use_logger else None
             utl.save_config(self.config, self.logger.full_output_folder)
         else:
             self.logger = None
-
 
         self.config = utl.setup_task_configs(self.config) # Setup for Ising20/50 configs.
 
@@ -74,7 +73,6 @@ class MetaLearner:
                 D_AMP = get_AMP_data('data/data_train.hkl')
             else:
                 raise NotImplementedError
-
             self.true_oracle = AMPTrueOracle(training_storage=D_AMP)
             if self.config["mode"] == "test":
                 fname = "data/metarlbo_rfc_not-alibicani.pkl"
@@ -82,15 +80,14 @@ class MetaLearner:
                 fname = "data/metarlbo_rfc_alibicani.pkl"
             with open(fname, "rb") as f:
                 self.true_oracle_model = pickle.load(f)
-
             # self.true_oracle_model = utl.get_true_oracle_model(self.config)
-        elif self.config["task"] == "CLAMP-v0":
 
+        elif self.config["task"] == "CLAMP-v0":
             if self.config["mode"] == "val" and self.config["CLAMP"]["use_pretrained_model"]:
                 from common_evaluation.clamp_common_eval.defaults import get_test_oracle
                 self.true_oracle = CLAMPTrueOracle(self.config["CLAMP"]["true_oracle_model"])
-                self.true_oracle_model = get_test_oracle(source=self.config["CLAMP"]["data_source"], 
-                                                        model=self.config["CLAMP"]["true_oracle_model"], 
+                self.true_oracle_model = get_test_oracle(source=self.config["CLAMP"]["data_source"],
+                                                        model=self.config["CLAMP"]["true_oracle_model"],
                                                         feature="AlBert",
                                                         device=device) #TODO: Set this up to either be RandomForest... or MLP
             elif self.config["mode"] == "val" and not self.config["CLAMP"]["use_pretrained_model"]:
@@ -98,7 +95,6 @@ class MetaLearner:
                 self.true_oracle = AMPTrueOracle(training_storage=D_AMP) # Use the RFC classifier from AMP task
                 self.true_oracle_model = utl.get_true_oracle_model(self.config)
             elif self.config["mode"] == "test":
-                # Use Moksh + Emmanuels oracle!
                 if self.config["CLAMP"]["true_oracle_model"] == "GFN":
                     # Use Moksh + Emmanuels oracle! 
                     from oracles.gflownet_oracle import get_proxy as get_oracle # Use their proxy as our oracle
@@ -109,14 +105,13 @@ class MetaLearner:
                     D_AMP = clamp_data.get_CLAMP_data(self.config["mode"])
                     self.true_oracle = AMPTrueOracle(training_storage=D_AMP) # Use the RFC classifier from AMP task
                     self.true_oracle_model = utl.get_true_oracle_model(self.config)
-
-
             else:
                 raise NotImplementedError
-        elif 'AltIsing' in self.config["task"]:
 
+        elif 'AltIsing' in self.config["task"]:
             self.true_oracle = AltIsingTrueOracle()
             self.true_oracle_model = utl.get_true_oracle_model(self.config)
+
         elif self.config['task'] == 'RNA14-v0':
             from oracles.RNA_true_oracle import RNATrueOracle
             self.true_oracle = RNATrueOracle()
@@ -136,7 +131,7 @@ class MetaLearner:
 
         if self.config["proxy_oracle"]["model_name"] == "CNN":
             self.flatten_proxy_oracle_input = False
-        else:    
+        else:
             self.flatten_proxy_oracle_input = True
 
         # --- END ---
@@ -145,14 +140,14 @@ class MetaLearner:
                                              num_processes=self.config["num_processes"],
                                              seed = self.config["seed"],
                                              # End of default parameters
-                                            # reward_oracle = self.true_oracle, 
-                                            # reward_oracle_model = self.true_oracle_model, 
+                                            # reward_oracle = self.true_oracle,
+                                            # reward_oracle_model = self.true_oracle_model,
                                             lambd=self.config["env"]["lambda"],
                                           radius=self.config["env"]["radius"],
                                           div_metric_name=self.config["diversity"]["div_metric_name"],
                                           div_switch=self.config["diversity"][
                                               "div_switch"])
-                            
+
 
         # Molecules that have been queried w/ their scores
         self.D_train = QueryStorage(storage_size=self.config["query_storage_size"],
@@ -163,10 +158,10 @@ class MetaLearner:
         # Molecules that have been queried (used for diversity)
         self.query_history = []
         self.proxy_oracles = None
-        self.proxy_oracle_models = None 
+        self.proxy_oracle_models = None
 
         self.reset_policy()
-        
+
         self.iter_idx = 0
         self.best_batch_mean = 0
         self.best_batch_max = 0
@@ -199,7 +194,7 @@ class MetaLearner:
         self.meta_opt = optim.SGD(self.policy.parameters(), lr=self.config["outer_lr"])
 
     def reset_exp_policy(self):
-        self.int_r_history = { "running_std": torch.tensor(0.), "len": torch.tensor(0.)}
+        self.int_r_history = { "running_std": torch.tensor(0.), "running_mean": torch.tensor(0.), "len": torch.tensor(0.)}
 
         if self.config["exp_policy"]["model_name"] == "MLP":  # TODO: add to config
             from algo.RND import MLP as MLPExp  # exploration policy
@@ -256,7 +251,7 @@ class MetaLearner:
                     logs = self.meta_update(logs, self.config["num_proxies"])
 
                 logs["timing/meta_updates"] = time.time() - st_time
-                
+
                 st_time = time.time()
 
                 # Sample from generator
@@ -284,7 +279,7 @@ class MetaLearner:
             if queried_mols is not None:
                 queried_mols_scores = torch.tensor(self.true_oracle.query(self.true_oracle_model, queried_mols,
                                                                           flatten_input=self.flatten_true_oracle_input))
-                
+
                 queried_mols_strings = utl.mol_to_string_encoding(self.config, queried_mols)
                 self.D_train.insert(queried_mols, queried_mols_scores, queried_mols_strings, query_round=self.iter_idx)
 
@@ -391,9 +386,7 @@ class MetaLearner:
 
         # Proxy(Task)-specific updates -- Samples the trajectories...
         for j in range(self.config["num_proxies"]):
-            with higher.innerloop_ctx(
-                    self.policy, inner_opt, copy_initial_weights=False
-            ) as (inner_policy, diffopt):
+            with higher.innerloop_ctx (self.policy, inner_opt, copy_initial_weights=False) as (inner_policy, diffopt):
 
                 D_meta_query = RolloutStorage(num_processes=self.config["num_processes"],
                                                    state_dim=self.env.observation_space.shape,
@@ -406,6 +399,7 @@ class MetaLearner:
                 train_episodes = []
                 train_losses = []
                 time_st = time.time()
+                densS = []
                 for k in range(self.config["num_inner_updates"]):
                     D_j = RolloutStorage(num_processes=self.config["num_processes"],
                                               state_dim=self.env.observation_space.shape,
@@ -414,8 +408,10 @@ class MetaLearner:
                                               device=device
                                               )
 
-                    self.sample_policy_training(inner_policy, self.proxy_oracles[j], self.proxy_oracle_models[j], num_steps=self.config["policy"]["num_steps"],
+                    dens = self.sample_policy_training(inner_policy, self.proxy_oracles[j], self.proxy_oracle_models[j], num_steps=self.config["policy"]["num_steps"],
                                        policy_storage=D_j, density_penalty = True)  # Sample from policy[j]
+
+                    logs[f"inner_loop/proxy/{j}/loop/{k}/dens/"] = dens
 
                     inner_loss = self.adapt(D_j, inner_policy, diffopt)
 
@@ -426,15 +422,14 @@ class MetaLearner:
                     train_losses.append(inner_loss.detach())
 
                 logs["timing/inner_loop_update"] = time.time() - time_st
-                
+
 
                 # Sample mols for meta update
                 if self.config["outerloop"]["oracle"] == 'proxy':
-
-                    self.sample_policy_training(inner_policy, self.proxy_oracles[j], self.proxy_oracle_models[j], num_steps=self.config["policy"]["num_meta_steps"],
+                    dens = self.sample_policy_training(inner_policy, self.proxy_oracles[j], self.proxy_oracle_models[j], num_steps=self.config["policy"]["num_meta_steps"],
                                        policy_storage=D_meta_query, density_penalty = self.config["outerloop"]["density_penalty"])
                 elif self.config["outerloop"]["oracle"] == 'true':
-                    self.sample_policy_training(inner_policy, self.true_oracle, self.true_oracle_model, num_steps=self.config["policy"]["num_meta_steps"],
+                    dens = self.sample_policy_training(inner_policy, self.true_oracle, self.true_oracle_model, num_steps=self.config["policy"]["num_meta_steps"],
                                                       policy_storage=D_meta_query, density_penalty = self.config["outerloop"]["density_penalty"])
                     # queried_mols = self.sample_policy(inner_policy, self.true_oracle, self.true_oracle_model, self.config["num_meta_proxy_samples"],
                     #                                   policy_storage=D_meta_query).detach()
@@ -448,16 +443,19 @@ class MetaLearner:
                 else:
                     raise NotImplementedError
 
-
+                densS.append(dens)
                 # Save the episodes...
 
                 episodes.append((train_episodes, D_meta_query))
                 train_losses_s.append(train_losses)
 
 
-        # Log the inner losses later (possibly instead of here)! 
+        # Log the inner losses later (possibly instead of here)!
         loss = self.step(episodes) # Performs meta-update
         logs["meta/loss"] = loss
+        # import pdb; pdb.set_trace()
+        logs["meta/dens/mean"] = torch.stack(densS).mean()
+        logs["meta/dens/std"] = torch.stack(densS).std()
 
         # self.meta_opt.step()
         return logs
@@ -500,6 +498,7 @@ class MetaLearner:
                 'query_proxy_idx': [],
                 'query_round': [],
                 }
+        densS = []
         for j in tqdm(range(num_query_proxies)):
             # Proxy(Task)-specific updates
             with higher.innerloop_ctx(
@@ -514,25 +513,27 @@ class MetaLearner:
                                               device=device
                                               )
 
-                    self.sample_policy_training(inner_policy, 
+                    dens = self.sample_policy_training(inner_policy,
                                         oracle=self.proxy_query_oracles[j],
                                         oracle_model=self.proxy_query_oracle_models[j],
                                         num_steps=self.config["policy"]["num_steps"],
                                         policy_storage=D_j,
                                         density_penalty = True)  # Sample from policy[j]
 
-
+                    densS.append(dens)
                     inner_loss = self.adapt(D_j, inner_policy, diffopt)
 
                 # Sample mols (and query) for training the proxy oracles later
-                generated_mols = self.sample_policy_mols(inner_policy, 
+                generated_mols = self.sample_policy_mols(inner_policy,
                                                         num_steps=self.config["policy"]["num_steps"],
                                                         num_samples=num_samples_per_proxy).detach()
                 sampled_mols.append(generated_mols)  # Sample from policies -- preferably make this parallelised in the future
                 info['query_proxy_idx'] = info['query_proxy_idx'] + [j] * len(generated_mols)
-                
+
         info['query_round'] = [self.iter_idx] * len(info['query_proxy_idx'])
-        return sampled_mols, logs, info 
+        logs["outer_loop/dens/mean"] = densS.mean()
+        logs["outer_loop/dens/std"] = densS.std()
+        return sampled_mols, logs, info
 
     def sample_policy_mols(self, policy, num_steps, num_samples=None):
         """
@@ -551,7 +552,7 @@ class MetaLearner:
 
         state_dim = self.env.observation_space.shape
         return_mols = torch.zeros(num_samples, *state_dim)
-        
+
         curr_sample = 0
         # data = {"reward_oracle": None, # Leo: This is deprecated -- to remove
         #         "reward_oracle_model": None,
@@ -571,12 +572,12 @@ class MetaLearner:
 
                 masks = None
                 st = state
-                st = seq_to_encoding(st).flatten(-2, -1).to(device)  
+                st = seq_to_encoding(st).flatten(-2, -1).to(device)
 
                 value, action, log_prob, hidden_state = policy.act(st, hidden_state, masks=masks)
                 action = action.detach().cpu()
 
-                next_state, reward, done, info = self.env.step(action) 
+                next_state, reward, done, info = self.env.step(action)
 
 
                 done = torch.tensor(done).float()
@@ -636,12 +637,12 @@ class MetaLearner:
 
             masks = None
             st = state
-            st = seq_to_encoding(st).flatten(-2, -1).to(device)  
- 
+            st = seq_to_encoding(st).flatten(-2, -1).to(device)
+
             value, action, log_prob, hidden_state, dist = policy.act(st, hidden_state, masks=masks, return_dist=True)
             action = action.detach().cpu()
 
-            next_state, reward, done, info = self.env.step(action) 
+            next_state, reward, done, info = self.env.step(action)
 
 
             done = torch.tensor(done).float()
@@ -651,7 +652,7 @@ class MetaLearner:
             policy_storage.insert(state=state.detach().clone(),
                                   next_state=next_state.detach().clone(),
                                   action=action.detach().clone(),
-                                  reward=reward.detach().clone().to(device) + self.config["entropy_reg_coeff"] * dist.entropy(), 
+                                  reward=reward.detach().clone().to(device) + self.config["entropy_reg_coeff"] * dist.entropy(),
                                   done=done.detach().clone())
 
             # reset environments that are done
@@ -677,11 +678,12 @@ class MetaLearner:
                                 radius=self.config["env"]["radius"],
                                 div_metric_name=self.config["diversity"]["div_metric_name"]).get_density()
 
+
             query_scores = oracle.query(oracle_model, query_states.cpu(), flatten_input=self.flatten_proxy_oracle_input)
 
-            policy_storage.rewards[bool_idx] += torch.tensor(query_scores).float().to(device) - self.config["env"]["lambda"] * dens.to(device) # TODO: Set the rewards to include the density penalties...
-
-            
+            policy_storage.rewards[bool_idx] += torch.tensor(query_scores).float().to(device) \
+                                                - torch.clamp(self.config["env"]["lambda"] * dens.to(device), min=-1.0, max=1.0)
+                                                # TODO: Is it ok to clip the values?
 
         policy_storage.compute_returns()
 
@@ -689,8 +691,9 @@ class MetaLearner:
         policy_storage.after_rollouts()
 
         self.total_time_sampling += time.time() - time_st
+        # import pdb; pdb.set_trace()
 
-        return 
+        return dens
 
     def select_molecules(self, mols, logs, n_query, use_diversity_metric=True):
         """
@@ -741,7 +744,7 @@ class MetaLearner:
 
 
     def fit_baseline(self, episodes):
-        states = seq_to_encoding(episodes.states.flatten(0, 1)).view(episodes.states.shape).to(device)  
+        states = seq_to_encoding(episodes.states.flatten(0, 1)).view(episodes.states.shape).to(device)
 
 
         # Fit the baseline to the training episodes
@@ -784,7 +787,7 @@ class MetaLearner:
                     self.adapt(train_episodes, inner_policy, diffopt)
 
                 # this is the inner-loop update
-                st = seq_to_encoding(valid_episodes.states.flatten(0, 1)).flatten(-2, -1).view(valid_episodes.states.shape[0], valid_episodes.states.shape[1], -1).to(device)  
+                st = seq_to_encoding(valid_episodes.states.flatten(0, 1)).flatten(-2, -1).view(valid_episodes.states.shape[0], valid_episodes.states.shape[1], -1).to(device)
                 _, _, _, _, pi = inner_policy.act(st, None, None, return_dist=True)
 
                 if old_pi is None:
@@ -832,7 +835,7 @@ class MetaLearner:
 
                     # get action values after inner-loop update
 
-                    st = seq_to_encoding(valid_episodes.states.flatten(0, 1)).view(valid_episodes.states.shape[0], valid_episodes.states.shape[1], -1).to(device)  
+                    st = seq_to_encoding(valid_episodes.states.flatten(0, 1)).view(valid_episodes.states.shape[0], valid_episodes.states.shape[1], -1).to(device)
                     _, _, _, _, pi = inner_policy.act(st.flatten(-2, -1), None, None, return_dist=True) # Fix the policy..., so it returns "pi"
                     pis.append(detach_distribution(pi))
 
@@ -875,7 +878,7 @@ class MetaLearner:
 
         self.meta_opt.zero_grad()
         meta_losses = []
-        
+
         # TODO: Couldn't I just do the update w/ the valid_episodes list? Why do I need to go through the inner training again? I don't think I need to :/ Test the speed w/o it
         for (train_episodes_s, valid_episodes) in episodes:
 
@@ -913,8 +916,8 @@ class MetaLearner:
 
         loss.backward()
         self.meta_opt.step()
-        
-        return loss_item 
+
+        return loss_item
 
     def trpo_step(self, episodes, max_kl=1e-3, cg_iters=10, cg_damping=1e-2,
              ls_max_steps=10, ls_backtrack_ratio=0.5):

@@ -93,7 +93,11 @@ def CNN(seq_len, alphabet_len, device = None): # TODO: Setup so we can use the d
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
   return NNProxyModel(seq_len=seq_len, alphabet_len=alphabet_len, model_type="CNN", device=device)
 
-
+def CNNdropout(seq_len, alphabet_len, device = None):
+    if device is None:
+        import torch
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    return NNProxyModel(seq_len=seq_len, alphabet_len=alphabet_len, model_type="CNN", device=device)
 
 def RNA_Model():
   return RNAModel()

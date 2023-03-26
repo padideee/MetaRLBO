@@ -24,6 +24,7 @@ DEFAULT_CONFIG = {
 	},
 	"proxy_oracle": {
 		"model_name": "KNR", # Options: KNR, GPR, XGB, BR, RFR, etc... (see oracles/models.py)
+		"UQ" : "MCdropout",
 		"p": 0.8, # Proportion of data to sample to train proxy oracles
 		"metric": "minkowski" 
 	},
@@ -42,7 +43,7 @@ DEFAULT_CONFIG = {
 		"div_metric_name": "hamming", # Options: "hamming" or "blast" (Note: blast is slow)
 		"div_switch": "ON" # switches the diversity bonus ON / OFF -- (Note: there's overlap with ["outerloop"]["density_penalty"]... be careful)
 	},
-
+	"reward" : "E+IN", # "E+IN" or "IN": pure exploration
 	"selection_criteria": { # Configs for selecting the samples
 		"method": "UCB", 
 		"config": {

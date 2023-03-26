@@ -368,7 +368,6 @@ class MetaLearner:
                               range(num_proxies)]
         self.proxy_oracle_models = [utl.get_proxy_oracle_model(self.config) for j in range(num_proxies)]
 
-
         # self.meta_opt.zero_grad()
         inner_opt = optim.SGD(self.policy.parameters(), lr=self.config["inner_lr"])
 
@@ -411,7 +410,7 @@ class MetaLearner:
                     dens = self.sample_policy_training(inner_policy, self.proxy_oracles[j], self.proxy_oracle_models[j], num_steps=self.config["policy"]["num_steps"],
                                        policy_storage=D_j, density_penalty = True)  # Sample from policy[j]
 
-                    logs[f"inner_loop/proxy/{j}/loop/{k}/dens/"] = dens
+                    logs[f"inner_loop/proxy/{j}/loop/{k}/dens/"] = dens.item()
 
                     inner_loss = self.adapt(D_j, inner_policy, diffopt)
 
@@ -453,7 +452,6 @@ class MetaLearner:
         # Log the inner losses later (possibly instead of here)!
         loss = self.step(episodes) # Performs meta-update
         logs["meta/loss"] = loss
-        # import pdb; pdb.set_trace()
         logs["meta/dens/mean"] = torch.stack(densS).mean()
         logs["meta/dens/std"] = torch.stack(densS).std()
 
@@ -531,8 +529,8 @@ class MetaLearner:
                 info['query_proxy_idx'] = info['query_proxy_idx'] + [j] * len(generated_mols)
 
         info['query_round'] = [self.iter_idx] * len(info['query_proxy_idx'])
-        logs["outer_loop/dens/mean"] = densS.mean()
-        logs["outer_loop/dens/std"] = densS.std()
+        logs["outer_loop/dens/mean"] = torch.stack(densS).mean()
+        logs["outer_loop/dens/std"] = torch.stack(densS).std()
         return sampled_mols, logs, info
 
     def sample_policy_mols(self, policy, num_steps, num_samples=None):
@@ -681,9 +679,18 @@ class MetaLearner:
 
             query_scores = oracle.query(oracle_model, query_states.cpu(), flatten_input=self.flatten_proxy_oracle_input)
 
-            policy_storage.rewards[bool_idx] += torch.tensor(query_scores).float().to(device) \
+            if self.config["reward"] == "E+IN":
+                policy_storage.rewards[bool_idx] += torch.tensor(query_scores).float().to(device) \
                                                 - torch.clamp(self.config["env"]["lambda"] * dens.to(device), min=-1.0, max=1.0)
                                                 # TODO: Is it ok to clip the values?
+            elif self.config["reward"] == "IN":
+                policy_storage.rewards[bool_idx] -= torch.clamp(self.config["env"]["lambda"] * dens.to(device), min=-1.0, max=1.0)
+
+            else:
+                raise NotImplementedError
+
+
+
 
         policy_storage.compute_returns()
 
@@ -693,7 +700,7 @@ class MetaLearner:
         self.total_time_sampling += time.time() - time_st
         # import pdb; pdb.set_trace()
 
-        return dens
+        return dens.mean()
 
     def select_molecules(self, mols, logs, n_query, use_diversity_metric=True):
         """

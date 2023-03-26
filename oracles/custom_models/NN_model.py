@@ -69,7 +69,54 @@ class CNN(nn.Module):
         y = self.model(x)
         return y
 
+def MC_dropout(act_vec, p=0.5, mask=True):
+    return F.dropout(act_vec, p=p, training=mask, inplace=True)
 
+class CNNdropout(nn.Module):
+    def __init__(self,
+                 seq_len: int,
+                 alphabet_len: str,
+                 num_filters: int = 32,
+                 hidden_size: int = 32,
+                 kernel_size: int = 3,
+                 mask = "True",
+                 pdrop = 0.5):
+        super().__init__()
+
+        self.cnn_model = nn.Sequential(
+            nn.Conv1d(in_channels=seq_len, out_channels=num_filters,
+                      kernel_size=kernel_size,
+                      padding="valid",
+                      stride=1),
+            nn.ReLU(),
+            MC_dropout(in_channels=num_filters, p=pdrop, mask=mask),
+            nn.Conv1d(in_channels=num_filters, out_channels=num_filters,
+                      kernel_size=kernel_size,
+                      padding="same",
+                      stride=1),
+            nn.ReLU(),
+            MC_dropout(in_channels=num_filters, p=pdrop, mask=mask),
+            nn.Conv1d(in_channels=num_filters, out_channels=num_filters, kernel_size=alphabet_len, padding='same',
+                      stride=1),
+            nn.ReLU()
+        )
+
+        # do global max pooling manually...
+
+        self.model = nn.Sequential(
+            nn.LazyLinear(hidden_size),
+            nn.ReLU(),
+            #             nn.LazyLinear(hidden_size),
+            #             nn.ReLU(),
+            nn.Dropout(0.25),
+            nn.LazyLinear(1)
+        )
+
+    def forward(self, x):
+        x = self.cnn_model(x)
+        x, _ = torch.max(x, 1)
+        y = self.model(x)
+        return y
 
 
 # # Taken from the PyTorch Transformer tutorial
@@ -102,6 +149,8 @@ class NNProxyModel(RegressorMixin):
             self.model_type_func = MLP
         elif model_type == "CNN":
             self.model_type_func = CNN
+        elif model_type == "CNN_dropout":
+            self.model_type_func = CNNdropout
         else:
             raise NotImplementedError
 

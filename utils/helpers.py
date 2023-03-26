@@ -188,6 +188,8 @@ def get_proxy_oracle_model(config):
         model = MLP(seq_len=config["task_config"]["seq_len"], alphabet_len=config["task_config"]["alphabet_len"])
     elif config["proxy_oracle"]["model_name"] == 'CNN':
         model = CNN(seq_len=config["task_config"]["seq_len"], alphabet_len=config["task_config"]["alphabet_len"])
+    elif config["proxy_oracle"]["model_name"] == 'CNN_dropout':
+        model = CNNdropout(seq_len=config["task_config"]["seq_len"], alphabet_len=config["task_config"]["alphabet_len"])
     else:
         raise NotImplementedError
 

@@ -2415,6 +2415,169 @@ Thesis_metarlbo_ising20_052_2 = { # Copy 040 (w/ num_meta_updates_per_iter 50 ->
     "seed": 73,
 }
 
+Thesis_metarlbo_ising20_052_RND_1 = { # 052: hamming -> RND, lambda: -1
+    "exp_label": "Thesis_MetaRLBO-Ising20-CNN-052_RND_1",
+    "task": "AltIsing20-v0",
+    "num_proxies": 4,
+    "max_num_queries": 8000, # Maximum number of queries in experiment #?
+    "num_inner_updates": 1,
+    "num_query_proxies": 32,
+    "num_initial_samples": 500, #250
+    "num_samples_per_proxy": 64,
+    "num_query_per_iter": 500, #250
+    "inner_lr": 1.0, #2.0
+    "outer_lr": 0.1, #0.2
+    "num_meta_updates_per_iter": 80,
+    "entropy_reg_coeff": 0.2, #0.0
+    "proxy_oracle": {
+        "model_name": "CNN",
+        "p": 0.7, #1.0
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB",
+        "config": {
+            'beta': 2.0, #4.0
+        },
+        "diversity_threshold": 1, #10 # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": - 1.0, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 2,
+    },
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "use_baseline": False,
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+    "reward" : "E+IN",
+	"diversity": {
+            "div_metric_name": "RND", # Options: "hamming" or "blast" or "RND" (Note: blast is slow)
+            "div_switch": "ON" # switches the diversity bonus ON / OFF -- (Note: there's overlap with ["outerloop"]["density_penalty"]... be careful)
+    },
+    "exp_policy": {
+            "model_name": "MLP",
+            "input_size": 400,  # 20*20
+            "hidden_size": 200,  # 20 * 10
+            "output_size": 20,
+    },
+}
+
+
+Thesis_metarlbo_ising20_052_RND_5 = { # 052: hamming -> RND, lambda: -0.1
+    "exp_label": "Thesis_MetaRLBO-Ising20-CNN-052_RND_5",
+    "task": "AltIsing20-v0",
+    "num_proxies": 4,
+    "max_num_queries": 8000, # Maximum number of queries in experiment #?
+    "num_inner_updates": 1,
+    "num_query_proxies": 32,
+    "num_initial_samples": 500, #250
+    "num_samples_per_proxy": 64,
+    "num_query_per_iter": 500, #250
+    "inner_lr": 1.0, #2.0
+    "outer_lr": 0.1, #0.2
+    "num_meta_updates_per_iter": 80,
+    "entropy_reg_coeff": 0.2, #0.0
+    "proxy_oracle": {
+        "model_name": "CNN",
+        "p": 0.7, #1.0
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB",
+        "config": {
+            'beta': 2.0, #4.0
+        },
+        "diversity_threshold": 1, #10 # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": - 5.0, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 2,
+    },
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "use_baseline": False,
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+    "reward" : "E+IN",
+	"diversity": {
+            "div_metric_name": "RND", # Options: "hamming" or "blast" or "RND" (Note: blast is slow)
+            "div_switch": "ON" # switches the diversity bonus ON / OFF -- (Note: there's overlap with ["outerloop"]["density_penalty"]... be careful)
+    },
+    "exp_policy": {
+            "model_name": "MLP",
+            "input_size": 400,  # 20*20
+            "hidden_size": 200,  # 20 * 10
+            "output_size": 20,
+    },
+}
+
+Thesis_metarlbo_ising20_052_RND_05 = { # 052: hamming -> RND, lambda: -0.5
+    "exp_label": "Thesis_MetaRLBO-Ising20-CNN-052_RND_05",
+    "task": "AltIsing20-v0",
+    "num_proxies": 4,
+    "max_num_queries": 8000, # Maximum number of queries in experiment #?
+    "num_inner_updates": 1,
+    "num_query_proxies": 32,
+    "num_initial_samples": 500, #250
+    "num_samples_per_proxy": 64,
+    "num_query_per_iter": 500, #250
+    "inner_lr": 1.0, #2.0
+    "outer_lr": 0.1, #0.2
+    "num_meta_updates_per_iter": 80,
+    "entropy_reg_coeff": 0.2, #0.0
+    "proxy_oracle": {
+        "model_name": "CNN",
+        "p": 0.7, #1.0
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB",
+        "config": {
+            'beta': 2.0, #4.0
+        },
+        "diversity_threshold": 1, #10 # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": - 0.5, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 2,
+    },
+
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "use_baseline": False,
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+    "reward" : "E+IN",
+	"diversity": {
+            "div_metric_name": "RND", # Options: "hamming" or "blast" or "RND" (Note: blast is slow)
+            "div_switch": "ON" # switches the diversity bonus ON / OFF -- (Note: there's overlap with ["outerloop"]["density_penalty"]... be careful)
+    },
+    "exp_policy": {
+            "model_name": "MLP",
+            "input_size": 400,  # 20*20
+            "hidden_size": 200,  # 20 * 10
+            "output_size": 20,
+    },
+}
+
 #----------------------- Thesis
 metarlbo_ising20_053 = { # Copy 050 (w/ num_samples_per_proxy: 128 -> 256)
     "exp_label": "MetaRLBO-Ising20-CNN-053",

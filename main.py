@@ -67,6 +67,8 @@ def main():
         config["seed"] = args.seed # Override the seed
         config["exp_label"] = config["exp_label"] + "_seed-" + str(args.seed)
 
+    print(config)
+
     # standard
     valid_tasks = ['AMP-v0', 'CLAMP-v0', 'AltIsing20-v0', 'AltIsing50-v0', 'AltIsing100-v0', 'RNA14-v0']
     if config["task"] in valid_tasks:
@@ -100,7 +102,6 @@ def main():
 
             evaluation = Evaluation(config, metalearner)
             evaluation.run()
-        
 
 if __name__ == '__main__':
     main()

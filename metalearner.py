@@ -672,6 +672,7 @@ class MetaLearner:
                                 self.rand_exp_policy,
                                 self.exp_optimizer,
                                 self.int_r_history,
+                                self.config,
                                 div_switch=self.config["diversity"]["div_switch"],
                                 radius=self.config["env"]["radius"],
                                 div_metric_name=self.config["diversity"]["div_metric_name"]).get_density()
@@ -680,16 +681,19 @@ class MetaLearner:
             query_scores = oracle.query(oracle_model, query_states.cpu(), flatten_input=self.flatten_proxy_oracle_input)
 
             if self.config["reward"] == "E+IN":
-                policy_storage.rewards[bool_idx] += torch.tensor(query_scores).float().to(device) \
-                                                - torch.clamp(self.config["env"]["lambda"] * dens.to(device), min=-1.0, max=1.0)
+                policy_storage.rewards[bool_idx] += torch.tensor(query_scores).float().to(device) - self.config["env"]["lambda"] * dens.to(device)
+                                                # - torch.clamp(self.config["env"]["lambda"] * dens.to(device), min=-1.0, max=1.0)
                                                 # TODO: Is it ok to clip the values?
             elif self.config["reward"] == "IN":
                 policy_storage.rewards[bool_idx] -= torch.clamp(self.config["env"]["lambda"] * dens.to(device), min=-1.0, max=1.0)
 
+            elif self.config["reward"] == "E":
+                policy_storage.rewards[bool_idx] += torch.tensor(query_scores).float().to(device)
+
             else:
-                raise NotImplementedError
-
-
+                policy_storage.rewards[bool_idx] += torch.tensor(query_scores).float().to(device) \
+                                                    - torch.clamp(self.config["env"]["lambda"] * dens.to(device),
+                                                                  min=-1.0, max=1.0)
 
 
         policy_storage.compute_returns()
@@ -698,7 +702,6 @@ class MetaLearner:
         policy_storage.after_rollouts()
 
         self.total_time_sampling += time.time() - time_st
-        # import pdb; pdb.set_trace()
 
         return dens.mean()
 

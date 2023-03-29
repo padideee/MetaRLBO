@@ -83,19 +83,33 @@ class CNNdropout(nn.Module):
                  pdrop = 0.5):
         super().__init__()
 
+        self.conv1 = nn.Conv1d(in_channels=seq_len, out_channels=num_filters,
+                              kernel_size=kernel_size,
+                              padding="valid",
+                              stride=1)
+        self.relu = nn.ReLU()
+        self.dropout = nn.Dropout(p=pdrop)
+        self.conv2 = nn.Conv1d(in_channels=num_filters, out_channels=num_filters,
+                               kernel_size=kernel_size,
+                               padding="same",
+                               stride=1)
+        self.conv3 = nn.Conv1d(in_channels=num_filters, out_channels=num_filters, kernel_size=alphabet_len, padding='same',
+                          stride=1)
+
+
         self.cnn_model = nn.Sequential(
             nn.Conv1d(in_channels=seq_len, out_channels=num_filters,
                       kernel_size=kernel_size,
                       padding="valid",
                       stride=1),
             nn.ReLU(),
-            MC_dropout(in_channels=num_filters, p=pdrop, mask=mask),
+            nn.Dropout(p=pdrop),
             nn.Conv1d(in_channels=num_filters, out_channels=num_filters,
                       kernel_size=kernel_size,
                       padding="same",
                       stride=1),
             nn.ReLU(),
-            MC_dropout(in_channels=num_filters, p=pdrop, mask=mask),
+            nn.Dropout(p=pdrop),
             nn.Conv1d(in_channels=num_filters, out_channels=num_filters, kernel_size=alphabet_len, padding='same',
                       stride=1),
             nn.ReLU()
@@ -113,7 +127,15 @@ class CNNdropout(nn.Module):
         )
 
     def forward(self, x):
-        x = self.cnn_model(x)
+        # x = self.cnn_model(x)
+        x = self.conv1(x)
+        # import pdb; pdb.set_trace()
+        x = self.relu(x)
+        x = self.dropout(x)
+
+        x = self.dropout(self.relu(self.conv2(x)))
+        x = self.dropout(self.relu(self.conv3(x)))
+
         x, _ = torch.max(x, 1)
         y = self.model(x)
         return y
@@ -153,6 +175,7 @@ class NNProxyModel(RegressorMixin):
             self.model_type_func = CNNdropout
         else:
             raise NotImplementedError
+
 
         self.seq_len = seq_len
         self.alphabet_len = alphabet_len

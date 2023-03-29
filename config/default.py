@@ -41,7 +41,9 @@ DEFAULT_CONFIG = {
 	},
 	"diversity": {
 		"div_metric_name": "hamming", # Options: "hamming" or "blast" (Note: blast is slow)
-		"div_switch": "ON" # switches the diversity bonus ON / OFF -- (Note: there's overlap with ["outerloop"]["density_penalty"]... be careful)
+		"div_switch": "ON", # switches the diversity bonus ON / OFF -- (Note: there's overlap with ["outerloop"]["density_penalty"]... be careful)
+		"RND_metric": "soft", # cosine, soft, L2
+		"T": 4,
 	},
 	"reward" : "E+IN", # "E+IN" or "IN": pure exploration
 	"selection_criteria": { # Configs for selecting the samples

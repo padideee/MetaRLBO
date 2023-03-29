@@ -6,6 +6,8 @@ from Bio.Blast.Applications import NcbiblastpCommandline
 from io import StringIO
 from Bio.Blast import NCBIXML
 import utils.helpers as utl
+import torch.nn as nn
+import torch.nn.functional as F
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -98,7 +100,7 @@ def running_mean(prevMean, prevLen, newData):
 class diversity():
     """ since different distance metric could lead to 'different scale', we should pay attention if
     we want use these metric for comparison purposes. """
-    def __init__(self, seq, history, model, rand_model, optimizer, int_r_history, div_switch="ON", radius=2, div_metric_name="hamming"):
+    def __init__(self, seq, history, model, rand_model, optimizer, int_r_history, config, div_switch="ON", radius=2, div_metric_name="hamming"):
         super(diversity, self).__init__()
         self.div_switch = div_switch
         self.seq = seq.to(device)
@@ -114,6 +116,8 @@ class diversity():
         self.radius = radius
         # self.history = history
         self.div_metric_name = div_metric_name
+        self.config = config
+        self.cos = nn.CosineSimilarity(dim=1, eps=1e-6)
 
 
 
@@ -163,6 +167,21 @@ class diversity():
         else:
             return 0.0
 
+    def sequence_density(self):
+        """Get average distance to `seq` out of all observed sequences."""
+        if self.div_switch == "ON":
+            self.seq_fitness = [1] * len(self.history)
+            dens = 0
+            dist_radius = 2
+            for i in range(len(self.history)):
+                dist = int(self.hamming_distance(self.history[i]))
+                if dist != 0 and dist <= dist_radius:  # TODO the case when dist = 0
+                    dens += self.seq_fitness[i] / dist
+        else:
+            return 0.0
+
+        return dens
+
     def density_blast(self):
         if self.div_switch == "ON":
             if self.batch_query:
@@ -194,8 +213,22 @@ class diversity():
         # log_error = []
         # TODO: why in the link multiplies by 0.5? https://github.com/wisnunugroho21/reinforcement_learning_ppo_rnd/blob/bea6e8dd578706232ec390d401b0eec030852ff3/PPO_RND/pytorch/ppo_rnd_pytorch.py#L296
         # TODO: why for normalization only divide by std (and not -mean also)
-        error = torch.mean(torch.square(self.model(self.seq) - self.rand_model(self.seq)) * 0.5, axis=-1)
+        if self.config["diversity"]["RND_metric"] == "L2":
+            error = torch.mean(torch.square(self.model(self.seq) - self.rand_model(self.seq)) * 0.5, axis=-1)
+        if self.config["diversity"]["RND_metric"] == "soft":
+            student_logits = self.model(self.seq)
+            teacher_logits = self.rand_model(self.seq)
+            p = F.softmax(student_logits / self.config["diversity"]["T"], dim=1) #log_softmax
+            q = F.softmax(teacher_logits / self.config["diversity"]["T"], dim=1)
+            # l_kl = F.kl_div(p, q, size_average=False) * (self.config["diversity"]["T"] ** 2) / student_logits.shape[0]
+            error = torch.mean(torch.square(p - q) * 0.5, axis=-1)
 
+        elif self.config["diversity"]["RND_metric"] == "cosine":
+            error = (self.cos(self.model(self.seq), self.rand_model(self.seq)) + 1) / 2.0
+
+        else:
+            NotImplementedError
+        import pdb; pdb.set_trace()
         # self.int_r_history = {"running_std": 0., "len": 0}
         std_in_rewards = running_std(self.int_r_history["running_std"], self.int_r_history["len"], error).detach()
         mean_in_rewards = running_mean(self.int_r_history["running_mean"], self.int_r_history["len"], error).detach()
@@ -215,11 +248,14 @@ class diversity():
 
 
 
+
     def get_density(self):
         if self.div_metric_name == "blast":
             return self.density_blast()
         elif self.div_metric_name == "hamming":
             return self.density_hamming()
+        elif self.div_metric_name == "fitness_weighted_density":
+            return self.sequence_density()
         elif self.div_metric_name == "RND":
             return self.RND_int_r()
         else:

@@ -41,11 +41,13 @@ DEFAULT_CONFIG = {
 	},
 	"diversity": {
 		"div_metric_name": "hamming", # Options: "hamming" or "blast" (Note: blast is slow)
+		#"reward_transofrm": "to_penalty",
 		"div_switch": "ON", # switches the diversity bonus ON / OFF -- (Note: there's overlap with ["outerloop"]["density_penalty"]... be careful)
 		"RND_metric": "soft", # cosine, soft, L2
-		"T": 4,
+		"T": 1,
 	},
 	"reward" : "E+IN", # "E+IN" or "IN": pure exploration
+	"reward_annealing": False,
 	"selection_criteria": { # Configs for selecting the samples
 		"method": "UCB", 
 		"config": {

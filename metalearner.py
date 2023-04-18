@@ -1,3 +1,5 @@
+import pdb
+
 import torch
 import pickle
 import numpy as np
@@ -222,6 +224,7 @@ class MetaLearner:
 
         for self.iter_idx in tqdm(range(self.config["num_meta_updates"] // self.config["num_meta_updates_per_iter"])):
 
+
             assert self.true_oracle.query_count == self.D_train.storage_filled
 
             if self.true_oracle.query_count > self.config["max_num_queries"]:
@@ -245,6 +248,16 @@ class MetaLearner:
 
             else:
 
+                if self.config["reward_annealing"] and self.iter_idx % 2 == 1 and self.iter_idx < 14:
+                    if self.config["diversity"]["div_metric_name"] == "RND":
+                        self.config["env"]["lambda"] = self.config["env"]["lambda"] / 2.0
+                        # self.config["env"]["lambda"] = self.config["env"]["lambda"] * 2.0
+                    else:
+                        self.config["env"]["lambda"] = self.config["env"]["lambda"]/2.0
+                logs["timing/lambda"] = self.config["env"]["lambda"]
+                # else:
+                #     pass
+                # import pdb; pdb.set_trace()
                 st_time = time.time()
                 # Train generator
                 for mi in tqdm(range(self.config["num_meta_updates_per_iter"])):
@@ -292,7 +305,9 @@ class MetaLearner:
                 logs["outer_loop/queried_mols_scores/current_batch/max"] = batch_max
 
                 # TODO: Log diversity here... parallelise the querying (after the unique checking)
+                # import pdb; pdb.set_trace()
                 logs["outer_loop/queried_mols/diversity"] = pairwise_hamming_distance(queried_mols)
+
 
             cumul_min, cumul_mean, cumul_max = self.D_train.scores[:self.D_train.storage_filled].min().item(), self.D_train.scores[:self.D_train.storage_filled].mean().item(), self.D_train.scores[:self.D_train.storage_filled].max().item()
 
@@ -680,21 +695,23 @@ class MetaLearner:
 
             query_scores = oracle.query(oracle_model, query_states.cpu(), flatten_input=self.flatten_proxy_oracle_input)
 
+            if self.config["diversity"]["reward_transofrm"] == "to_penalty":
+                dens = 1 - dens
+
             if self.config["reward"] == "E+IN":
                 policy_storage.rewards[bool_idx] += torch.tensor(query_scores).float().to(device) - self.config["env"]["lambda"] * dens.to(device)
                                                 # - torch.clamp(self.config["env"]["lambda"] * dens.to(device), min=-1.0, max=1.0)
                                                 # TODO: Is it ok to clip the values?
-            elif self.config["reward"] == "IN":
-                policy_storage.rewards[bool_idx] -= torch.clamp(self.config["env"]["lambda"] * dens.to(device), min=-1.0, max=1.0)
-
-            elif self.config["reward"] == "E":
-                policy_storage.rewards[bool_idx] += torch.tensor(query_scores).float().to(device)
-
-            else:
-                policy_storage.rewards[bool_idx] += torch.tensor(query_scores).float().to(device) \
-                                                    - torch.clamp(self.config["env"]["lambda"] * dens.to(device),
-                                                                  min=-1.0, max=1.0)
-
+            # elif self.config["reward"] == "IN":
+            #     policy_storage.rewards[bool_idx] -= torch.clamp(self.config["env"]["lambda"] * dens.to(device), min=-1.0, max=1.0)
+            #
+            # elif self.config["reward"] == "E":
+            #     policy_storage.rewards[bool_idx] += torch.tensor(query_scores).float().to(device)
+            #
+            # else:
+            #     policy_storage.rewards[bool_idx] += torch.tensor(query_scores).float().to(device) \
+            #                                         - torch.clamp(self.config["env"]["lambda"] * dens.to(device),
+            #                                                       min=-1.0, max=1.0)
 
         policy_storage.compute_returns()
 

@@ -1863,7 +1863,7 @@ Thesis_rna14_028_qp_8 = { # 023 but beta: 1 -> 0
     "seed": 73,
 }
 
-####RND
+# --------------------------------- RND
 Thesis_rna14_026_RND_1 = { # 023 but beta: 1 -> 0
     "exp_label": "Thesis_MetaRLBO-RNA14-026-RND_1",
     "task": "RNA14-v0",
@@ -2041,7 +2041,7 @@ Thesis_rna14_026_RND_IN = { # only IN reward (with RND)
     "seed": 73,
 }
 
-Thesis_rna14_026_RND_beta1 = { # IN+E, MCdropout, beta=1.0
+Thesis_rna14_026_RND_beta1 = { # IN+E, MCdropout, beta=1.0, lambda=0.1
     "exp_label": "Thesis_MetaRLBO-RNA14-026_RND_beta1",
     "task": "RNA14-v0",
     "num_proxies": 4,
@@ -2277,6 +2277,7 @@ Thesis_rna14_026_ham_beta0_bootstrap = { # IN+E, MCdropout+ensemble, beta=1.0 ->
     "seed": 73,
 }
 
+############
 Thesis_rna14_026_RND_beta0_lambda1 = { # RND on, E + IN, beta=0, lambda: 0.1 -> 1.0
     "exp_label": "Thesis_MetaRLBO-RNA14-026_RND_beta0_lambda1",
     "task": "RNA14-v0",
@@ -2335,7 +2336,7 @@ Thesis_rna14_026_RND_beta0_lambda1 = { # RND on, E + IN, beta=0, lambda: 0.1 -> 
     "seed": 73,
 }
 
-Thesis_rna14_026_RND_s_beta1_lambda1 = { # RND on, E + IN, beta=0, lambda: 0.1 -> 1.0
+Thesis_rna14_026_RND_s_beta1_lambda1 = { # RND on, E + IN, beta=1, lambda: 0.1 -> 1.0
     "exp_label": "Thesis_MetaRLBO-RNA14-026_RND_s_beta1_lambda1",
     "task": "RNA14-v0",
     "num_proxies": 4,
@@ -2383,6 +2384,853 @@ Thesis_rna14_026_RND_s_beta1_lambda1 = { # RND on, E + IN, beta=0, lambda: 0.1 -
     },
     "env": { # See DynaPPO paper for these configs
         "lambda": - 1.0, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 2,
+    },
+    "true_oracle": {
+        "model_name": "RNA14_Oracle",
+    },
+    "reset_policy_per_round": True,
+    "use_baseline": False,
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+Thesis_rna14_026_RND_c_beta1_lambda1 = { # RND on, E + IN, beta=1, lambda: 0.1 -> 1.0, RND: s -> c
+    "exp_label": "Thesis_MetaRLBO-RNA14-026_RND_c_beta1_lambda1",
+    "task": "RNA14-v0",
+    "num_proxies": 4,
+    "max_num_queries": 1500, # Maximum number of queries in experiment
+    "num_inner_updates": 2,
+    "num_query_proxies": 8,
+    "num_initial_samples": 100,
+    "num_samples_per_proxy": 256,
+    "num_query_per_iter": 100,
+    "inner_lr": 1.0,
+    "outer_lr": 0.1,
+    "num_meta_updates_per_iter": 50,
+    "entropy_reg_coeff": 0.2,
+    "proxy_oracle": {
+        "model_name": "CNN",
+        "p": 1.0,
+    },
+    "policy": {
+        "num_steps": 58, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+        "num_meta_steps": 58,
+    },
+    "exp_policy": {
+            "model_name": "MLP",
+            "input_size": 56,  # 14*4
+            "hidden_size": 28,  # 14 * 2
+            "output_size": 14,
+    },
+    "diversity": {
+            "div_metric_name": "RND", # Options: "hamming" or "blast" or "RND" (Note: blast is slow)
+            "div_switch": "ON", # switches the diversity bonus ON / OFF -- (Note: there's overlap with ["outerloop"]["density_penalty"]... be careful)
+            "RND_metric": "cosine",
+			"T": 1,
+    },
+    "reward" : "E+IN",
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB",
+        "config": {
+            'beta': 1.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": - 1.0, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 2,
+    },
+    "true_oracle": {
+        "model_name": "RNA14_Oracle",
+    },
+    "reset_policy_per_round": True,
+    "use_baseline": False,
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+Thesis_rna14_026_RND_s_beta1_lambda005 = { # RND on, E + IN, beta=0, lambda:  0.1, RND: s
+    "exp_label": "Thesis_MetaRLBO-RNA14-026_RND_s_beta1_lambda005",
+    "task": "RNA14-v0",
+    "num_proxies": 4,
+    "max_num_queries": 1500, # Maximum number of queries in experiment
+    "num_inner_updates": 2,
+    "num_query_proxies": 8,
+    "num_initial_samples": 100,
+    "num_samples_per_proxy": 256,
+    "num_query_per_iter": 100,
+    "inner_lr": 1.0,
+    "outer_lr": 0.1,
+    "num_meta_updates_per_iter": 50,
+    "entropy_reg_coeff": 0.2,
+    "proxy_oracle": {
+        "model_name": "CNN",
+        "p": 1.0,
+    },
+    "policy": {
+        "num_steps": 58, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+        "num_meta_steps": 58,
+    },
+    "exp_policy": {
+            "model_name": "MLP",
+            "input_size": 56,  # 14*4
+            "hidden_size": 28,  # 14 * 2
+            "output_size": 14,
+    },
+    "diversity": {
+            "div_metric_name": "RND", # Options: "hamming" or "blast" or "RND" (Note: blast is slow)
+            "div_switch": "ON", # switches the diversity bonus ON / OFF -- (Note: there's overlap with ["outerloop"]["density_penalty"]... be careful)
+            "RND_metric": "soft",
+			"T": 1,
+    },
+    "reward" : "E+IN",
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB",
+        "config": {
+            'beta': 1.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": - 0.05, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 2,
+    },
+    "true_oracle": {
+        "model_name": "RNA14_Oracle",
+    },
+    "reset_policy_per_round": True,
+    "use_baseline": False,
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+Thesis_rna14_026_RND_c_beta1_lambda005 = { # RND on, E + IN, beta=0, lambda:  0.05, RND: c
+    "exp_label": "Thesis_MetaRLBO-RNA14-026_RND_c_beta1_lambda005",
+    "task": "RNA14-v0",
+    "num_proxies": 4,
+    "max_num_queries": 1500, # Maximum number of queries in experiment
+    "num_inner_updates": 2,
+    "num_query_proxies": 8,
+    "num_initial_samples": 100,
+    "num_samples_per_proxy": 256,
+    "num_query_per_iter": 100,
+    "inner_lr": 1.0,
+    "outer_lr": 0.1,
+    "num_meta_updates_per_iter": 50,
+    "entropy_reg_coeff": 0.2,
+    "proxy_oracle": {
+        "model_name": "CNN",
+        "p": 1.0,
+    },
+    "policy": {
+        "num_steps": 58, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+        "num_meta_steps": 58,
+    },
+    "exp_policy": {
+            "model_name": "MLP",
+            "input_size": 56,  # 14*4
+            "hidden_size": 28,  # 14 * 2
+            "output_size": 14,
+    },
+    "diversity": {
+            "div_metric_name": "RND", # Options: "hamming" or "blast" or "RND" (Note: blast is slow)
+            "div_switch": "ON", # switches the diversity bonus ON / OFF -- (Note: there's overlap with ["outerloop"]["density_penalty"]... be careful)
+            "RND_metric": "cosine",
+			"T": 1,
+    },
+    "reward" : "E+IN",
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB",
+        "config": {
+            'beta': 1.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": - 0.05, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 2,
+    },
+    "true_oracle": {
+        "model_name": "RNA14_Oracle",
+    },
+    "reset_policy_per_round": True,
+    "use_baseline": False,
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+Thesis_rna14_026_RND_c_beta1_lambda2 = { # RND on, E + IN, beta=0, lambda: 2, RND: c
+    "exp_label": "Thesis_MetaRLBO-RNA14-026_RND_c_beta1_lambda2",
+    "task": "RNA14-v0",
+    "num_proxies": 4,
+    "max_num_queries": 1500, # Maximum number of queries in experiment
+    "num_inner_updates": 2,
+    "num_query_proxies": 8,
+    "num_initial_samples": 100,
+    "num_samples_per_proxy": 256,
+    "num_query_per_iter": 100,
+    "inner_lr": 1.0,
+    "outer_lr": 0.1,
+    "num_meta_updates_per_iter": 50,
+    "entropy_reg_coeff": 0.2,
+    "proxy_oracle": {
+        "model_name": "CNN",
+        "p": 1.0,
+    },
+    "policy": {
+        "num_steps": 58, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+        "num_meta_steps": 58,
+    },
+    "exp_policy": {
+            "model_name": "MLP",
+            "input_size": 56,  # 14*4
+            "hidden_size": 28,  # 14 * 2
+            "output_size": 14,
+    },
+    "diversity": {
+            "div_metric_name": "RND", # Options: "hamming" or "blast" or "RND" (Note: blast is slow)
+            "div_switch": "ON", # switches the diversity bonus ON / OFF -- (Note: there's overlap with ["outerloop"]["density_penalty"]... be careful)
+            "RND_metric": "cosine",
+			"T": 1,
+    },
+    "reward" : "E+IN",
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB",
+        "config": {
+            'beta': 1.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": - 2, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 2,
+    },
+    "true_oracle": {
+        "model_name": "RNA14_Oracle",
+    },
+    "reset_policy_per_round": True,
+    "use_baseline": False,
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+Thesis_rna14_026_RND_s_beta1_lambda2 = { # RND on, E + IN, beta=0, lambda: 2, RND: s
+    "exp_label": "Thesis_MetaRLBO-RNA14-026_RND_s_beta1_lambda2",
+    "task": "RNA14-v0",
+    "num_proxies": 4,
+    "max_num_queries": 1500, # Maximum number of queries in experiment
+    "num_inner_updates": 2,
+    "num_query_proxies": 8,
+    "num_initial_samples": 100,
+    "num_samples_per_proxy": 256,
+    "num_query_per_iter": 100,
+    "inner_lr": 1.0,
+    "outer_lr": 0.1,
+    "num_meta_updates_per_iter": 50,
+    "entropy_reg_coeff": 0.2,
+    "proxy_oracle": {
+        "model_name": "CNN",
+        "p": 1.0,
+    },
+    "policy": {
+        "num_steps": 58, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+        "num_meta_steps": 58,
+    },
+    "exp_policy": {
+            "model_name": "MLP",
+            "input_size": 56,  # 14*4
+            "hidden_size": 28,  # 14 * 2
+            "output_size": 14,
+    },
+    "diversity": {
+            "div_metric_name": "RND", # Options: "hamming" or "blast" or "RND" (Note: blast is slow)
+            "div_switch": "ON", # switches the diversity bonus ON / OFF -- (Note: there's overlap with ["outerloop"]["density_penalty"]... be careful)
+            "RND_metric": "soft",
+			"T": 1,
+    },
+    "reward" : "E+IN",
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB",
+        "config": {
+            'beta': 1.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": - 2, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 2,
+    },
+    "true_oracle": {
+        "model_name": "RNA14_Oracle",
+    },
+    "reset_policy_per_round": True,
+    "use_baseline": False,
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+#### bests
+Thesis_rna14_026_ham_beta1_lambda01_NoPE = { # No Positional encoding
+    "exp_label": "Thesis_MetaRLBO-RNA14-026_ham_beta1_lambda01_NoPE",
+    "task": "RNA14-v0",
+    "num_proxies": 4,
+    "max_num_queries": 1500, # Maximum number of queries in experiment
+    "num_inner_updates": 2,
+    "num_query_proxies": 8,
+    "num_initial_samples": 100,
+    "num_samples_per_proxy": 256,
+    "num_query_per_iter": 100,
+    "inner_lr": 1.0,
+    "outer_lr": 0.1,
+    "num_meta_updates_per_iter": 50,
+    "entropy_reg_coeff": 0.2,
+    "proxy_oracle": {
+        "model_name": "CNN",
+        "p": 1.0,
+    },
+    "policy": {
+        "num_steps": 58, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+        "num_meta_steps": 58,
+    },
+    "exp_policy": {
+            "model_name": "MLP",
+            "input_size": 56,  # 14*4
+            "hidden_size": 28,  # 14 * 2
+            "output_size": 14,
+    },
+    "diversity": {
+            "div_metric_name": "hamming", # Options: "hamming" or "blast" or "RND" (Note: blast is slow)
+            "div_switch": "ON" # switches the diversity bonus ON / OFF -- (Note: there's overlap with ["outerloop"]["density_penalty"]... be careful)
+    },
+    "reward" : "E+IN",
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB",
+        "config": {
+            'beta': 1.0, #0.0
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": 0.1, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 2,
+    },
+
+    "true_oracle": {
+        "model_name": "RNA14_Oracle",
+    },
+    "reset_policy_per_round": True,
+    "use_baseline": False,
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+Thesis_rna14_026_ham_beta1_lambda01_PE = { # with Positional encoding
+    "exp_label": "Thesis_MetaRLBO-RNA14-026_ham_beta1_lambda01_PE",
+    "task": "RNA14-v0",
+    "num_proxies": 4,
+    "max_num_queries": 1500, # Maximum number of queries in experiment
+    "num_inner_updates": 2,
+    "num_query_proxies": 8,
+    "num_initial_samples": 100,
+    "num_samples_per_proxy": 256,
+    "num_query_per_iter": 100,
+    "inner_lr": 1.0,
+    "outer_lr": 0.1,
+    "num_meta_updates_per_iter": 50,
+    "entropy_reg_coeff": 0.2,
+    "proxy_oracle": {
+        "model_name": "CNN",
+        "p": 1.0,
+    },
+    "policy": {
+        "num_steps": 58, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+        "num_meta_steps": 58,
+    },
+    "exp_policy": {
+            "model_name": "MLP",
+            "input_size": 56,  # 14*4
+            "hidden_size": 28,  # 14 * 2
+            "output_size": 14,
+    },
+    "diversity": {
+            "div_metric_name": "hamming", # Options: "hamming" or "blast" or "RND" (Note: blast is slow)
+            "div_switch": "ON" # switches the diversity bonus ON / OFF -- (Note: there's overlap with ["outerloop"]["density_penalty"]... be careful)
+    },
+    "reward" : "E+IN",
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB",
+        "config": {
+            'beta': 1.0, #0.0
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": 0.1, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 2,
+    },
+
+    "true_oracle": {
+        "model_name": "RNA14_Oracle",
+    },
+    "reset_policy_per_round": True,
+    "use_baseline": False,
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+###### Annealing
+Thesis_rna14_026_ham_beta1_anneal_r7 = { # radius:7, annealing
+    "exp_label": "Thesis_MetaRLBO-RNA14-026_ham_beta1_anneal_r7",
+    "task": "RNA14-v0",
+    "num_proxies": 4,
+    "max_num_queries": 1500, # Maximum number of queries in experiment
+    "num_inner_updates": 2,
+    "num_query_proxies": 8,
+    "num_initial_samples": 100,
+    "num_samples_per_proxy": 256,
+    "num_query_per_iter": 100,
+    "inner_lr": 1.0,
+    "outer_lr": 0.1,
+    "num_meta_updates_per_iter": 50,
+    "entropy_reg_coeff": 0.2,
+    "proxy_oracle": {
+        "model_name": "CNN",
+        "p": 1.0,
+    },
+    "policy": {
+        "num_steps": 58, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+        "num_meta_steps": 58,
+    },
+    "exp_policy": {
+            "model_name": "MLP",
+            "input_size": 56,  # 14*4
+            "hidden_size": 28,  # 14 * 2
+            "output_size": 14,
+    },
+    "diversity": {
+            "div_metric_name": "hamming", # Options: "hamming" or "blast" or "RND" (Note: blast is slow)
+            "div_switch": "ON" # switches the diversity bonus ON / OFF -- (Note: there's overlap with ["outerloop"]["density_penalty"]... be careful)
+    },
+    "reward" : "E+IN",
+    "reward_annealing": True,
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB",
+        "config": {
+            'beta': 1.0, #0.0
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": 10, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 7,
+    },
+
+    "true_oracle": {
+        "model_name": "RNA14_Oracle",
+    },
+    "reset_policy_per_round": True,
+    "use_baseline": False,
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+Thesis_rna14_026_ham_beta1_NOanneal_r7 = { # radius:7, NOT annealing
+    "exp_label": "Thesis_MetaRLBO-RNA14-026_ham_beta1_NOanneal_r7",
+    "task": "RNA14-v0",
+    "num_proxies": 4,
+    "max_num_queries": 1500, # Maximum number of queries in experiment
+    "num_inner_updates": 2,
+    "num_query_proxies": 8,
+    "num_initial_samples": 100,
+    "num_samples_per_proxy": 256,
+    "num_query_per_iter": 100,
+    "inner_lr": 1.0,
+    "outer_lr": 0.1,
+    "num_meta_updates_per_iter": 50,
+    "entropy_reg_coeff": 0.2,
+    "proxy_oracle": {
+        "model_name": "CNN",
+        "p": 1.0,
+    },
+    "policy": {
+        "num_steps": 58, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+        "num_meta_steps": 58,
+    },
+    "exp_policy": {
+            "model_name": "MLP",
+            "input_size": 56,  # 14*4
+            "hidden_size": 28,  # 14 * 2
+            "output_size": 14,
+    },
+    "diversity": {
+            "div_metric_name": "hamming", # Options: "hamming" or "blast" or "RND" (Note: blast is slow)
+            "div_switch": "ON" # switches the diversity bonus ON / OFF -- (Note: there's overlap with ["outerloop"]["density_penalty"]... be careful)
+    },
+    "reward" : "E+IN",
+    "reward_annealing": False,
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB",
+        "config": {
+            'beta': 1.0, #0.0
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": 1, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 7,
+    },
+
+    "true_oracle": {
+        "model_name": "RNA14_Oracle",
+    },
+    "reset_policy_per_round": True,
+    "use_baseline": False,
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+Thesis_rna14_026_ham_beta1_NOanneal_r7_lambda_01 = { # radius:7, NOT annealing
+    "exp_label": "Thesis_MetaRLBO-RNA14-026_ham_beta1_NOanneal_r7_lambda_01",
+    "task": "RNA14-v0",
+    "num_proxies": 4,
+    "max_num_queries": 1500, # Maximum number of queries in experiment
+    "num_inner_updates": 2,
+    "num_query_proxies": 8,
+    "num_initial_samples": 100,
+    "num_samples_per_proxy": 256,
+    "num_query_per_iter": 100,
+    "inner_lr": 1.0,
+    "outer_lr": 0.1,
+    "num_meta_updates_per_iter": 50,
+    "entropy_reg_coeff": 0.2,
+    "proxy_oracle": {
+        "model_name": "CNN",
+        "p": 1.0,
+    },
+    "policy": {
+        "num_steps": 58, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+        "num_meta_steps": 58,
+    },
+    "exp_policy": {
+            "model_name": "MLP",
+            "input_size": 56,  # 14*4
+            "hidden_size": 28,  # 14 * 2
+            "output_size": 14,
+    },
+    "diversity": {
+            "div_metric_name": "hamming", # Options: "hamming" or "blast" or "RND" (Note: blast is slow)
+            "div_switch": "ON" # switches the diversity bonus ON / OFF -- (Note: there's overlap with ["outerloop"]["density_penalty"]... be careful)
+    },
+    "reward" : "E+IN",
+    "reward_annealing": False,
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB",
+        "config": {
+            'beta': 1.0, #0.0
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": 0.1, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 7,
+    },
+    "true_oracle": {
+        "model_name": "RNA14_Oracle",
+    },
+    "reset_policy_per_round": True,
+    "use_baseline": False,
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+
+
+Thesis_rna14_026_RND_s_beta1_anneal = { # anneal, RND
+    "exp_label": "Thesis_MetaRLBO-RNA14-026_RND_s_beta1_anneal",
+    "task": "RNA14-v0",
+    "num_proxies": 4,
+    "max_num_queries": 1500, # Maximum number of queries in experiment
+    "num_inner_updates": 2,
+    "num_query_proxies": 8,
+    "num_initial_samples": 100,
+    "num_samples_per_proxy": 256,
+    "num_query_per_iter": 100,
+    "inner_lr": 1.0,
+    "outer_lr": 0.1,
+    "num_meta_updates_per_iter": 50,
+    "entropy_reg_coeff": 0.2,
+    "proxy_oracle": {
+        "model_name": "CNN",
+        "p": 1.0,
+    },
+    "policy": {
+        "num_steps": 58, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+        "num_meta_steps": 58,
+    },
+    "exp_policy": {
+            "model_name": "MLP",
+            "input_size": 56,  # 14*4
+            "hidden_size": 28,  # 14 * 2
+            "output_size": 14,
+    },
+    "diversity": {
+            "div_metric_name": "RND", # Options: "hamming" or "blast" or "RND" (Note: blast is slow)
+            "div_switch": "ON", # switches the diversity bonus ON / OFF -- (Note: there's overlap with ["outerloop"]["density_penalty"]... be careful)
+            "RND_metric": "soft",
+			"T": 1,
+    },
+    "reward" : "E+IN",
+    "reward_annealing": True,
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB",
+        "config": {
+            'beta': 1.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": - 0.1, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 2,
+    },
+    "true_oracle": {
+        "model_name": "RNA14_Oracle",
+    },
+    "reset_policy_per_round": True,
+    "use_baseline": False,
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+Thesis_rna14_026_RND_c_beta1_anneal = { # anneal, RND
+    "exp_label": "Thesis_MetaRLBO-RNA14-026_RND_c_beta1_anneal",
+    "task": "RNA14-v0",
+    "num_proxies": 4,
+    "max_num_queries": 1500, # Maximum number of queries in experiment
+    "num_inner_updates": 2,
+    "num_query_proxies": 8,
+    "num_initial_samples": 100,
+    "num_samples_per_proxy": 256,
+    "num_query_per_iter": 100,
+    "inner_lr": 1.0,
+    "outer_lr": 0.1,
+    "num_meta_updates_per_iter": 50,
+    "entropy_reg_coeff": 0.2,
+    "proxy_oracle": {
+        "model_name": "CNN",
+        "p": 1.0,
+    },
+    "policy": {
+        "num_steps": 58, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+        "num_meta_steps": 58,
+    },
+    "exp_policy": {
+            "model_name": "MLP",
+            "input_size": 56,  # 14*4
+            "hidden_size": 28,  # 14 * 2
+            "output_size": 14,
+    },
+    "diversity": {
+            "div_metric_name": "RND", # Options: "hamming" or "blast" or "RND" (Note: blast is slow)
+            "div_switch": "ON", # switches the diversity bonus ON / OFF -- (Note: there's overlap with ["outerloop"]["density_penalty"]... be careful)
+            "RND_metric": "cosine",
+			"T": 1,
+    },
+    "reward" : "E+IN",
+    "reward_annealing": True,
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB",
+        "config": {
+            'beta': 1.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": - 0.1, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 2,
+    },
+    "true_oracle": {
+        "model_name": "RNA14_Oracle",
+    },
+    "reset_policy_per_round": True,
+    "use_baseline": False,
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+Thesis_rna14_026_RND_c_beta1_anneal_p = { # anneal, RND, reward to penalty
+    "exp_label": "Thesis_MetaRLBO-RNA14-026_RND_c_beta1_anneal_p",
+    "task": "RNA14-v0",
+    "num_proxies": 4,
+    "max_num_queries": 1500, # Maximum number of queries in experiment
+    "num_inner_updates": 2,
+    "num_query_proxies": 8,
+    "num_initial_samples": 100,
+    "num_samples_per_proxy": 256,
+    "num_query_per_iter": 100,
+    "inner_lr": 1.0,
+    "outer_lr": 0.1,
+    "num_meta_updates_per_iter": 50,
+    "entropy_reg_coeff": 0.2,
+    "proxy_oracle": {
+        "model_name": "CNN",
+        "p": 1.0,
+    },
+    "policy": {
+        "num_steps": 58, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+        "num_meta_steps": 58,
+    },
+    "exp_policy": {
+            "model_name": "MLP",
+            "input_size": 56,  # 14*4
+            "hidden_size": 28,  # 14 * 2
+            "output_size": 14,
+    },
+    "diversity": {
+            "div_metric_name": "RND", # Options: "hamming" or "blast" or "RND" (Note: blast is slow)
+            "reward_transofrm": "to_penalty",
+            "div_switch": "ON", # switches the diversity bonus ON / OFF -- (Note: there's overlap with ["outerloop"]["density_penalty"]... be careful)
+            "RND_metric": "cosine",
+			"T": 1,
+    },
+    "reward" : "E+IN",
+    "reward_annealing": True,
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB",
+        "config": {
+            'beta': 1.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda":  10, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 2,
+    },
+    "true_oracle": {
+        "model_name": "RNA14_Oracle",
+    },
+    "reset_policy_per_round": True,
+    "use_baseline": False,
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+Thesis_rna14_026_RND_c_beta1_NOanneal_p = { # anneal, RND, reward to penalty
+    "exp_label": "Thesis_MetaRLBO-RNA14-026_RND_c_beta1_NOanneal_p",
+    "task": "RNA14-v0",
+    "num_proxies": 4,
+    "max_num_queries": 1500, # Maximum number of queries in experiment
+    "num_inner_updates": 2,
+    "num_query_proxies": 8,
+    "num_initial_samples": 100,
+    "num_samples_per_proxy": 256,
+    "num_query_per_iter": 100,
+    "inner_lr": 1.0,
+    "outer_lr": 0.1,
+    "num_meta_updates_per_iter": 50,
+    "entropy_reg_coeff": 0.2,
+    "proxy_oracle": {
+        "model_name": "CNN",
+        "p": 1.0,
+    },
+    "policy": {
+        "num_steps": 58, # number of steps (per env) before updating... ensure this is at least as big as the length of the episode of the environment
+        "num_meta_steps": 58,
+    },
+    "exp_policy": {
+            "model_name": "MLP",
+            "input_size": 56,  # 14*4
+            "hidden_size": 28,  # 14 * 2
+            "output_size": 14,
+    },
+    "diversity": {
+            "div_metric_name": "RND", # Options: "hamming" or "blast" or "RND" (Note: blast is slow)
+            "reward_transofrm": "to_penalty",
+            "div_switch": "ON", # switches the diversity bonus ON / OFF -- (Note: there's overlap with ["outerloop"]["density_penalty"]... be careful)
+            "RND_metric": "cosine",
+			"T": 1,
+    },
+    "reward" : "E+IN",
+    "reward_annealing": False,
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB",
+        "config": {
+            'beta': 1.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda":  1, # Diversity hyperparameter -- higher is more penalty for more similar mols.
         "radius": 2,
     },
     "true_oracle": {

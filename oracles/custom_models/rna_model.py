@@ -48,4 +48,5 @@ class RNAModel:
             Recall landscape get_fitness requires:
             (Union[List[str], ndarray]) – A list/numpy array of sequence strings to be scored.
         """
+
         return self.landscape.get_fitness(all_str_seqs) # returns score for each seq

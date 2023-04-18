@@ -161,7 +161,6 @@ class diversity():
                 penalty_sums = sums[(sums < self.radius)]
 
                 ret = ((self.radius - penalty_sums)/self.radius).sum() # Linear penalty weighting...
-
             return ret
 
         else:
@@ -228,7 +227,7 @@ class diversity():
 
         else:
             NotImplementedError
-        import pdb; pdb.set_trace()
+            
         # self.int_r_history = {"running_std": 0., "len": 0}
         std_in_rewards = running_std(self.int_r_history["running_std"], self.int_r_history["len"], error).detach()
         mean_in_rewards = running_mean(self.int_r_history["running_mean"], self.int_r_history["len"], error).detach()
@@ -243,7 +242,7 @@ class diversity():
         self.optimizer.zero_grad()
         torch.mean(int_rew).backward()
         self.optimizer.step()
-
+        # import pdb; pdb.set_trace()
         return log_int_r
 
 

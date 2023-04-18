@@ -36,7 +36,9 @@ def seq_to_encoding(seq):
 
     seqN = seq + p_enc
     # s = (seqN.detach().cpu().numpy()).reshape((1, 46*21))
+
     return seqN
+    # return seq
 
 
 def get_data(data):

@@ -30,3 +30,18 @@ def enc_to_seq(enc):
         seq.append(enc_mol[enc[i].item()])
 
     return ''.join(seq)
+
+def enc_to_seq_RNA(enc):
+    """
+        Converts encoding (14, 4) to string...
+    """
+    char_pairs_RNA = [('U', 0), ('G', 1), ('C', 2), ('A', 3)]
+    mol_enc_RNA = OrderedDict(char_pairs_RNA)
+    enc_mol_RNA = OrderedDict(list(map(lambda x: (x[1], x[0]), char_pairs_RNA)))
+
+    enc = torch.argmax(enc, -1)
+    seq = []
+    for i in range(len(enc)):
+        seq.append(enc_mol_RNA[enc[i].item()])
+
+    return ''.join(seq)

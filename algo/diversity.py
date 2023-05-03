@@ -249,14 +249,17 @@ class diversity():
 
 
     def get_density(self):
-        if self.div_metric_name == "blast":
-            return self.density_blast()
-        elif self.div_metric_name == "hamming":
-            return self.density_hamming()
-        elif self.div_metric_name == "fitness_weighted_density":
-            return self.sequence_density()
-        elif self.div_metric_name == "RND":
-            return self.RND_int_r()
+        if self.div_switch == "ON":
+            if self.div_metric_name == "blast":
+                return self.density_blast()
+            elif self.div_metric_name == "hamming":
+                return self.density_hamming()
+            elif self.div_metric_name == "fitness_weighted_density":
+                return self.sequence_density()
+            elif self.div_metric_name == "RND":
+                return self.RND_int_r()
+            else:
+                raise NotImplementedError
         else:
-            raise NotImplementedError
+            return torch.tensor(0.0)
 

@@ -1216,9 +1216,14 @@ debug_metarlbo_ising20_052 = { # Copy 040 (w/ num_meta_updates_per_iter 50 -> 80
     "results_log_dir": "./logs",
     "seed": 73,
 	"reward" : "E+IN",
+	"reward_annealing": False,
+	"trunc_state": False,
 	"diversity": {
-            "div_metric_name": "RND", # Options: "hamming" or "blast" or "RND" (Note: blast is slow)
-            "div_switch": "ON" # switches the diversity bonus ON / OFF -- (Note: there's overlap with ["outerloop"]["density_penalty"]... be careful)
+            "div_metric_name": "hamming", # Options: "hamming" or "blast" or "RND" (Note: blast is slow)
+			"reward_transofrm_to_penalty": False,
+            "div_switch": "OFF", # switches the diversity bonus ON / OFF -- (Note: there's overlap with ["outerloop"]["density_penalty"]... be careful)
+            "RND_metric": "cosine",
+			"T": 1,
     },
 	"exp_policy": {
             "model_name": "MLP",

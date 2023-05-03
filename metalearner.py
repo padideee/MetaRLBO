@@ -692,28 +692,42 @@ class MetaLearner:
                                 radius=self.config["env"]["radius"],
                                 div_metric_name=self.config["diversity"]["div_metric_name"]).get_density()
 
+            query_scores_T = oracle.query(oracle_model, query_states.cpu(), flatten_input=self.flatten_proxy_oracle_input)
 
-            query_scores = oracle.query(oracle_model, query_states.cpu(), flatten_input=self.flatten_proxy_oracle_input)
+            if self.config["trunc_state"]:
+                dim = query_states.shape
+                trunc_state = query_states * \
+                              torch.vstack((torch.ones(dim[2]).repeat(int(dim[1] / 2), 1), torch.zeros(dim[2]).repeat(int(dim[1] / 2), 1))).repeat(dim[0], 1, 1).to(device)
 
-            if self.config["diversity"]["reward_transofrm"] == "to_penalty":
+                query_scores1 = oracle.query(oracle_model, trunc_state.cpu(),flatten_input=self.flatten_proxy_oracle_input)
+                query_scores = (2 * query_scores1 + query_scores_T) / 2.0
+
+            else:
+                query_scores = query_scores_T
+
+
+            if self.config["diversity"]["reward_transofrm_to_penalty"]:
                 dens = 1 - dens
 
             if self.config["reward"] == "E+IN":
                 policy_storage.rewards[bool_idx] += torch.tensor(query_scores).float().to(device) - self.config["env"]["lambda"] * dens.to(device)
                                                 # - torch.clamp(self.config["env"]["lambda"] * dens.to(device), min=-1.0, max=1.0)
                                                 # TODO: Is it ok to clip the values?
-            # elif self.config["reward"] == "IN":
-            #     policy_storage.rewards[bool_idx] -= torch.clamp(self.config["env"]["lambda"] * dens.to(device), min=-1.0, max=1.0)
-            #
-            # elif self.config["reward"] == "E":
-            #     policy_storage.rewards[bool_idx] += torch.tensor(query_scores).float().to(device)
-            #
-            # else:
-            #     policy_storage.rewards[bool_idx] += torch.tensor(query_scores).float().to(device) \
-            #                                         - torch.clamp(self.config["env"]["lambda"] * dens.to(device),
-            #                                                       min=-1.0, max=1.0)
+            elif self.config["reward"] == "IN":
+                policy_storage.rewards[bool_idx] -= torch.clamp(self.config["env"]["lambda"] * dens.to(device), min=-1.0, max=1.0)
+
+            elif self.config["reward"] == "E":
+                policy_storage.rewards[bool_idx] += torch.tensor(query_scores).float().to(device)
+
+            else:
+                policy_storage.rewards[bool_idx] += torch.tensor(query_scores).float().to(device) \
+                                                    - torch.clamp(self.config["env"]["lambda"] * dens.to(device),
+                                                                  min=-1.0, max=1.0)
+
+            # policy_storage.rewards[bool_idx] += torch.tensor(query_scores).float().to(device)
 
         policy_storage.compute_returns()
+
 
         # TODO: If the meta optimiser doesn't use bootstrapping... then we do this
         policy_storage.after_rollouts()

@@ -2578,6 +2578,124 @@ Thesis_metarlbo_ising20_052_RND_05 = { # 052: hamming -> RND, lambda: -0.5
     },
 }
 
+Thesis_metarlbo_ising20_052_6_NOtrunc = { #
+    "exp_label": "THESIS_MetaRLBO-Ising20-052_6_NOtrunc",
+    "task": "AltIsing20-v0",
+    "num_proxies": 4,
+    "max_num_queries": 8000, # Maximum number of queries in experiment
+    "num_inner_updates": 1,
+    "num_query_proxies": 32,
+    "num_initial_samples": 500,
+    "num_samples_per_proxy": 64,
+    "num_query_per_iter": 500,
+    "inner_lr": 1.0,
+    "outer_lr": 0.1,
+    "num_meta_updates_per_iter": 80,
+    "entropy_reg_coeff": 0.2,
+    "proxy_oracle": {
+        "model_name": "CNN",
+        "p": 1.0, #0.7
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB",
+        "config": {
+            'beta': 2.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": 1.0, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 2,
+    },
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "reward" : "E+IN",
+	"reward_annealing": False,
+    "trunc_state": False,
+	"diversity": {
+            "div_metric_name": "hamming", # Options: "hamming" or "blast" or "RND" (Note: blast is slow)
+			"reward_transofrm_to_penalty": False,
+            "div_switch": "OFF", # switches the diversity bonus ON / OFF -- (Note: there's overlap with ["outerloop"]["density_penalty"]... be careful)
+            "RND_metric": "cosine",
+			"T": 1,
+    },
+	"exp_policy": {
+            "model_name": "MLP",
+            "input_size": 400,  # 20*20
+            "hidden_size": 200,  # 20 * 10
+            "output_size": 20,
+    },
+    "use_baseline": False,
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+Thesis_metarlbo_ising20_052_6_trunc = { #
+    "exp_label": "THESIS_MetaRLBO-Ising20-052_6_trunc",
+    "task": "AltIsing20-v0",
+    "num_proxies": 4,
+    "max_num_queries": 8000, # Maximum number of queries in experiment
+    "num_inner_updates": 1,
+    "num_query_proxies": 32,
+    "num_initial_samples": 500,
+    "num_samples_per_proxy": 64,
+    "num_query_per_iter": 500,
+    "inner_lr": 1.0,
+    "outer_lr": 0.1,
+    "num_meta_updates_per_iter": 80,
+    "entropy_reg_coeff": 0.2,
+    "proxy_oracle": {
+        "model_name": "CNN",
+        "p": 1.0, #0.7
+    },
+    "outerloop": {
+        "oracle": "proxy",
+        "density_penalty": True,
+    },
+    "selection_criteria": { # Configs for selecting the samples
+        "method": "UCB",
+        "config": {
+            'beta': 2.0,
+        },
+        "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
+    },
+    "env": { # See DynaPPO paper for these configs
+        "lambda": 1.0, # Diversity hyperparameter -- higher is more penalty for more similar mols.
+        "radius": 2,
+    },
+    "true_oracle": {
+        "model_name": "AltIsing_Oracle",
+    },
+    "reward" : "E+IN",
+	"reward_annealing": False,
+    "trunc_state": True,
+	"diversity": {
+            "div_metric_name": "hamming", # Options: "hamming" or "blast" or "RND" (Note: blast is slow)
+			"reward_transofrm_to_penalty": False,
+            "div_switch": "OFF", # switches the diversity bonus ON / OFF -- (Note: there's overlap with ["outerloop"]["density_penalty"]... be careful)
+            "RND_metric": "cosine",
+			"T": 1,
+    },
+	"exp_policy": {
+            "model_name": "MLP",
+            "input_size": 400,  # 20*20
+            "hidden_size": 200,  # 20 * 10
+            "output_size": 20,
+    },
+    "use_baseline": False,
+    "log_interval": 1,
+    "results_log_dir": "./logs",
+    "seed": 73,
+}
+
+
+
 #----------------------- Thesis
 metarlbo_ising20_053 = { # Copy 050 (w/ num_samples_per_proxy: 128 -> 256)
     "exp_label": "MetaRLBO-Ising20-CNN-053",
@@ -3878,3 +3996,4 @@ metarlbo_ising20_081 = { # Copy 075 but beta: 1 -> 0 and entropy reg coeff: 0.2 
     "results_log_dir": "./logs",
     "seed": 73,
 }
+

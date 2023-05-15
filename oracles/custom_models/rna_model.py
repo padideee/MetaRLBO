@@ -15,7 +15,7 @@ except:
 
 class RNAModel:
 
-    def __init__(self, ptype="L14_RNA1"):
+    def __init__(self, ptype="L50_RNA1"): # L14_RNA1
 
         self.problem = flexs.landscapes.rna.registry()[ptype]
         pprint.pprint(self.problem)
@@ -48,5 +48,5 @@ class RNAModel:
             Recall landscape get_fitness requires:
             (Union[List[str], ndarray]) – A list/numpy array of sequence strings to be scored.
         """
-
+        
         return self.landscape.get_fitness(all_str_seqs) # returns score for each seq

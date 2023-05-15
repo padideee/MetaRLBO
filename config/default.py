@@ -49,6 +49,7 @@ DEFAULT_CONFIG = {
 	"reward" : "E+IN", # "E+IN" or "IN": pure exploration
 	"reward_annealing": False,
 	"trunc_state": False,
+	"trunc_rate": 2, 
 	"selection_criteria": { # Configs for selecting the samples
 		"method": "UCB", 
 		"config": {

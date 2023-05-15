@@ -26,7 +26,7 @@ def task_str_len(task_name):
     elif 'AltIsing100' in task_name:
         length=100
     elif 'RNA14' in task_name:
-        length=14
+        length=50
     else:
         raise NotImplementedError
     return length
@@ -111,7 +111,7 @@ def setup_task_configs(config):
         length = task_str_len(config["task"])
         config["task_config"]["seq_len"], config["task_config"]["alphabet_len"] = length, 20
     elif config['task'] == 'RNA14-v0':
-        config["task_config"]["seq_len"], config["task_config"]["alphabet_len"] = 14, 4
+        config["task_config"]["seq_len"], config["task_config"]["alphabet_len"] = 50, 4
 
     else:
         raise NotImplementedError

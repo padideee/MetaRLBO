@@ -38,7 +38,7 @@ register( # This is an issue...
 register( # This is an issue...
     'RNA14-v0',
     entry_point='environments.RNA_env:RNAEnv',
-    kwargs={'max_length': 14, 'vocab_size': 4},
+    kwargs={'max_length': 50, 'vocab_size': 4},
 )
 
 

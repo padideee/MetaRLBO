@@ -1217,7 +1217,8 @@ debug_metarlbo_ising20_052 = { # Copy 040 (w/ num_meta_updates_per_iter 50 -> 80
     "seed": 73,
 	"reward" : "E+IN",
 	"reward_annealing": False,
-	"trunc_state": False,
+	"trunc_state": True,
+	"trunc_rate": 2,
 	"diversity": {
             "div_metric_name": "hamming", # Options: "hamming" or "blast" or "RND" (Note: blast is slow)
 			"reward_transofrm_to_penalty": False,
@@ -1296,8 +1297,8 @@ debug_Thesis_rna14_026_test_4_aneal_hamm_r7 = {
     "seed": 73,
 }
 
-debug_Thesis_rna14_test_5 = {
-    "exp_label": "DEBUG_Thesis_RNA14_test_5",
+debug_Thesis_rna50_test_5 = {
+    "exp_label": "DEBUG_Thesis_RNA50_test_5",
     "task": "RNA14-v0",
     "num_proxies": 4,
     "max_num_queries": 1500, # Maximum number of queries in experiment
@@ -1321,8 +1322,8 @@ debug_Thesis_rna14_test_5 = {
     },
     "exp_policy": {
             "model_name": "MLP",
-            "input_size": 56,  # 14*4
-            "hidden_size": 28,  # 14 * 2
+            "input_size": 200,  # 50*4
+            "hidden_size": 100,  # 50 * 2
             "output_size": 14,
     },
     "diversity": {
@@ -1334,6 +1335,8 @@ debug_Thesis_rna14_test_5 = {
     },
 	"reward" : "E+IN",
 	"reward_annealing": False,
+	"trunc_state": False,
+	"trunc_rate": 2,
     "outerloop": {
         "oracle": "proxy",
         "density_penalty": True,
@@ -1346,8 +1349,8 @@ debug_Thesis_rna14_test_5 = {
         "diversity_threshold": 1, # Diversity threshold when greedily selecting molecules...
     },
     "env": { # See DynaPPO paper for these configs
-        "lambda": 100, # Diversity hyperparameter -- higher is more penalty for more similar mols. (- for RND + for hamming)
-        "radius": 7, #2
+        "lambda": .1, # Diversity hyperparameter -- higher is more penalty for more similar mols. (- for RND + for hamming)
+        "radius": 2, #2
     },
 
     "true_oracle": {

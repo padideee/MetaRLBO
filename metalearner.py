@@ -696,11 +696,19 @@ class MetaLearner:
 
             if self.config["trunc_state"]:
                 dim = query_states.shape
-                trunc_state = query_states * \
-                              torch.vstack((torch.ones(dim[2]).repeat(int(dim[1] / 2), 1), torch.zeros(dim[2]).repeat(int(dim[1] / 2), 1))).repeat(dim[0], 1, 1).to(device)
+                c = self.config['trunc_rate']
 
-                query_scores1 = oracle.query(oracle_model, trunc_state.cpu(),flatten_input=self.flatten_proxy_oracle_input)
-                query_scores = (2 * query_scores1 + query_scores_T) / 2.0
+                while c > 1:
+                    trunc_state = query_states * \
+                                  torch.vstack((torch.ones(dim[2]).repeat(int(dim[1] // c), 1), torch.zeros(dim[2]).repeat(int(dim[1] // c), 1))).repeat(dim[0], 1, 1).to(device)
+
+                    sub_query = oracle.query(oracle_model, trunc_state.cpu(),flatten_input=self.flatten_proxy_oracle_input)
+                    query_scores_T = query_scores_T + sub_query*c
+
+                    c -= 1
+
+                query_scores = query_scores_T / float(c)
+
 
             else:
                 query_scores = query_scores_T

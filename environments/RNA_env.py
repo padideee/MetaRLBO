@@ -9,8 +9,8 @@ import utils.helpers as utl
 
 
 class RNAEnv(gym.Env):
-    def __init__(self, lambd = 0.1, radius = 2, max_length = 14, vocab_size=8, query_history = None,
-                 div_metric_name="hamming", div_switch="ON"):
+    def __init__(self, lambd = 0.1, radius = 2, max_length = 50, vocab_size=8, query_history = None,
+                 div_metric_name="hamming", div_switch="ON"): # max_length = 14
 
         self.seed()
         # Actions in AMP design are the 20 amino acids
